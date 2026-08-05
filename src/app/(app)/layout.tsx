@@ -5,13 +5,12 @@ import type { ReactNode } from "react";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
+import { QuickActionSheet } from "@/components/quick/QuickActionSheet";
+import { Toaster } from "@/components/ui/sonner";
 
 /**
- * Оболочка четырёх вкладок: телефон-контейнер, скроллящийся контент
- * и таб-бар поверх него.
- *
- * Здесь же живёт состояние листа быстрых действий — сам лист
- * подключается на шаге 10, пока FAB только переключает флаг.
+ * Оболочка четырёх вкладок: телефон-контейнер, скроллящийся контент,
+ * таб-бар поверх него и лист быстрых действий по кнопке «+».
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [isQuickOpen, setIsQuickOpen] = useState(false);
@@ -27,6 +26,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         onFabClick={() => setIsQuickOpen((open) => !open)}
         fabExpanded={isQuickOpen}
       />
+
+      <QuickActionSheet open={isQuickOpen} onOpenChange={setIsQuickOpen} />
+
+      <Toaster position="top-center" />
     </PhoneFrame>
   );
 }

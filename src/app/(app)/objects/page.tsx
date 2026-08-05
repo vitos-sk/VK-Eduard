@@ -1,6 +1,6 @@
-import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import { t } from "@/lib/i18n";
+import { ObjectsScreen } from "@/components/objects/ObjectsScreen";
+import { objects } from "@/lib/mock/objects";
 
 export default function ObjectsPage() {
-  return <ScreenHeader title={t.objects.title} />;
+  return <ObjectsScreen objects={objects} />;
 }

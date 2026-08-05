@@ -88,6 +88,7 @@ export const uk = {
     now: "Зараз",
     pause: "Пауза",
     resume: "Продовжити",
+    startWork: "Почати роботу",
     finishWork: "Завершити роботу",
     addManually: "Додати час вручну",
     plan: "Норма",

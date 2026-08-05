@@ -32,14 +32,25 @@ export function ScreenHeader({ title, action, className }: ScreenHeaderProps) {
 
 interface BackHeaderProps {
   title: string;
-  /** Куда ведёт стрелка «‹». */
-  href: string;
+  /** Куда ведёт стрелка «‹». Не задан — стрелка вызывает `onBack`. */
+  href?: string;
+  /** Возврат на предыдущий экран вместо перехода по ссылке. */
+  onBack?: () => void;
   action?: ReactNode;
   className?: string;
 }
 
 /** Компактная шапка вложенной страницы: стрелка назад, заголовок по центру. */
-export function BackHeader({ title, href, action, className }: BackHeaderProps) {
+export function BackHeader({
+  title,
+  href,
+  onBack,
+  action,
+  className,
+}: BackHeaderProps) {
+  const backClassName =
+    "-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2 focus-visible:outline-2 focus-visible:outline-brand";
+
   return (
     <header
       className={cn(
@@ -47,13 +58,20 @@ export function BackHeader({ title, href, action, className }: BackHeaderProps) 
         className,
       )}
     >
-      <Link
-        href={href}
-        aria-label={t.common.back}
-        className="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2 focus-visible:outline-2 focus-visible:outline-brand"
-      >
-        <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
-      </Link>
+      {href ? (
+        <Link href={href} aria-label={t.common.back} className={backClassName}>
+          <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label={t.common.back}
+          className={backClassName}
+        >
+          <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
+        </button>
+      )}
 
       <h1 className="flex-1 text-center text-[17px] font-bold">{title}</h1>
 

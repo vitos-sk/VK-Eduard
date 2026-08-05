@@ -16,13 +16,13 @@ interface NavItem {
 }
 
 const leftItems: readonly NavItem[] = [
-  { href: "/", label: t.nav.home, icon: House },
-  { href: "/objects", label: t.nav.objects, icon: Building2 },
+  { href: "/reports", label: t.nav.reports, icon: FileText },
+  { href: "/hours", label: t.nav.hours, icon: Clock },
 ];
 
 const rightItems: readonly NavItem[] = [
-  { href: "/hours", label: t.nav.hours, icon: Clock },
-  { href: "/reports", label: t.nav.reports, icon: FileText },
+  { href: "/objects", label: t.nav.objects, icon: Building2 },
+  { href: "/", label: t.nav.home, icon: House },
 ];
 
 interface BottomNavProps {
@@ -33,6 +33,9 @@ interface BottomNavProps {
 /**
  * Нижний таб-бар: 4 вкладки и FAB по центру.
  * Прижат к низу `PhoneFrame`, а не к окну браузера.
+ *
+ * `z-60` — выше подложки нижних листов (z-50): по макету таб-бар
+ * остаётся видимым, когда открыт лист быстрых действий.
  */
 export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   const pathname = usePathname();
@@ -40,7 +43,7 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   return (
     <nav
       aria-label={t.common.appName}
-      className="absolute inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="absolute inset-x-0 bottom-0 z-60 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       <div className="flex h-[68px] items-stretch">
         {leftItems.map((item) => (

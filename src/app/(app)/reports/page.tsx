@@ -1,6 +1,5 @@
-import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import { t } from "@/lib/i18n";
+import { ReportsScreen } from "@/components/reports/ReportsScreen";
 
 export default function ReportsPage() {
-  return <ScreenHeader title={t.reports.title} />;
+  return <ReportsScreen />;
 }

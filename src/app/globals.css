@@ -135,6 +135,11 @@
   }
 }
 
+/* Подложка нижних листов: в тёмной теме дефолтные 10% почти не видны */
+[data-slot="drawer-overlay"] {
+  background-color: rgb(0 0 0 / 0.6);
+}
+
 /* Моноширинные цифры для таймера и метрик */
 @utility tabular {
   font-variant-numeric: tabular-nums;

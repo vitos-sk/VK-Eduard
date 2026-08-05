@@ -1,6 +1,5 @@
-import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import { t } from "@/lib/i18n";
+import { HoursScreen } from "@/components/hours/HoursScreen";
 
 export default function HoursPage() {
-  return <ScreenHeader title={t.hours.title} />;
+  return <HoursScreen />;
 }
