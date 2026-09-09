@@ -10,7 +10,7 @@
  * и от данных, а нужны как статические файлы — в том числе `/apple-touch-icon.png`,
  * который iOS ищет в корне сам, ещё до того как прочитает разметку.
  */
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -59,7 +59,7 @@ async function png(svg, file) {
   const out = path.join(PUBLIC, file);
   await mkdir(path.dirname(out), { recursive: true });
   await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(out);
-  return file;
+  return `public/${file}`;
 }
 
 /**
@@ -136,6 +136,44 @@ async function lucideSvg(name, size = 96) {
 </svg>`;
 }
 
+/**
+ * Favicon. Собираем .ico руками: sharp его не пишет, а ICO спокойно хранит
+ * внутри обычные PNG — заголовок плюс по 16-байтовой записи на размер.
+ * Лежит в `src/app/`, потому что это файловая конвенция Next, а не статика.
+ */
+async function favicon() {
+  const sizes = [32, 64];
+  const images = await Promise.all(
+    sizes.map((size) =>
+      sharp(Buffer.from(markSvg({ w: size, h: size, ratio: 0.68 })))
+        .png({ compressionLevel: 9 })
+        .toBuffer(),
+    ),
+  );
+
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(sizes.length, 4);
+
+  let offset = 6 + 16 * sizes.length;
+  const entries = images.map((image, i) => {
+    const entry = Buffer.alloc(16);
+    entry.writeUInt8(sizes[i] >= 256 ? 0 : sizes[i], 0);
+    entry.writeUInt8(sizes[i] >= 256 ? 0 : sizes[i], 1);
+    entry.writeUInt16LE(1, 4); // color planes
+    entry.writeUInt16LE(32, 6); // bits per pixel
+    entry.writeUInt32LE(image.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    offset += image.length;
+    return entry;
+  });
+
+  const out = path.join(ROOT, "src/app/favicon.ico");
+  await writeFile(out, Buffer.concat([header, ...entries, ...images]));
+  return "src/app/favicon.ico";
+}
+
 async function main() {
   const written = [];
 
@@ -155,8 +193,10 @@ async function main() {
     );
   }
 
+  written.push(await favicon());
+
   console.log(`Готово, файлов: ${written.length}`);
-  for (const file of written) console.log(`  public/${file}`);
+  for (const file of written) console.log(`  ${file}`);
 }
 
 await main();

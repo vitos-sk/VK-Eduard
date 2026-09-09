@@ -18,9 +18,9 @@ declare
   uid       uuid;
 begin
   -- Фирма
-  select id into v_company from companies where name = 'K work';
+  select id into v_company from companies where name = 'K group';
   if v_company is null then
-    insert into companies (name) values ('K work') returning id into v_company;
+    insert into companies (name) values ('K group') returning id into v_company;
   end if;
 
   -- Пользователи и профили

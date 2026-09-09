@@ -18,15 +18,15 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'K work',
-    short_name: 'K work',
+    name: 'K group',
+    short_name: 'K group',
     description: 'Облік робочих годин і звітів',
     start_url: '/',
     id: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#142611',   // = --bg, чтобы splash не мигал белым
-    theme_color: '#142611',
+    background_color: '#0d2b08',   // = --bg, чтобы splash не мигал белым
+    theme_color: '#0d2b08',
     lang: 'uk',
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -44,15 +44,22 @@ export default function manifest(): MetadataRoute.Manifest {
 
 ## 2. Иконки
 
+Все файлы собирает `npm run icons` (`scripts/generate-app-icons.mjs`) из знака «K»
+в `components/brand/Logo.tsx`. Руками их не правим: иначе иконка на телефоне
+и логотип в шапке расходятся при первой же правке знака.
+
 | Файл | Размер | Для чего |
 |---|---|---|
-| `icon-192.png`, `icon-512.png` | 192, 512 | Android, общий случай |
-| `maskable-512.png` | 512 | Android обрезает иконку под форму лаунчера |
+| `icons/icon-192/512/1024.png` | 192, 512, 1024 | Android, общий случай |
+| `icons/maskable-192/512.png` | 192, 512 | Android режет иконку под форму лаунчера |
+| `icons/shortcut-*.png` | 96 | быстрые действия по долгому нажатию на ярлык |
 | `apple-touch-icon.png` | 180 | iOS; **без прозрачности** — Safari зальёт её чёрным |
+| `splash/<W>x<H>.png` | 12 штук | стартовые экраны iOS |
 | `favicon.ico` | 32 | вкладка браузера |
 
-Логотип «K» — жёлтый знак на фоне `--bg`. У maskable-версии значок занимает центральные
-80%, остальное — фон: safe zone у круглых лаунчеров съедает края.
+Знак на фоне `--bg`. Маскируемая версия — **отдельный файл**, а не тот же с двумя
+`purpose`: Android гарантирует только центральный круг в 80% холста, поэтому знак
+в ней мельче обычного.
 
 ---
 
@@ -74,7 +81,7 @@ Safari поддерживает PWA частично, и об это споты�
 | Ограничение | Что делаем |
 |---|---|
 | `beforeinstallprompt` не существует | показываем текстовую инструкцию: «Поділитися → На екран «Додому»». Определяем iOS + не-standalone через `matchMedia('(display-mode: standalone)')` |
-| Splash-экран не берётся из манифеста | добавляем `apple-touch-startup-image` на ключевые размеры, либо мирится с однотонным фоном |
+| Splash-экран не берётся из манифеста | `apple-touch-startup-image` на 12 разрешений iPhone: список устройств живёт в `lib/pwa.ts` и в генераторе. Картинка подхватывается только при точном совпадении медиавыражения **и** точном размере файла |
 | Строка статуса | `apple-mobile-web-app-status-bar-style: black-translucent` + `viewportFit: 'cover'` + `env(safe-area-inset-*)` — иначе шапка уезжает под «чёлку» |
 | Push только с iOS 16.4+ и только для установленного приложения | пуши — последний этап, приложение обязано быть полезным без них |
 | **IndexedDB чистится после ~7 дней без визитов** | главный риск для офлайн-очереди |
@@ -89,12 +96,12 @@ Safari поддерживает PWA частично, и об это споты�
 
 ```ts
 export const metadata: Metadata = {
-  title: 'K work',
-  appleWebApp: { capable: true, title: 'K work', statusBarStyle: 'black-translucent' },
+  title: 'K group',
+  appleWebApp: { capable: true, title: 'K group', statusBarStyle: 'black-translucent' },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#142611',
+  themeColor: '#0d2b08',
   viewportFit: 'cover',
   userScalable: false,   // случайный зум двумя пальцами в перчатках — частая помеха
 }
