@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -13,21 +14,33 @@ export type Profile = Tables<"profiles">;
  *
  * `cache` — чтобы шапка, экран и layout в одном рендере не сделали три
  * одинаковых запроса. Живёт ровно один запрос, между пользователями не течёт.
+ *
+ * Id пользователя берём из заголовка `x-user-id`, который `proxy.ts` уже
+ * поставил после своего getUser() на этом же запросе — второй сетевой
+ * поход в Supabase Auth за той же проверкой только удлинял каждый переход
+ * между вкладками. Резервный getUser() остаётся на случай запроса, до
+ * которого proxy.ts не дошёл (matcher его не покрывает).
  */
 export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
 
-  // getUser(), а не getSession(): токен проверяется на сервере Supabase.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let userId = (await headers()).get("x-user-id");
 
-  if (!user) return null;
+  if (!userId) {
+    // getUser(), а не getSession(): токен проверяется на сервере Supabase.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    userId = user?.id ?? null;
+  }
+
+  if (!userId) return null;
 
   const { data } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   return data;

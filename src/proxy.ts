@@ -16,16 +16,28 @@ function isPublic(pathname: string): boolean {
  * В Next 16 `middleware.ts` переименован в `proxy.ts` — гайды Supabase
  * пока пишут по-старому, поведение то же.
  *
- * Делает ровно две вещи:
+ * Делает три вещи:
  * 1. Обновляет протухший access-токен и записывает свежие куки в ответ.
  *    Без этого сессия живёт час и рабочего выкидывает посреди смены.
  * 2. Отправляет неавторизованного на `/welcome`, а вошедшего — с welcome
  *    и логина на главную.
+ * 3. Кладёт проверенный id пользователя в заголовок `x-user-id` для
+ *    страницы — `getProfile()` берёт его вместо повторного getUser().
+ *    Без этого каждый переход между вкладками ходил в Supabase Auth за
+ *    одной и той же проверкой токена дважды (тут и в `session.ts`) — это
+ *    и было главной причиной медленной навигации.
  *
  * Это оптимистичная проверка, а не авторизация: данные закрывает RLS.
  */
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const pendingCookies: {
+    name: string;
+    value: string;
+    options?: Parameters<
+      InstanceType<typeof NextResponse>["cookies"]["set"]
+    >[2];
+  }[] = [];
+  let refreshHeaders: Record<string, string> = {};
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
     cookies: {
@@ -36,15 +48,10 @@ export async function proxy(request: NextRequest) {
         for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
         }
-        response = NextResponse.next({ request });
-        for (const { name, value, options } of cookiesToSet) {
-          response.cookies.set(name, value, options);
-        }
+        pendingCookies.push(...cookiesToSet);
         // Ответ с новыми куками сессии не должен попасть в кэш CDN:
         // иначе чужой токен уедет другому пользователю.
-        for (const [key, headerValue] of Object.entries(headers)) {
-          response.headers.set(key, headerValue);
-        }
+        refreshHeaders = headers;
       },
     },
   });
@@ -69,6 +76,25 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  // Заголовок ставим здесь и только здесь — клиент не может подделать
+  // его своим запросом, потому что `Headers.set` ниже всегда перезаписывает
+  // то, что пришло снаружи.
+  const requestHeaders = new Headers(request.headers);
+  if (user) {
+    requestHeaders.set("x-user-id", user.id);
+  } else {
+    requestHeaders.delete("x-user-id");
+  }
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  for (const { name, value, options } of pendingCookies) {
+    response.cookies.set(name, value, options);
+  }
+  for (const [key, headerValue] of Object.entries(refreshHeaders)) {
+    response.headers.set(key, headerValue);
   }
 
   return response;
