@@ -260,6 +260,14 @@ export function HoursScreen({
           label={t.hours.title}
         />
 
+        {period === "day" && isToday && (
+          <DayActions
+            className="mt-3"
+            openEntry={openEntry}
+            onChanged={handleChanged}
+          />
+        )}
+
         <PeriodNavigator
           className="mt-3"
           title={getPeriodTitle(period, date)}
@@ -276,13 +284,6 @@ export function HoursScreen({
               entries={dayEntries}
               siteNameById={siteNameById}
             />
-            {isToday && (
-              <DayActions
-                className="pt-1"
-                openEntry={openEntry}
-                onChanged={handleChanged}
-              />
-            )}
           </div>
         )}
 
