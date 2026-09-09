@@ -10,12 +10,20 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "K group",
-  description: "Облік робочого часу та звітів для співробітників K group",
+  title: "K work",
+  description: "Облік робочого часу та звітів для співробітників K work",
+  // iOS не читает манифест: имя, режим и статус-бар задаются только этими метатегами.
+  // `black-translucent` вместе с `viewportFit: "cover"` пускает контент под «чёлку»,
+  // поэтому шапки и таб-бар обязаны учитывать `env(safe-area-inset-*)`.
+  appleWebApp: {
+    capable: true,
+    title: "K work",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0C",
+  themeColor: "#142611",
   viewportFit: "cover",
   width: "device-width",
   initialScale: 1,

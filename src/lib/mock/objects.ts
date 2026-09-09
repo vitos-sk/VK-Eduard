@@ -13,7 +13,7 @@ export const objects: readonly SiteObject[] = [
     status: "in_progress",
     photosCount: 8,
     reportsCount: 2,
-    gradient: ["#3F4A5A", "#232A35"],
+    gradient: ["#3B5C2E", "#1B2C15"],
   },
   {
     id: "obj-villa",
@@ -22,7 +22,7 @@ export const objects: readonly SiteObject[] = [
     status: "in_progress",
     photosCount: 6,
     reportsCount: 1,
-    gradient: ["#4A4235", "#262117"],
+    gradient: ["#5A5A24", "#2B2B11"],
   },
   {
     id: "obj-hanser",
@@ -31,7 +31,7 @@ export const objects: readonly SiteObject[] = [
     status: "not_started",
     photosCount: 0,
     reportsCount: 0,
-    gradient: ["#33454A", "#1B2529"],
+    gradient: ["#2E5541", "#15281F"],
   },
   {
     id: "obj-loretto",
@@ -40,7 +40,7 @@ export const objects: readonly SiteObject[] = [
     status: "not_started",
     photosCount: 0,
     reportsCount: 0,
-    gradient: ["#453B52", "#241E2C"],
+    gradient: ["#4A5C2A", "#232C14"],
   },
   {
     id: "obj-angelverein",
@@ -49,7 +49,7 @@ export const objects: readonly SiteObject[] = [
     status: "not_started",
     photosCount: 0,
     reportsCount: 0,
-    gradient: ["#3A4740", "#1E2622"],
+    gradient: ["#2F4E3C", "#16241C"],
   },
 ] as const;
 

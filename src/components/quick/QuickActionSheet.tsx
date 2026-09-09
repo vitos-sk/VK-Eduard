@@ -47,7 +47,8 @@ interface QuickActionSheetProps {
 
 /**
  * Нижний лист по кнопке «+»: пять быстрых действий.
- * Свайп вниз и «Скасувати» закрывают, таб-бар остаётся видимым под листом.
+ * Закрывают свайп вниз, стрелка «назад», тап вне листа и повторный тап по FAB;
+ * таб-бар остаётся видимым под листом.
  */
 export function QuickActionSheet({ open, onOpenChange }: QuickActionSheetProps) {
   const handleAction = (action: QuickAction) => {
@@ -65,52 +66,59 @@ export function QuickActionSheet({ open, onOpenChange }: QuickActionSheetProps) 
       <DrawerContent
         aria-describedby={undefined}
         className={cn(
-          "mx-auto max-w-[430px] border-border bg-surface text-text",
-          // Отступ снизу под таб-бар: он остаётся видимым поверх листа.
+          "mx-auto max-w-[430px] border-0 bg-transparent",
+          // Сам контейнер листа кликов не ловит: тап по прозрачной зоне снизу
+          // (таб-бар и жёлтый FAB) уходит на подложку и закрывает лист.
+          // `!` обязателен: vaul проставляет pointer-events инлайном.
+          "pointer-events-none!",
+          // Встроенную «ручку» vaul прячем — своя нарисована внутри панели.
+          "[&>div:first-child]:hidden",
+          // Прозрачный отступ снизу под таб-бар: он остаётся видимым под листом.
           // В «телефоне по центру» под баром ещё 24px рамки — учитываем их.
           "pb-[calc(68px+env(safe-area-inset-bottom))] phone:pb-[calc(68px+1.5rem)]",
           // Лист высокий: при нехватке места скроллится список пунктов,
-          // заголовок и «Скасувати» остаются на месте.
+          // заголовок остаётся на месте.
           "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
         )}
       >
-        <div className="flex items-center gap-1 px-2 pt-3 pb-1">
-          <DrawerClose
-            aria-label={t.common.back}
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-full text-text",
-              "transition-colors duration-150 active:bg-surface-2",
-              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
-            <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
-          </DrawerClose>
-
-          <DrawerTitle className="text-[20px] font-bold text-text">
-            {t.quick.title}
-          </DrawerTitle>
-        </div>
-
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-2 pb-1">
-          {quickActions.map((action) => (
-            <QuickActionRow
-              key={action.id}
-              action={action}
-              onSelect={() => handleAction(action)}
-            />
-          ))}
-        </div>
-
-        <DrawerClose
+        <div
           className={cn(
-            "mx-4 mt-4 mb-3 flex h-[56px] items-center justify-center",
-            "rounded-[14px] bg-surface-2 text-[15px] font-bold text-text",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+            "pointer-events-auto flex min-h-0 flex-1 flex-col",
+            "rounded-t-[20px] border-t border-border bg-surface text-text",
           )}
         >
-          {t.quick.cancel}
-        </DrawerClose>
+          <div
+            aria-hidden
+            className="mx-auto mt-3 h-1 w-[100px] shrink-0 rounded-full bg-border"
+          />
+
+          <div className="flex items-center gap-1 px-2 pt-3 pb-1">
+            <DrawerClose
+              aria-label={t.common.back}
+              className={cn(
+                "flex size-11 shrink-0 items-center justify-center rounded-full text-text",
+                "transition-colors duration-150 active:bg-surface-2",
+                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
+              )}
+            >
+              <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
+            </DrawerClose>
+
+            <DrawerTitle className="text-[20px] font-bold text-text">
+              {t.quick.title}
+            </DrawerTitle>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-2 pb-4">
+            {quickActions.map((action) => (
+              <QuickActionRow
+                key={action.id}
+                action={action}
+                onSelect={() => handleAction(action)}
+              />
+            ))}
+          </div>
+        </div>
       </DrawerContent>
     </Drawer>
   );

@@ -12,7 +12,7 @@ import type { Report } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /** Запасной градиент, если объект отчёта не найден среди моков. */
-const fallbackGradient = ["#3A3F4A", "#1F232A"] as const;
+const fallbackGradient = ["#2F5227", "#182C13"] as const;
 
 interface ReportCardProps {
   report: Report;

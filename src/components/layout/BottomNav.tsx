@@ -16,13 +16,13 @@ interface NavItem {
 }
 
 const leftItems: readonly NavItem[] = [
-  { href: "/reports", label: t.nav.reports, icon: FileText },
-  { href: "/hours", label: t.nav.hours, icon: Clock },
+  { href: "/", label: t.nav.home, icon: House },
+  { href: "/objects", label: t.nav.objects, icon: Building2 },
 ];
 
 const rightItems: readonly NavItem[] = [
-  { href: "/objects", label: t.nav.objects, icon: Building2 },
-  { href: "/", label: t.nav.home, icon: House },
+  { href: "/hours", label: t.nav.hours, icon: Clock },
+  { href: "/reports", label: t.nav.reports, icon: FileText },
 ];
 
 interface BottomNavProps {

@@ -32,14 +32,14 @@ export const quickActions: readonly QuickAction[] = [
     id: "outside",
     title: t.quick.outside.title,
     description: t.quick.outside.description,
-    accent: "#60A5FA",
+    accent: "var(--success)",
     href: "/time/manual?type=outside",
   },
   {
     id: "create_report",
     title: t.quick.createReport.title,
     description: t.quick.createReport.description,
-    accent: "#A78BFA",
+    accent: "var(--text-muted)",
     href: null,
   },
 ];

@@ -20,6 +20,9 @@ export function FabButton({ onClick, expanded = false, className }: FabButtonPro
   return (
     <button
       type="button"
+      // Метка для листа быстрых действий: клик по FAB не должен закрываться
+      // как «клик вне листа» — кнопка сама переключает состояние.
+      data-quick-fab=""
       onClick={onClick}
       aria-label={t.nav.add}
       aria-expanded={expanded}

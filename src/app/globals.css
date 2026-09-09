@@ -8,8 +8,9 @@
   /* Порог, с которого приложение показывается «телефоном по центру». */
   --breakpoint-phone: 30rem;
 
-  /* --- Дизайн-система K group (раздел 3.1 плана) --- */
+  /* --- Дизайн-система K work — зелёная тема (docs/DESIGN-SYSTEM.md) --- */
   --color-bg: var(--bg);
+  --color-bg-outer: var(--bg-outer);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-brand: var(--brand);
@@ -71,18 +72,19 @@
   чтобы срабатывали `dark:`-варианты внутри компонентов shadcn.
 */
 :root {
-  --bg: #0a0a0c;
-  --surface: #131418;
-  --surface-2: #1b1d22;
-  --border: #25272c;
-  --brand: #ffc93c;
-  --brand-ink: #0a0a0c;
+  --bg: #142611;
+  --bg-outer: #0b1509;
+  --surface: #1d3418;
+  --surface-2: #26421f;
+  --border: #2f5227;
+  --brand: #f5c43c;
+  --brand-ink: #142611;
   --text: #ffffff;
-  --text-muted: #8e9099;
-  --text-dim: #5c5e66;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --danger: #f87171;
+  --text-muted: #9db394;
+  --text-dim: #7e9675;
+  --success: #7bc96f;
+  --warning: #f5c43c;
+  --danger: #f2705f;
 
   --background: var(--bg);
   --foreground: var(--text);
