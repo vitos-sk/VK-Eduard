@@ -1,10 +1,26 @@
 import { formatDuration } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { daySheet } from "@/lib/mock/timesheet";
+import type { WorkEntry } from "@/modules/entries/types";
+import type { DayAggregate } from "@/modules/entries/period";
 import { cn } from "@/lib/utils";
 
-/** «Деталі робочого часу»: три строки с цветными точками. */
-export function DayDetailsCard({ className }: { className?: string }) {
+interface DayDetailsCardProps {
+  aggregate: DayAggregate;
+  entries: readonly WorkEntry[];
+  /** Имя объекта по `site_id` — для строки «Об'єкти». */
+  siteNameById: ReadonlyMap<string, string>;
+  className?: string;
+}
+
+/** «Деталі робочого часу»: відпрацьовано, перерва, об'єкти дня. */
+export function DayDetailsCard({
+  aggregate,
+  entries,
+  siteNameById,
+  className,
+}: DayDetailsCardProps) {
+  const objectsLabel = objectsSummary(entries, siteNameById);
+
   return (
     <section
       className={cn(
@@ -17,26 +33,40 @@ export function DayDetailsCard({ className }: { className?: string }) {
       <dl className="mt-3 space-y-3">
         <DetailRow
           label={t.hours.workTime}
-          value={formatDuration(daySheet.workedSec)}
+          value={formatDuration(aggregate.workedMinutes * 60)}
           dotClassName="bg-success"
         />
         <DetailRow
           label={t.hours.break}
-          value={formatDuration(daySheet.breakSec)}
+          value={formatDuration(aggregate.breakMinutes * 60)}
           dotClassName="bg-warning"
         />
         <DetailRow
-          label={t.hours.outsideWorkTime}
-          value={
-            daySheet.outsideSec > 0
-              ? formatDuration(daySheet.outsideSec)
-              : t.common.dash
-          }
+          label={t.hours.objects}
+          value={objectsLabel}
           dotClassName="bg-text-dim"
         />
       </dl>
     </section>
   );
+}
+
+/** Названия объектов дня без повторов, через кому; ни одной записи — тире. */
+function objectsSummary(
+  entries: readonly WorkEntry[],
+  siteNameById: ReadonlyMap<string, string>,
+): string {
+  if (entries.length === 0) {
+    return t.common.dash;
+  }
+
+  const names = new Set(
+    entries.map((entry) =>
+      entry.site_id ? (siteNameById.get(entry.site_id) ?? t.hours.noObject) : t.hours.noObject,
+    ),
+  );
+
+  return Array.from(names).join(", ");
 }
 
 function DetailRow({
@@ -57,7 +87,9 @@ function DetailRow({
         />
         <span className="truncate">{label}</span>
       </dt>
-      <dd className="tabular shrink-0 text-[15px] font-bold">{value}</dd>
+      <dd className="tabular shrink-0 max-w-[55%] truncate text-right text-[15px] font-bold">
+        {value}
+      </dd>
     </div>
   );
 }

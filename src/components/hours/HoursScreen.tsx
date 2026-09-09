@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { addDays, addMonths, addWeeks, endOfWeek, startOfWeek } from "date-fns";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { addDays, addMonths, addWeeks, eachDayOfInterval, endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
 import { CalendarDays } from "lucide-react";
 
 import { DayActions } from "@/components/hours/DayActions";
 import { DayDetailsCard } from "@/components/hours/DayDetailsCard";
+import { DayEntriesCard } from "@/components/hours/DayEntriesCard";
 import { DaySummaryCard } from "@/components/hours/DaySummaryCard";
-import { DayTimelineCard } from "@/components/hours/DayTimelineCard";
 import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
@@ -24,13 +24,13 @@ import {
 } from "@/components/ui/popover";
 import { formatDateFull, formatDayMonth } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import {
-  daySheet,
-  monthSummary,
-  weekSummary,
-} from "@/lib/mock/timesheet";
-import { TODAY } from "@/lib/mock/user";
-import type { WorkStatus } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import type { Profile } from "@/modules/auth/session";
+import { getEntriesForDate, getEntriesInRange, getOpenEntry } from "@/modules/entries/queries";
+import { aggregateDay, buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
+import type { WorkEntry } from "@/modules/entries/types";
+import type { Site } from "@/modules/sites/queries";
+import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 
 type Period = "day" | "week" | "month";
@@ -40,10 +40,6 @@ const PERIOD_OPTIONS: readonly SegmentedOption<Period>[] = [
   { value: "week", label: t.hours.tabs.week },
   { value: "month", label: t.hours.tabs.month },
 ];
-
-/** Время последней отметки на таймлайне — им закрывается день. */
-const NOW_TIME =
-  daySheet.timeline.find((point) => point.kind === "now")?.time ?? "14:00";
 
 /** Заголовок навигатора: день, диапазон недели или месяц с годом. */
 function getPeriodTitle(period: Period, date: Date): string {
@@ -61,44 +57,158 @@ function getPeriodTitle(period: Period, date: Date): string {
   return `${t.months.nominative[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+interface HoursScreenProps {
+  profile: Profile;
+  sites: readonly Site[];
+  /** Сегодняшняя дата и данные по ней — с сервера, чтобы первый экран не мигал пустотой. */
+  initialDate: string;
+  initialEntries: readonly WorkEntry[];
+  initialOpenEntry: WorkEntry | null;
+}
+
 /**
- * Экран «Години». Стрелки навигатора и календарь листают период визуально —
- * данные остаются моковыми, это допущение UI-фазы.
+ * Экран «Години». Данные читает браузерный клиент Supabase при каждой смене
+ * периода/даты — офлайн-кеша (модуль `sync`) пока нет, это этап 5.
  */
-export function HoursScreen() {
+export function HoursScreen({
+  profile,
+  sites,
+  initialDate,
+  initialEntries,
+  initialOpenEntry,
+}: HoursScreenProps) {
+  const supabase = useMemo(() => createClient(), []);
+  const siteNameById = useMemo(
+    () => new Map(sites.map((site) => [site.id, site.name] as const)),
+    [sites],
+  );
+
   const [period, setPeriod] = useState<Period>("day");
-  const [date, setDate] = useState<Date>(TODAY);
+  const [date, setDate] = useState<Date>(() => new Date(`${initialDate}T00:00:00`));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [status, setStatus] = useState<WorkStatus>(daySheet.status);
-  const [endAt, setEndAt] = useState<string | null>(daySheet.endAt);
+
+  const [dayEntries, setDayEntries] = useState<readonly WorkEntry[]>(initialEntries);
+  const [rangeEntries, setRangeEntries] = useState<readonly WorkEntry[]>([]);
+  const [openEntry, setOpenEntry] = useState<WorkEntry | null>(initialOpenEntry);
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  // Таймер большой цифры на «Дне» тикает раз в секунду, но только пока
+  // вкладка открыта — иначе смысла в интервале нет.
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    if (period !== "day") return;
+
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, [period]);
+
+  const todayKey = dateKeyOf(new Date());
+  const isToday = dateKeyOf(date) === todayKey;
+
+  // Открытую смену держим отдельно от «дня»: она может быть заведена под
+  // вчерашней датой (ночная смена, ещё не завершена) и не попасть в список
+  // записей за сегодня, но кнопки на этом экране всё равно должны её видеть.
+  useEffect(() => {
+    let cancelled = false;
+
+    getOpenEntry(supabase, profile.id)
+      .then((entry) => {
+        if (!cancelled) setOpenEntry(entry);
+      })
+      .catch(() => {
+        // Сеть моргнула — старое значение openEntry остаётся на экране.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, profile.id, refreshToken]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const key = dateKeyOf(date);
+
+    if (period === "day") {
+      getEntriesForDate(supabase, profile.id, key)
+        .then((entries) => {
+          if (!cancelled) setDayEntries(entries);
+        })
+        .catch(() => {});
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const from = period === "week" ? startOfWeek(date, { locale: ukLocale }) : startOfMonth(date);
+    const to = period === "week" ? endOfWeek(date, { locale: ukLocale }) : endOfMonth(date);
+
+    getEntriesInRange(supabase, profile.id, dateKeyOf(from), dateKeyOf(to))
+      .then((entries) => {
+        if (!cancelled) setRangeEntries(entries);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, profile.id, period, date, refreshToken]);
+
+  const handleChanged = useCallback(() => {
+    setRefreshToken((token) => token + 1);
+  }, []);
 
   const shiftPeriod = (direction: 1 | -1) => {
     setDate((current) => {
-      if (period === "day") {
-        return addDays(current, direction);
-      }
-
-      return period === "week"
-        ? addWeeks(current, direction)
-        : addMonths(current, direction);
+      if (period === "day") return addDays(current, direction);
+      return period === "week" ? addWeeks(current, direction) : addMonths(current, direction);
     });
   };
 
-  const toggleWork = () => {
-    if (status === "completed") {
-      setStatus("in_progress");
-      setEndAt(null);
+  const dayAggregate = useMemo(
+    () => aggregateDay(dayEntries, now),
+    [dayEntries, now],
+  );
 
-      return;
-    }
+  const weekSummary = useMemo(() => {
+    if (period !== "week") return null;
 
-    setStatus("completed");
-    setEndAt(NOW_TIME);
-  };
+    const from = startOfWeek(date, { locale: ukLocale });
+    const days = eachDayOfInterval({ start: from, end: endOfWeek(date, { locale: ukLocale }) });
+    const slots: DaySlot[] = days.map((day) => ({
+      date: dateKeyOf(day),
+      label: t.weekdays.short[day.getDay()],
+      isOffDay: day.getDay() === 0 || day.getDay() === 6,
+    }));
 
-  const togglePause = () => {
-    setStatus((current) => (current === "paused" ? "in_progress" : "paused"));
-  };
+    return buildPeriodSummary(
+      getPeriodTitle("week", date),
+      5 * profile.daily_norm_minutes,
+      slots,
+      rangeEntries,
+    );
+  }, [period, date, rangeEntries, profile.daily_norm_minutes]);
+
+  const monthSummary = useMemo(() => {
+    if (period !== "month") return null;
+
+    const from = startOfMonth(date);
+    const days = eachDayOfInterval({ start: from, end: endOfMonth(date) });
+    const slots: DaySlot[] = days.map((day) => ({
+      date: dateKeyOf(day),
+      label: String(day.getDate()).padStart(2, "0"),
+      isOffDay: day.getDay() === 0 || day.getDay() === 6,
+    }));
+    const workDays = days.filter((day) => day.getDay() !== 0 && day.getDay() !== 6).length;
+
+    return buildPeriodSummary(
+      getPeriodTitle("month", date),
+      workDays * profile.daily_norm_minutes,
+      slots,
+      rangeEntries,
+    );
+  }, [period, date, rangeEntries, profile.daily_norm_minutes]);
 
   return (
     <div className="pb-6">
@@ -159,21 +269,28 @@ export function HoursScreen() {
 
         {period === "day" && (
           <div className="mt-3 space-y-3">
-            <DaySummaryCard status={status} endAt={endAt} />
-            <DayTimelineCard />
-            <DayDetailsCard />
-            <DayActions
-              className="pt-1"
-              status={status}
-              onToggleWork={toggleWork}
-              onTogglePause={togglePause}
+            <DaySummaryCard aggregate={dayAggregate} />
+            <DayEntriesCard entries={dayEntries} siteNameById={siteNameById} now={now} />
+            <DayDetailsCard
+              aggregate={dayAggregate}
+              entries={dayEntries}
+              siteNameById={siteNameById}
             />
+            {isToday && (
+              <DayActions
+                className="pt-1"
+                openEntry={openEntry}
+                onChanged={handleChanged}
+              />
+            )}
           </div>
         )}
 
-        {period === "week" && <PeriodView className="mt-3" summary={weekSummary} />}
+        {period === "week" && weekSummary && (
+          <PeriodView className="mt-3" summary={weekSummary} />
+        )}
 
-        {period === "month" && (
+        {period === "month" && monthSummary && (
           <PeriodView className="mt-3" summary={monthSummary} labelEvery={5} />
         )}
       </div>

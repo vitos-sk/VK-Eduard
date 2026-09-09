@@ -11,21 +11,24 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { t } from "@/lib/i18n";
-import { objects } from "@/lib/mock/objects";
+import { gradientForId } from "@/lib/siteGradient";
+import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
 
 interface ObjectPickerDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  sites: readonly Site[];
   /** Выбранный объект или `null`, пока он не указан. */
   value: string | null;
-  onSelect: (objectId: string) => void;
+  onSelect: (siteId: string) => void;
 }
 
-/** Нижний лист со списком всех объектов — выбор для поля «Об'єкт». */
+/** Нижний лист со списком объектов компании — выбор для поля «Об'єкт». */
 export function ObjectPickerDrawer({
   open,
   onOpenChange,
+  sites,
   value,
   onSelect,
 }: ObjectPickerDrawerProps) {
@@ -47,15 +50,15 @@ export function ObjectPickerDrawer({
         </DrawerHeader>
 
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-1 pb-1">
-          {objects.map((object) => {
-            const isActive = object.id === value;
+          {sites.map((site) => {
+            const isActive = site.id === value;
 
             return (
               <button
-                key={object.id}
+                key={site.id}
                 type="button"
                 onClick={() => {
-                  onSelect(object.id);
+                  onSelect(site.id);
                   onOpenChange(false);
                 }}
                 className={cn(
@@ -67,18 +70,14 @@ export function ObjectPickerDrawer({
                     : "border-border bg-surface-2",
                 )}
               >
-                <Thumb
-                  name={object.name}
-                  gradient={object.gradient}
-                  size="sm"
-                />
+                <Thumb name={site.name} gradient={gradientForId(site.id)} size="sm" />
 
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-bold">
-                    {object.name}
+                    {site.name}
                   </span>
                   <span className="mt-0.5 block truncate text-[13px] font-medium text-text-muted">
-                    {object.address}
+                    {site.address ?? t.common.dash}
                   </span>
                 </span>
 

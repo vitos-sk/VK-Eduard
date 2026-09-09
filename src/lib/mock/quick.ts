@@ -2,9 +2,14 @@ import { t } from "@/lib/i18n";
 import type { QuickAction } from "@/lib/types";
 
 /**
- * Пять пунктов листа быстрых действий (кнопка «+»), раздел 6, шаг 10 плана.
+ * Четыре пункта листа быстрых действий (кнопка «+»).
  * `accent` — цвет иконки: токен темы или HEX из таблицы шага.
- * `href: null` означает действие без своего экрана — по нему показывается тост.
+ * `href: null` означает действие без своего экрана — обрабатывается на месте
+ * (старт/стоп смены и перерыва пишут прямо в базу, см. `QuickActionSheet`).
+ *
+ * Отдельного пункта «Дорога / Поза об'єктом» больше нет: в форме ручного
+ * ввода объект и так необязателен (`site_id = null`) — второй пункт,
+ * ведущий туда же с другой подписью, только путал бы.
  */
 export const quickActions: readonly QuickAction[] = [
   {
@@ -27,13 +32,6 @@ export const quickActions: readonly QuickAction[] = [
     description: t.quick.startBreak.description,
     accent: "var(--warning)",
     href: null,
-  },
-  {
-    id: "outside",
-    title: t.quick.outside.title,
-    description: t.quick.outside.description,
-    accent: "var(--success)",
-    href: "/time/manual?type=outside",
   },
   {
     id: "create_report",

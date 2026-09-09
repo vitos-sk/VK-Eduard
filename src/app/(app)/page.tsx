@@ -5,11 +5,14 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { fmt, formatDateLong } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { homeObjects } from "@/lib/mock/objects";
-import { TODAY } from "@/lib/mock/user";
+import { createClient } from "@/lib/supabase/server";
 import { initialsOf, requireProfile } from "@/modules/auth/session";
+import { getOpenEntry } from "@/modules/entries/queries";
 
 export default async function HomePage() {
   const profile = await requireProfile();
+  const supabase = await createClient();
+  const openEntry = await getOpenEntry(supabase, profile.id);
 
   return (
     <div className="px-4 pb-6">
@@ -20,11 +23,11 @@ export default async function HomePage() {
           {fmt(t.home.greeting, { name: profile.full_name })}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-text-muted">
-          {formatDateLong(TODAY)}
+          {formatDateLong(new Date())}
         </p>
       </div>
 
-      <WorkTimeCard className="mt-5" />
+      <WorkTimeCard className="mt-5" openEntry={openEntry} />
 
       <SectionHeader
         className="mt-6"

@@ -1,16 +1,10 @@
 "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import {
-  Car,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  FileText,
-  Pause,
-  Play,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, FileText, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -21,6 +15,8 @@ import {
 } from "@/components/ui/drawer";
 import { t } from "@/lib/i18n";
 import { quickActions } from "@/lib/mock/quick";
+import { startCurrentBreak, startShift } from "@/modules/entries/actions";
+import { dateKeyOf, hhmmOf } from "@/modules/time/calc";
 import type { QuickAction, QuickActionId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -29,15 +25,7 @@ const icons: Record<QuickActionId, LucideIcon> = {
   manual_time: Clock,
   start_work: Play,
   start_break: Pause,
-  outside: Car,
   create_report: FileText,
-};
-
-/** Тост для пунктов, у которых нет своего экрана. */
-const toastMessages: Partial<Record<QuickActionId, string>> = {
-  start_work: t.quick.workStarted,
-  start_break: t.quick.breakStarted,
-  create_report: t.common.comingSoon,
 };
 
 interface QuickActionSheetProps {
@@ -46,18 +34,40 @@ interface QuickActionSheetProps {
 }
 
 /**
- * Нижний лист по кнопке «+»: пять быстрых действий.
+ * Нижний лист по кнопке «+»: быстрые действия. «Почати роботу» и «Почати
+ * перерву» пишут в базу прямо отсюда — независимо от того, какой экран
+ * открыт (лист доступен с любой вкладки).
  * Закрывают свайп вниз, стрелка «назад», тап вне листа и повторный тап по FAB;
  * таб-бар остаётся видимым под листом.
  */
 export function QuickActionSheet({ open, onOpenChange }: QuickActionSheetProps) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
   const handleAction = (action: QuickAction) => {
     onOpenChange(false);
 
-    const message = toastMessages[action.id];
+    if (action.id === "create_report") {
+      toast(t.common.comingSoon);
+      return;
+    }
 
-    if (message) {
-      toast(message);
+    if (action.id === "start_work" || action.id === "start_break") {
+      startTransition(async () => {
+        const now = new Date();
+        const result =
+          action.id === "start_work"
+            ? await startShift(null, dateKeyOf(now), hhmmOf(now))
+            : await startCurrentBreak(hhmmOf(now));
+
+        if (result.error) {
+          toast(result.error);
+          return;
+        }
+
+        toast(action.id === "start_work" ? t.quick.workStarted : t.quick.breakStarted);
+        router.refresh();
+      });
     }
   };
 

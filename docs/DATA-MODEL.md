@@ -1,8 +1,10 @@
 # Модель данных
 
-Схема Supabase. **Применена** на этапе 2: `supabase/migrations/0001_init.sql`
-и `0002_private_rls_helpers.sql`. Дальнейшие изменения — новой миграцией,
-а не правкой этого файла и не руками в дашборде.
+Схема Supabase. **Применена**: `0001_init.sql` и `0002_private_rls_helpers.sql`
+на этапе 2, `0003_allow_open_break.sql` — на этапе 3, когда реальная проверка
+потока «старт → перерва → стоп» вскрыла, что `break_pair` был слишком строгим
+(подробности в его комментарии и в docs/ROADMAP.md). Дальнейшие изменения —
+новой миграцией, а не правкой этого файла и не руками в дашборде.
 
 Два отличия применённого SQL от черновика ниже:
 хелперы `current_company_id()` и `is_boss()` живут в схеме `private`, а не в `public`
@@ -221,7 +223,10 @@ create table work_entries (
   ) stored,
 
   -- перерыв обязан быть парным
-  constraint break_pair check ((break_start is null) = (break_end is null)),
+  -- break_start без break_end — законное состояние «перерва триває».
+  -- Запрещён только обратный случай: break_end без break_start.
+  -- (Правлено миграцией 0003 — так было не с первой попытки, см. её комментарий.)
+  constraint break_pair check (break_start is not null or break_end is null),
 
   -- защита от опечатки: смена от 1 минуты до 18 часов
   constraint duration_sane check (

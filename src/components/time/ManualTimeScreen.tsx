@@ -1,87 +1,85 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays, ChevronRight, Clock, Info, MapPin } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, Info } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { Thumb } from "@/components/shared/Thumb";
-import { EntryTypeSelector } from "@/components/time/EntryTypeSelector";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
-import { PhotoPicker } from "@/components/time/PhotoPicker";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { fmt, formatDateShort, minutesBetween } from "@/lib/format";
+import { formatDateShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { getObjectById } from "@/lib/mock/objects";
-import { TODAY } from "@/lib/mock/user";
-import type { TimeEntryKind } from "@/lib/types";
+import { gradientForId } from "@/lib/siteGradient";
+import { createManualEntry } from "@/modules/entries/actions";
+import type { Site } from "@/modules/sites/queries";
+import {
+  isDurationValid,
+  minutesBetweenWrapped,
+  dateKeyOf,
+} from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
-
-/** Больше шести фото к записи не прикрепляем — счётчик «0/6» на макете. */
-const MAX_PHOTOS = 6;
 
 /** Значения по умолчанию — те же, что на макете. */
 const DEFAULT_START = "13:30";
 const DEFAULT_END = "16:00";
 
 interface ManualTimeScreenProps {
-  /** Предвыбранный тип записи: `outside` приходит из `?type=outside`. */
-  defaultKind: TimeEntryKind;
+  sites: readonly Site[];
 }
 
-/**
- * Экран «Додати час вручну». Форма живёт в локальном стейте:
- * «Зберегти запис» показывает тост и возвращает на «Години», никуда не сохраняя.
- */
-export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
+/** Экран «Додати час вручну» — форма пишет закрытую запись прямо в базу. */
+export function ManualTimeScreen({ sites }: ManualTimeScreenProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const [kind, setKind] = useState<TimeEntryKind>(defaultKind);
-  const [objectId, setObjectId] = useState<string | null>(null);
-  const [date, setDate] = useState<Date>(TODAY);
+  const [siteId, setSiteId] = useState<string | null>(null);
+  const [date, setDate] = useState<Date>(() => new Date());
   const [startAt, setStartAt] = useState(DEFAULT_START);
   const [endAt, setEndAt] = useState(DEFAULT_END);
   const [description, setDescription] = useState("");
-  const [photos, setPhotos] = useState<readonly string[]>([]);
-  const [withGeolocation, setWithGeolocation] = useState(false);
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const selectedObject = objectId ? getObjectById(objectId) : undefined;
+  const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
-  const durationMin = minutesBetween(startAt, endAt);
-  const isValid = durationMin > 0;
+  // Переход через полночь — не ошибка: 22:00 → 06:00 это нічна зміна
+  // (docs/DATA-MODEL.md), поэтому длительность считаем «завёрнутой».
+  const durationMin = minutesBetweenWrapped(startAt, endAt);
+  const isValid = isDurationValid(durationMin);
   const durationLabel = isValid
-    ? fmt(t.manualTime.durationValue, {
-        hours: Math.floor(durationMin / 60),
-        minutes: durationMin % 60,
-      })
+    ? `${Math.floor(durationMin / 60)} год ${durationMin % 60} хв`
     : t.common.dash;
 
-  const addPhoto = () => {
-    setPhotos((current) =>
-      current.length >= MAX_PHOTOS
-        ? current
-        : [...current, `photo-${Date.now()}`],
-    );
-  };
-
-  const removePhoto = (id: string) => {
-    setPhotos((current) => current.filter((photo) => photo !== id));
-  };
-
   const handleSubmit = () => {
-    toast(t.manualTime.saved);
-    router.push("/hours");
+    startTransition(async () => {
+      const result = await createManualEntry({
+        workDate: dateKeyOf(date),
+        siteId,
+        startedAt: startAt,
+        endedAt: endAt,
+        breakStart: null,
+        breakEnd: null,
+        description,
+      });
+
+      if (result.error) {
+        toast(result.error);
+        return;
+      }
+
+      toast(t.manualTime.saved);
+      router.push("/hours");
+      router.refresh();
+    });
   };
 
   return (
@@ -94,10 +92,6 @@ export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
           {t.manualTime.hint}
         </p>
 
-        <Field label={t.manualTime.entryType}>
-          <EntryTypeSelector value={kind} onChange={setKind} />
-        </Field>
-
         <Field label={t.manualTime.objectLabel}>
           <button
             type="button"
@@ -108,19 +102,19 @@ export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
             )}
           >
-            {selectedObject ? (
+            {selectedSite ? (
               <>
                 <Thumb
-                  name={selectedObject.name}
-                  gradient={selectedObject.gradient}
+                  name={selectedSite.name}
+                  gradient={gradientForId(selectedSite.id)}
                   size="sm"
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-bold">
-                    {selectedObject.name}
+                    {selectedSite.name}
                   </span>
                   <span className="mt-0.5 block truncate text-[13px] font-medium text-text-muted">
-                    {selectedObject.address}
+                    {selectedSite.address ?? t.common.dash}
                   </span>
                 </span>
               </>
@@ -198,11 +192,7 @@ export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
         <div>
           <div className="grid grid-cols-2 gap-3">
             <Field label={t.manualTime.start}>
-              <TimeInput
-                value={startAt}
-                onChange={setStartAt}
-                invalid={!isValid}
-              />
+              <TimeInput value={startAt} onChange={setStartAt} invalid={!isValid} />
             </Field>
 
             <Field label={t.manualTime.finish}>
@@ -212,7 +202,7 @@ export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
 
           {!isValid && (
             <p className="mt-2 text-[13px] font-medium text-danger">
-              {t.manualTime.errorEndBeforeStart}
+              {t.manualTime.errorDuration}
             </p>
           )}
         </div>
@@ -231,35 +221,10 @@ export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
           />
         </Field>
 
-        <PhotoPicker
-          photos={photos}
-          max={MAX_PHOTOS}
-          onAdd={addPhoto}
-          onRemove={removePhoto}
-        />
-
-        <Field label={t.manualTime.geolocation}>
-          <label className="flex min-h-[60px] w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-4">
-            <MapPin
-              className="size-5 shrink-0 text-text-muted"
-              strokeWidth={2}
-              aria-hidden
-            />
-            <span className="min-w-0 flex-1 text-[15px] font-medium text-text">
-              {t.manualTime.addGeolocation}
-            </span>
-            <Switch
-              checked={withGeolocation}
-              onCheckedChange={setWithGeolocation}
-              className="h-6 w-11 [&>[data-slot=switch-thumb]]:size-5"
-            />
-          </label>
-        </Field>
-
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!isValid}
+          disabled={!isValid || isPending}
           className={cn(
             "flex h-[56px] w-full items-center justify-center rounded-[14px]",
             "bg-brand text-[15px] font-bold text-brand-ink",
@@ -275,8 +240,9 @@ export function ManualTimeScreen({ defaultKind }: ManualTimeScreenProps) {
       <ObjectPickerDrawer
         open={isObjectPickerOpen}
         onOpenChange={setIsObjectPickerOpen}
-        value={objectId}
-        onSelect={setObjectId}
+        sites={sites}
+        value={siteId}
+        onSelect={setSiteId}
       />
     </div>
   );

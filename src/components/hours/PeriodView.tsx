@@ -1,10 +1,10 @@
-import { formatHoursShort, toDateKey } from "@/lib/format";
+import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { TODAY } from "@/lib/mock/user";
+import { dateKeyOf } from "@/modules/time/calc";
 import type { PeriodSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const TODAY_KEY = toDateKey(TODAY);
+const TODAY_KEY = dateKeyOf(new Date());
 
 interface PeriodViewProps {
   summary: PeriodSummary;

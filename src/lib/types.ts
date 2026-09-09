@@ -1,6 +1,7 @@
 /**
- * Общие типы приложения. UI-фаза: данных с сервера нет,
- * всё это описывает форму моков из `src/lib/mock/`.
+ * Общие типы приложения. Часть всё ещё описывает форму моков из
+ * `src/lib/mock/` (объекты, отчёты — этапы 4 и 6); `PeriodBar`/`PeriodSummary`
+ * уже реальные — их строит `modules/entries/period.ts` из базы.
  */
 
 /** Статус объекта, отчёта или рабочего дня. Справочник — раздел 3.4 плана. */
@@ -49,54 +50,6 @@ export interface ReportGroup {
   reports: readonly Report[];
 }
 
-/** Тип записи времени: работа на объекте или вне его (дорога и т.п.). */
-export type TimeEntryKind = "on_site" | "outside";
-
-/** Одна запись рабочего времени. */
-export interface TimeEntry {
-  id: string;
-  kind: TimeEntryKind;
-  /** Дата в формате `YYYY-MM-DD`. */
-  date: string;
-  /** `HH:mm`. */
-  startAt: string;
-  /** `HH:mm`, `null` пока запись не закрыта. */
-  endAt: string | null;
-  /** Длительность в минутах. */
-  durationMin: number;
-  objectId: string | null;
-  description: string | null;
-}
-
-/** Рабочий день целиком — сводка для экрана «Години», вкладка «День». */
-export interface DaySheet {
-  /** Дата в формате `YYYY-MM-DD`. */
-  date: string;
-  status: WorkStatus;
-  /** `HH:mm`. */
-  startAt: string;
-  /** `HH:mm`, `null` пока день не завершён. */
-  endAt: string | null;
-  /** Отработано, в секундах. */
-  workedSec: number;
-  /** Перерыв, в секундах. */
-  breakSec: number;
-  /** Время вне рабочего времени, в секундах. */
-  outsideSec: number;
-  /** Когда обновлены данные, `HH:mm`. */
-  updatedAt: string;
-  /** Точки таймлайна «Графік робочого дня». */
-  timeline: readonly TimelinePoint[];
-}
-
-/** Отметка на таймлайне рабочего дня. */
-export interface TimelinePoint {
-  /** `HH:mm`. */
-  time: string;
-  label: string;
-  kind: "start" | "break" | "now" | "end";
-}
-
 /** Один день в столбчатой диаграмме за неделю или месяц. */
 export interface PeriodBar {
   /** Дата в формате `YYYY-MM-DD`. */
@@ -129,7 +82,6 @@ export type QuickActionId =
   | "manual_time"
   | "start_work"
   | "start_break"
-  | "outside"
   | "create_report";
 
 /** Пункт листа быстрых действий. */
