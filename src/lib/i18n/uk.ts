@@ -11,9 +11,9 @@
 export const uk = {
   /** Общее: кнопки и подписи, которые встречаются на разных экранах. */
   common: {
-    appName: "K work",
-    /** Слово рядом со знаком в логотипе: знак «K» + «work.». */
-    appWordmark: "work",
+    appName: "K group",
+    /** Слово рядом со знаком в логотипе: знак «K» + «group.». */
+    appWordmark: "group",
     cancel: "Скасувати",
     save: "Зберегти",
     back: "Назад",

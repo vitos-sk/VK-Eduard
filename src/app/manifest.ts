@@ -24,8 +24,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#142611",
-    theme_color: "#142611",
+    background_color: "#0d2b08",
+    theme_color: "#0d2b08",
     categories: ["business", "productivity"],
     /**
      * `any` и `maskable` — разные картинки, а не одна с двумя целями:

@@ -15,7 +15,7 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: t.common.appName,
   applicationName: t.common.appName,
-  description: "Облік робочого часу та звітів для співробітників K work",
+  description: "Облік робочого часу та звітів для співробітників K group",
   // Ярлык на домашнем экране. `apple-touch-icon` лежит в корне `public/`,
   // а не в `app/`: iOS запрашивает `/apple-touch-icon.png` напрямую,
   // не дожидаясь разметки, — так иконка находится в любом случае.
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#142611",
+  themeColor: "#0d2b08",
   viewportFit: "cover",
   width: "device-width",
   initialScale: 1,

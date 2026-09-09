@@ -20,17 +20,19 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC = path.join(ROOT, "public");
 
 /** Цвета берём из `globals.css` — они не должны разъезжаться с темой. */
-const BG = "#142611";
+const BG = "#0d2b08";
 const BRAND = "#f5c43c";
 const INK = "#ffffff";
 
-/** Знак `K` в системе координат 100×100 и его реальный bbox внутри неё. */
+/**
+ * Знак `K` в системе координат 100×100 — те же path, что в `Logo.tsx`,
+ * и его bbox (низ срезан по диагонали, поэтому высота не ровно 100).
+ */
 const MARK_PATHS = [
-  { d: "M4 6h22v88H4z", fill: INK },
-  { d: "M30 50 74 6h24L50 54z", fill: INK },
-  { d: "M46 58 96 94H58L34 74z", fill: BRAND },
+  { d: "M0 0h32.6v36.9L68.4 0H100v17.1L24.6 98.4H0Z", fill: INK },
+  { d: "M71.1 69.5 98.4 98.4H46Z", fill: BRAND },
 ];
-const MARK_BOX = { x: 4, y: 6, w: 94, h: 88 };
+const MARK_BOX = { x: 0, y: 0, w: 100, h: 98.4 };
 
 /**
  * SVG со знаком по центру холста `w × h`.
