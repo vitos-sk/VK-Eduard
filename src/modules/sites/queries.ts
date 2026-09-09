@@ -22,3 +22,37 @@ export async function getActiveSites(
 
   return data ?? [];
 }
+
+/**
+ * Все объекты компании, включая архивные — для списка «Об'єкти» и подписи
+ * названия в истории записей. Архивный объект пропадает из выбора при
+ * создании новой записи, но не должен пропадать из уже случившейся истории.
+ */
+export async function getAllSites(
+  supabase: SupabaseClient<Database>,
+): Promise<Site[]> {
+  const { data, error } = await supabase
+    .from("sites")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+
+  return data ?? [];
+}
+
+/** Один объект по id — для детальной страницы `/objects/[id]`. */
+export async function getSiteById(
+  supabase: SupabaseClient<Database>,
+  id: string,
+): Promise<Site | null> {
+  const { data, error } = await supabase
+    .from("sites")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data;
+}

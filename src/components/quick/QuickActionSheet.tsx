@@ -47,11 +47,6 @@ export function QuickActionSheet({ open, onOpenChange }: QuickActionSheetProps) 
   const handleAction = (action: QuickAction) => {
     onOpenChange(false);
 
-    if (action.id === "create_report") {
-      toast(t.common.comingSoon);
-      return;
-    }
-
     if (action.id === "start_work" || action.id === "start_break") {
       startTransition(async () => {
         const now = new Date();

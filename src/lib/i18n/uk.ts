@@ -113,6 +113,15 @@ export const uk = {
     reportsCount: "{n} звіти",
     emptyTitle: "Об'єктів немає",
     emptyHint: "Тут з'являться майданчики, до яких вас призначать",
+    /** Детальна сторінка `/objects/[id]`. */
+    detail: {
+      kind: "Вид робіт",
+      address: "Адреса",
+      totalWorked: "Відпрацьовано всього",
+      myReports: "Мої звіти тут",
+      emptyTitle: "Ви ще не працювали на цьому об'єкті",
+      emptyHint: "Звіти з'являться тут, щойно ви відмітите час на цьому об'єкті",
+    },
   },
 
   /** Экран «Години». */
@@ -164,24 +173,66 @@ export const uk = {
     title: "Звіти",
     searchPlaceholder: "Пошук звіту...",
     createReport: "Створити звіт",
+    /** REPORTS.md, раздел 2: не статуси и не групувальні вкладки, а фільтр по вмісту. */
     tabs: {
       all: "Усі",
-      inProgress: "В роботі",
-      completed: "Завершені",
-    },
-    sort: {
-      label: "За датою",
-      byDate: "За датою",
-      byObject: "За об'єктом",
-      byStatus: "За статусом",
+      noDescription: "Без опису",
+      withPhoto: "З фото",
     },
     today: "Сьогодні",
     yesterday: "Вчора",
     reportsCount: "{n} звітів",
-    commentsCount: "{n} коментарі",
     photosCount: "{n} фото",
-    emptyTitle: "Звітів немає",
+    /**
+     * Сводка над списком по видимій вибірці (REPORTS.md, раздел 3) —
+     * не завжди «цей тиждень», список за замовчуванням показує всю історію,
+     * тому підпис навмисно нейтральний, а не прив'язаний до періоду.
+     */
+    periodSummary: "Показано у списку",
+    ongoingSince: "з {time}",
+    noDescriptionBadge: "Без опису",
+    addDescription: "Дописати",
+    emptyTitle: "Ще немає звітів",
     emptyHint: "Створіть перший звіт по виконаній роботі",
+    emptyFilterTitle: "Нічого не знайдено",
+    emptyFilterHint: "Спробуйте змінити фільтри або пошуковий запит",
+    /** Фільтр «Без опису» нічого не знайшов — це нагорода, а не порожнеча. */
+    emptyNoDescriptionTitle: "Усі звіти заповнені 👍",
+  },
+
+  /** Детальна сторінка `/reports/[id]`. */
+  reportDetail: {
+    backTitle: "Звіт",
+    edit: "Редагувати",
+    addDescriptionTitle: "Додати опис",
+    addDescriptionPlaceholder: "Наприклад: Монтаж покрівельної мембрани",
+    save: "Зберегти",
+    saved: "Опис збережено",
+    saveError: "Не вдалося зберегти опис. Спробуйте ще раз",
+    createdBy: "Створив(ла) {name}",
+    worked: "Відпрацьовано",
+    overtime: "Додатково",
+    photosTitle: "Фото",
+    addPhoto: "Додати фото",
+    removePhoto: "Видалити фото",
+    uploading: "Завантаження...",
+    uploadError: "Не вдалося завантажити фото",
+    deletePhotoError: "Не вдалося видалити фото",
+    maxPhotos: "Максимум {max} фото",
+    editWindowClosed: "Минуло більше 7 днів — звертайтеся до шефа",
+  },
+
+  /** Форма `/reports/new` — створення звіту з нуля. */
+  reportForm: {
+    title: "Новий звіт",
+    repeatYesterday: "Повторити останній звіт",
+    breakToggle: "Перерва 1 година",
+    quickDuration: "{hours} год",
+    submit: "Зберегти звіт",
+    saved: "Звіт збережено",
+    photosStepTitle: "Тепер додайте фото",
+    photosStepHint: "Необов'язково, але зі знімками звіт зрозуміліший",
+    done: "Готово",
   },
 
   /** Лист быстрых действий — кнопка «+». */
@@ -238,13 +289,6 @@ export const uk = {
     not_started: "НЕ РОЗПОЧАТО",
     completed: "ЗАВЕРШЕНИЙ",
     paused: "НА ПАУЗІ",
-  },
-
-  /** Виды работ в отчётах. */
-  workKind: {
-    montazh: "Монтаж",
-    uteplennia: "Утеплення",
-    demontazh: "Демонтаж",
   },
 
   /** Единицы времени для коротких форматов. */

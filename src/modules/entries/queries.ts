@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types.gen";
-import type { WorkEntry } from "./types";
+import type { WorkEntry, WorkEntryWithPhotos } from "./types";
 
 type Client = SupabaseClient<Database>;
 
@@ -47,6 +47,44 @@ export async function getEntriesForDate(
   if (error) throw error;
 
   return data ?? [];
+}
+
+/**
+ * Лента «Звіти»: записи автора вместе с их фото, от новых к старым.
+ * Фильтры (Усі / Без опису / З фото), поиск и группировка по датам —
+ * на клиенте, поверх этого одного запроса: масштаб компании (десятки
+ * человек) не требует серверной пагинации на этом этапе.
+ */
+export async function getEntriesFeed(
+  supabase: Client,
+  authorId: string,
+): Promise<WorkEntryWithPhotos[]> {
+  const { data, error } = await supabase
+    .from("work_entries")
+    .select("*, entry_photos(*)")
+    .eq("author_id", authorId)
+    .order("work_date", { ascending: false })
+    .order("started_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []) as WorkEntryWithPhotos[];
+}
+
+/** Одна запись с фото — для детальной страницы `/reports/[id]`. */
+export async function getEntryWithPhotos(
+  supabase: Client,
+  entryId: string,
+): Promise<WorkEntryWithPhotos | null> {
+  const { data, error } = await supabase
+    .from("work_entries")
+    .select("*, entry_photos(*)")
+    .eq("id", entryId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data as WorkEntryWithPhotos | null;
 }
 
 /** Записи автора в диапазоне дат включительно — для сводок «Тиждень» / «Місяць». */

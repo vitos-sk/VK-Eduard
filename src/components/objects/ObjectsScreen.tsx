@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -32,7 +33,11 @@ interface ObjectsScreenProps {
 
 /**
  * Экран «Об'єкти»: фильтр по статусу, поиск по названию и адресу,
- * список площадок. Всё считается на клиенте по мокам.
+ * список площадок — уже настоящих, объекты приходят из базы через страницу.
+ * Фильтр и поиск считаются на клиенте поверх готового списка: масштаб
+ * компании (десятки объектов) этого не замечает.
+ *
+ * Кнопка «+» пока без экрана — создание объектов из интерфейса это этап 6.
  */
 export function ObjectsScreen({ objects }: ObjectsScreenProps) {
   const [filter, setFilter] = useState<ObjectFilter>("all");
@@ -65,6 +70,7 @@ export function ObjectsScreen({ objects }: ObjectsScreenProps) {
         action={
           <button
             type="button"
+            onClick={() => toast(t.common.comingSoon)}
             aria-label={t.objects.addObject}
             className={cn(
               "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",

@@ -1,5 +1,4 @@
-"use client";
-
+import Link from "next/link";
 import { Camera, ChevronRight, FileText } from "lucide-react";
 
 import { MetaRow } from "@/components/shared/MetaRow";
@@ -14,8 +13,6 @@ interface ObjectCardProps {
   object: SiteObject;
   /** Стрелка «›» справа — для списка на экране «Об'єкти». */
   showChevron?: boolean;
-  /** Детальной страницы объекта в этой фазе нет — по умолчанию заглушка. */
-  onClick?: () => void;
   className?: string;
 }
 
@@ -23,13 +20,11 @@ interface ObjectCardProps {
 export function ObjectCard({
   object,
   showChevron = false,
-  onClick = () => {},
   className,
 }: ObjectCardProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      href={`/objects/${object.id}`}
       className={cn(
         "flex w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
         "transition-transform duration-150 active:scale-[0.98]",
@@ -42,7 +37,7 @@ export function ObjectCard({
       <div className="min-w-0 flex-1">
         <p className="truncate text-[17px] font-bold">{object.name}</p>
         <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">
-          {object.address}
+          {object.address || t.common.dash}
         </p>
 
         {/* Статус — в нижней строке: рядом с названием бейдж не оставляет
@@ -73,6 +68,6 @@ export function ObjectCard({
           aria-hidden
         />
       )}
-    </button>
+    </Link>
   );
 }

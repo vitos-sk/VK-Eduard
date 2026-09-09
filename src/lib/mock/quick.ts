@@ -38,6 +38,6 @@ export const quickActions: readonly QuickAction[] = [
     title: t.quick.createReport.title,
     description: t.quick.createReport.description,
     accent: "var(--text-muted)",
-    href: null,
+    href: "/reports/new",
   },
 ];

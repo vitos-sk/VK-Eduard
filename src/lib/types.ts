@@ -1,16 +1,19 @@
 /**
- * Общие типы приложения. Часть всё ещё описывает форму моков из
- * `src/lib/mock/` (объекты, отчёты — этапы 4 и 6); `PeriodBar`/`PeriodSummary`
- * уже реальные — их строит `modules/entries/period.ts` из базы.
+ * Общие типы приложения. Всё здесь строится из реальных данных — моков
+ * в `src/lib/mock/` для этого больше не осталось (остался только `quick.ts`,
+ * список пунктов листа быстрых действий — это конфигурация UI, не данные).
+ * Отчёты («Звіти») не отдельный тип — это те же `work_entries`,
+ * см. `modules/entries/types.ts`.
  */
 
-/** Статус объекта, отчёта или рабочего дня. Справочник — раздел 3.4 плана. */
+/** Статус объекта или рабочего дня. Справочник — раздел 3.4 плана. */
 export type WorkStatus = "in_progress" | "not_started" | "completed" | "paused";
 
-/** Вид выполненных работ в отчёте. */
-export type WorkKind = "montazh" | "uteplennia" | "demontazh";
-
-/** Стройплощадка. */
+/**
+ * Форма стройплощадки для карточки/миниатюры. Строится из строки `sites`
+ * через `modules/sites/present.ts` — `photosCount`/`reportsCount` в базе
+ * не хранятся, это агрегат по своим же записям (`modules/entries/siteStats.ts`).
+ */
 export interface SiteObject {
   id: string;
   name: string;
@@ -20,34 +23,6 @@ export interface SiteObject {
   reportsCount: number;
   /** Пара цветов для градиента в `Thumb`. */
   gradient: readonly [string, string];
-}
-
-/** Отчёт о проделанной работе. */
-export interface Report {
-  id: string;
-  objectId: string;
-  objectName: string;
-  /** Дата в формате `YYYY-MM-DD` — ключ группировки. */
-  date: string;
-  /** Начало интервала, `HH:mm`. */
-  timeFrom: string;
-  /** Конец интервала, `HH:mm`. */
-  timeTo: string;
-  workKinds: readonly WorkKind[];
-  status: WorkStatus;
-  photosCount: number;
-  commentsCount: number;
-}
-
-/**
- * Готовая группа отчётов за одну дату — экран «Звіти» её просто рендерит.
- * `title` уже подставлен: «Сьогодні» / «Вчора» / «27 липня».
- */
-export interface ReportGroup {
-  /** Дата в формате `YYYY-MM-DD`. */
-  date: string;
-  title: string;
-  reports: readonly Report[];
 }
 
 /** Один день в столбчатой диаграмме за неделю или месяц. */

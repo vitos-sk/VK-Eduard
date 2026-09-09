@@ -218,6 +218,11 @@ export interface ManualEntryInput {
   description: string;
 }
 
+export interface CreateManualEntryState extends EntryActionState {
+  /** `id` новой записи — форме «Звіти» он нужен, чтобы сразу прикрепить фото. */
+  entryId: string | null;
+}
+
 /**
  * Ручной ввод смены — всегда уже закрытой (форма требует и начало, и конец).
  * Время здесь вводит сам пользователь в форме — оно однозначно локальное,
@@ -228,15 +233,15 @@ export interface ManualEntryInput {
  */
 export async function createManualEntry(
   input: ManualEntryInput,
-): Promise<EntryActionState> {
+): Promise<CreateManualEntryState> {
   const profile = await getProfile();
 
   if (!profile) {
-    return { error: t.auth.noProfile };
+    return { error: t.auth.noProfile, entryId: null };
   }
 
   if (!isBreakPairValid(input.breakStart, input.breakEnd)) {
-    return { error: t.hours.genericError };
+    return { error: t.hours.genericError, entryId: null };
   }
 
   const worked =
@@ -246,28 +251,69 @@ export async function createManualEntry(
       : 0);
 
   if (!isDurationValid(worked)) {
-    return { error: t.manualTime.errorDuration };
+    return { error: t.manualTime.errorDuration, entryId: null };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("work_entries").insert({
-    client_id: randomUUID(),
-    company_id: profile.company_id,
-    author_id: profile.id,
-    site_id: input.siteId,
-    work_date: input.workDate,
-    started_at: input.startedAt,
-    ended_at: input.endedAt,
-    break_start: input.breakStart,
-    break_end: input.breakEnd,
-    description: input.description,
-    source: "manual",
-  });
+  const { data, error } = await supabase
+    .from("work_entries")
+    .insert({
+      client_id: randomUUID(),
+      company_id: profile.company_id,
+      author_id: profile.id,
+      site_id: input.siteId,
+      work_date: input.workDate,
+      started_at: input.startedAt,
+      ended_at: input.endedAt,
+      break_start: input.breakStart,
+      break_end: input.breakEnd,
+      description: input.description,
+      source: "manual",
+    })
+    .select("id")
+    .single();
 
   if (error) {
     // `ended_at` тут всегда задан, поэтому индекс «одна открытая смена»
     // не участвует — реальная причина отказа почти наверняка не в нём.
-    return { error: t.manualTime.saveError };
+    return { error: t.manualTime.saveError, entryId: null };
+  }
+
+  revalidatePath("/", "layout");
+
+  return { error: null, entryId: data.id };
+}
+
+/**
+ * Дозаполнение описания — «Дописати» на карточці «Без опису» и правка
+ * в детальной странице. RLS сам решает, можно ли: своя запись за последние
+ * 7 дней или что угодно, если шеф.
+ */
+export async function updateEntryDescription(
+  entryId: string,
+  description: string,
+): Promise<EntryActionState> {
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("work_entries")
+    .update({ description })
+    .eq("id", entryId)
+    .select("id");
+
+  if (error) {
+    return { error: t.reportDetail.saveError };
+  }
+
+  // UPDATE, которому RLS не даёт совпасть ни с одной строкой, не ошибка,
+  // а пустой результат — окно правки закрылось, а не «что-то пошло не так».
+  if (!data || data.length === 0) {
+    return { error: t.reportDetail.editWindowClosed };
   }
 
   revalidatePath("/", "layout");
