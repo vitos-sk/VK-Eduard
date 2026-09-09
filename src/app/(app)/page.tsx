@@ -5,16 +5,19 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { fmt, formatDateLong } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { homeObjects } from "@/lib/mock/objects";
-import { TODAY, currentUser } from "@/lib/mock/user";
+import { TODAY } from "@/lib/mock/user";
+import { initialsOf, requireProfile } from "@/modules/auth/session";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const profile = await requireProfile();
+
   return (
     <div className="px-4 pb-6">
-      <HomeHeader />
+      <HomeHeader initials={initialsOf(profile)} />
 
       <div className="mt-6">
         <h1 className="text-[30px] leading-tight font-extrabold tracking-tight">
-          {fmt(t.home.greeting, { name: currentUser.name })}
+          {fmt(t.home.greeting, { name: profile.full_name })}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-text-muted">
           {formatDateLong(TODAY)}

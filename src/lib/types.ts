@@ -9,19 +9,6 @@ export type WorkStatus = "in_progress" | "not_started" | "completed" | "paused";
 /** Вид выполненных работ в отчёте. */
 export type WorkKind = "montazh" | "uteplennia" | "demontazh";
 
-/** Сотрудник, который пользуется приложением. */
-export interface User {
-  id: string;
-  /** Имя для приветствия на главной. */
-  name: string;
-  /** Должность, например «Монтажник». */
-  role: string;
-  /** Инициалы для плейсхолдера аватара. */
-  initials: string;
-  /** Непрочитанные уведомления — счётчик на колокольчике. */
-  unreadCount: number;
-}
-
 /** Стройплощадка. */
 export interface SiteObject {
   id: string;

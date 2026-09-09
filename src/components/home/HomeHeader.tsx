@@ -1,16 +1,26 @@
+import Link from "next/link";
 import { Bell } from "lucide-react";
 
+import { Logo } from "@/components/brand/Logo";
 import { t } from "@/lib/i18n";
-import { currentUser } from "@/lib/mock/user";
 import { cn } from "@/lib/utils";
 
 /**
- * Шапка главной: логотип «K group.» слева,
- * колокольчик со счётчиком непрочитанных и аватар справа.
+ * Шапка главной: логотип «K work.» слева, колокольчик и аватар справа.
  *
- * Экранов уведомлений и профиля в этой фазе нет — кнопки без действия.
+ * `initials` — первая буква имени из профиля. Счётчик непрочитанных убран
+ * вместе с моком: экрана уведомлений нет, а рисовать выдуманное число
+ * рядом с настоящим именем — врать пользователю.
+ *
+ * Аватар ведёт в профиль, экрана уведомлений пока нет — колокольчик без действия.
  */
-export function HomeHeader({ className }: { className?: string }) {
+export function HomeHeader({
+  initials,
+  className,
+}: {
+  initials: string;
+  className?: string;
+}) {
   return (
     <header
       className={cn(
@@ -18,39 +28,23 @@ export function HomeHeader({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="flex items-center gap-2">
-        <span
-          aria-hidden
-          className="flex size-9 items-center justify-center rounded-[10px] bg-brand text-[19px] font-extrabold text-brand-ink"
-        >
-          K
-        </span>
-        <span className="text-[19px] font-extrabold tracking-tight">
-          {t.common.appName}
-          <span className="text-brand">.</span>
-        </span>
-      </div>
+      <Logo size={19} />
 
       <div className="flex items-center gap-2">
         <button
           type="button"
           aria-label={t.common.notifications}
           className={cn(
-            "relative flex size-11 items-center justify-center rounded-full text-text",
+            "flex size-11 items-center justify-center rounded-full text-text",
             "transition-colors duration-150 active:bg-surface-2",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
           )}
         >
           <Bell className="size-6" strokeWidth={2} aria-hidden />
-          {currentUser.unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 flex size-[18px] items-center justify-center rounded-full bg-brand text-[11px] font-bold text-brand-ink">
-              {currentUser.unreadCount}
-            </span>
-          )}
         </button>
 
-        <button
-          type="button"
+        <Link
+          href="/more"
           aria-label={t.common.profile}
           className={cn(
             "flex size-11 items-center justify-center rounded-full border border-border bg-surface-2",
@@ -59,8 +53,8 @@ export function HomeHeader({ className }: { className?: string }) {
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
           )}
         >
-          {currentUser.initials}
-        </button>
+          {initials}
+        </Link>
       </div>
     </header>
   );
