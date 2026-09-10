@@ -45,10 +45,8 @@ export default async function ReportDetailPage({
       entry={entry}
       siteName={site?.name ?? null}
       companyId={profile.company_id}
-      // Автор записи и её зритель — пока всегда один человек: вкладки
-      // «Команда» (этап 6) ещё нет, шеф чужие звіти отсюда не открывает.
-      authorName={profile.full_name}
-      normMinutes={profile.daily_norm_minutes}
+      authorName={entry.author_full_name}
+      normMinutes={entry.author_daily_norm_minutes}
       editable={editable}
       photoUrls={Object.fromEntries(photoUrls)}
     />

@@ -200,6 +200,18 @@ export const uk = {
       noDescription: "Без опису",
       withPhoto: "З фото",
     },
+    /** Верхні вкладки екрана — «Команда» видно тільки boss (REPORTS.md, розділ 4). */
+    screenTabs: {
+      mine: "Мої",
+      team: "Команда",
+    },
+    team: {
+      allWorkers: "Усі працівники",
+      thisWeek: "Цей тиждень: {hours}",
+      export: "Експорт звітів",
+      empty: "У компанії ще немає активних працівників",
+      back: "Команда",
+    },
     today: "Сьогодні",
     yesterday: "Вчора",
     reportsCount: "{n} звітів",

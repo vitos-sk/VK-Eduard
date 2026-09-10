@@ -26,6 +26,7 @@ export default async function ReportsPage() {
 
   return (
     <ReportsScreen
+      profile={profile}
       entries={entries}
       sites={sites}
       thumbUrls={Object.fromEntries(thumbUrls)}
