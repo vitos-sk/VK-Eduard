@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
+import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
 import { PhotoUploader } from "@/components/reports/PhotoUploader";
 import { fmt, formatDateFull, formatDateShort, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -34,6 +37,7 @@ export function ReportDetail({
   editable,
   photoUrls,
 }: ReportDetailProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [description, setDescription] = useState(entry.description);
   const [isEditing, setIsEditing] = useState(description === "");
@@ -67,10 +71,24 @@ export function ReportDetail({
 
       <div className="space-y-4 px-4">
         <section className="rounded-[16px] border border-border bg-surface p-4">
-          <p className="text-[20px] font-bold">{siteName ?? t.hours.noObject}</p>
-          <p className="mt-1 text-[14px] font-medium text-text-muted">
-            {formatDateFull(fromDateKey(entry.work_date))}
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[20px] font-bold">{siteName ?? t.hours.noObject}</p>
+              <p className="mt-1 text-[14px] font-medium text-text-muted">
+                {formatDateFull(fromDateKey(entry.work_date))}
+              </p>
+            </div>
+
+            {editable && !isOngoing && (
+              <Link
+                href={`/time/manual/${entry.id}`}
+                aria-label={t.reportDetail.editTime}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+              >
+                <Pencil className="size-4" strokeWidth={2} aria-hidden />
+              </Link>
+            )}
+          </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
             <TimeCell label={t.hours.start} value={entry.started_at.slice(0, 5)} />
@@ -180,6 +198,16 @@ export function ReportDetail({
         <p className="px-1 text-[13px] font-medium text-text-dim">
           {fmt(t.reportDetail.createdBy, { name: authorName })} · {formatDateShort(new Date(entry.created_at))}
         </p>
+
+        {editable && (
+          <DeleteEntryButton
+            entryId={entry.id}
+            onDeleted={() => {
+              router.push("/reports");
+              router.refresh();
+            }}
+          />
+        )}
       </div>
     </div>
   );

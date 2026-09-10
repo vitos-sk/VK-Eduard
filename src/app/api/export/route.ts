@@ -1,37 +1,39 @@
 import { NextResponse } from "next/server";
 
-import { formatTimeShort, formatWorkDateShort } from "@/lib/format";
+import { formatDateShort, formatTimeShort, formatWorkDateShort, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getCompanyEntryHoursInRange } from "@/modules/entries/queries";
+import { buildCsv } from "@/modules/export/csv";
+import { buildPdf } from "@/modules/export/pdf";
+import type { ExportRow } from "@/modules/export/types";
+import { buildXlsx } from "@/modules/export/xlsx";
 import { getAllSites } from "@/modules/sites/queries";
 
-/** Экранирует поле CSV: кавычки — двойными, оборачивает при спецсимволах. */
-function csvField(value: string): string {
-  if (/[",\r\n;]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
+// exceljs/pdfkit читають файли й працюють з Buffer — потребують Node,
+// не Edge Runtime.
+export const runtime = "nodejs";
 
-  return value;
+const CONTENT_TYPES = {
+  csv: "text/csv; charset=utf-8",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pdf: "application/pdf",
+} as const;
+
+type ExportFormat = keyof typeof CONTENT_TYPES;
+
+function isExportFormat(value: string): value is ExportFormat {
+  return value in CONTENT_TYPES;
 }
 
-const HEADER = [
-  "Дата",
-  "Робітник",
-  "Об'єкт",
-  "Початок",
-  "Кінець",
-  "Перерва (хв)",
-  "Всього (хв)",
-  "Відпрацьовано (хв)",
-  "Додатково (хв)",
-  "Опис",
-  "Фото",
-];
-
 /**
- * CSV за диапазон дат для всієї компанії — ROADMAP.md, етап 6.
+ * Експорт годин за діапазон дат — CSV (як і раніше), Excel .xlsx і
+ * PDF-табель (`docs/ROADMAP.md`, етап 6, доповнений десктоп-адмінкою).
+ * Формат — `?format=`, дефолт `csv` для сумісності зі старими посиланнями.
+ * `?workerId=` звужує вибірку до одного робітника (експорт з картки
+ * робітника в адмінці) — фільтр застосовується вже після RLS-вибірки.
+ *
  * RLS на `entry_hours` сама вирішує обсяг: рядовому робітнику віддасть
  * тільки його зміни, шефу (`is_boss()`) — усі по компанії. Кнопка в
  * інтерфейсі показана тільки шефу, але навіть пряме звернення сюди
@@ -42,6 +44,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
+  const workerId = searchParams.get("workerId");
+  const formatParam = searchParams.get("format") ?? "csv";
 
   if (!from || !to) {
     return NextResponse.json(
@@ -50,44 +54,59 @@ export async function GET(request: Request) {
     );
   }
 
+  if (!isExportFormat(formatParam)) {
+    return NextResponse.json({ error: "Невідомий формат експорту" }, { status: 400 });
+  }
+
   const supabase = await createClient();
 
-  const [rows, sites] = await Promise.all([
+  const [entryHours, sites, company] = await Promise.all([
     getCompanyEntryHoursInRange(supabase, profile.company_id, from, to),
     getAllSites(supabase),
+    supabase.from("companies").select("name").eq("id", profile.company_id).maybeSingle(),
   ]);
 
   const siteNameById = new Map(sites.map((site) => [site.id, site.name] as const));
 
-  const lines = [HEADER.map(csvField).join(",")];
+  const rows: ExportRow[] = entryHours
+    .filter((row) => row.work_date && row.started_at)
+    .filter((row) => !workerId || row.author_id === workerId)
+    .map((row) => ({
+      date: formatWorkDateShort(row.work_date!),
+      worker: row.full_name ?? "",
+      site: row.site_id ? (siteNameById.get(row.site_id) ?? "") : t.hours.noObject,
+      start: formatTimeShort(row.started_at!),
+      end: row.ended_at ? formatTimeShort(row.ended_at) : t.hours.entryOngoing,
+      breakMinutes: row.break_minutes ?? 0,
+      totalMinutes: row.total_minutes,
+      workedMinutes: row.worked_minutes ?? 0,
+      overtimeMinutes: row.overtime_minutes ?? 0,
+      description: row.description ?? "",
+      photoCount: row.photo_count ?? 0,
+    }));
 
-  for (const row of rows) {
-    if (!row.work_date || !row.started_at) continue;
+  const meta = {
+    companyName: company.data?.name ?? "",
+    periodTitle: `${formatDateShort(fromDateKey(from))} – ${formatDateShort(fromDateKey(to))}`,
+  };
 
-    const cells = [
-      formatWorkDateShort(row.work_date),
-      row.full_name ?? "",
-      row.site_id ? (siteNameById.get(row.site_id) ?? "") : t.hours.noObject,
-      formatTimeShort(row.started_at),
-      row.ended_at ? formatTimeShort(row.ended_at) : t.hours.entryOngoing,
-      String(row.break_minutes ?? 0),
-      row.total_minutes === null ? t.hours.entryOngoing : String(row.total_minutes),
-      String(row.worked_minutes ?? 0),
-      String(row.overtime_minutes ?? 0),
-      row.description ?? "",
-      String(row.photo_count ?? 0),
-    ];
+  const fileName = `hours_${from}_${to}.${formatParam}`;
+  const body = await buildExportBody(formatParam, rows, meta);
 
-    lines.push(cells.map(csvField).join(","));
-  }
-
-  // BOM в начале — иначе Excel показывает кириллицу кракозябрами.
-  const csv = "\uFEFF" + lines.join("\r\n");
-
-  return new NextResponse(csv, {
+  return new NextResponse(body, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="hours_${from}_${to}.csv"`,
+      "Content-Type": CONTENT_TYPES[formatParam],
+      "Content-Disposition": `attachment; filename="${fileName}"`,
     },
   });
+}
+
+async function buildExportBody(
+  format: ExportFormat,
+  rows: readonly ExportRow[],
+  meta: { companyName: string; periodTitle: string },
+): Promise<BodyInit> {
+  if (format === "xlsx") return new Uint8Array(await buildXlsx(rows, meta));
+  if (format === "pdf") return new Uint8Array(await buildPdf(rows, meta));
+  return buildCsv(rows);
 }

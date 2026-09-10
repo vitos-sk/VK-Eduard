@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
-import { ChevronLeft, Download } from "lucide-react";
+import { ChevronLeft, Download, UserPlus } from "lucide-react";
 
+import { AddWorkerForm } from "@/components/reports/AddWorkerForm";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
@@ -63,20 +64,17 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
   const [openEntries, setOpenEntries] = useState<readonly WorkEntryWithPhotos[]>([]);
   const [openThumbUrls, setOpenThumbUrls] = useState<Readonly<Record<string, string>>>({});
   const [isOpenLoading, setIsOpenLoading] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const refreshWorkers = useCallback(() => {
+    getCompanyWorkers(supabase, companyId)
+      .then((data) => setWorkers(data))
+      .catch(() => {});
+  }, [supabase, companyId]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    getCompanyWorkers(supabase, companyId)
-      .then((data) => {
-        if (!cancelled) setWorkers(data);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase, companyId]);
+    refreshWorkers();
+  }, [refreshWorkers]);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,11 +169,34 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
 
   return (
     <div className="px-4">
-      <PeriodNavigator
-        title={monthTitle}
-        onPrev={() => setMonth((current) => addMonthsSafe(current, -1))}
-        onNext={() => setMonth((current) => addMonthsSafe(current, 1))}
-      />
+      <div className="flex items-center gap-2">
+        <PeriodNavigator
+          className="flex-1"
+          title={monthTitle}
+          onPrev={() => setMonth((current) => addMonthsSafe(current, -1))}
+          onNext={() => setMonth((current) => addMonthsSafe(current, 1))}
+        />
+
+        <button
+          type="button"
+          onClick={() => setIsAddOpen((open) => !open)}
+          aria-label={t.reports.team.addWorker}
+          className={cn(
+            "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
+            "transition-transform duration-150 active:scale-95",
+          )}
+        >
+          <UserPlus className="size-5" strokeWidth={2.2} aria-hidden />
+        </button>
+      </div>
+
+      {isAddOpen && (
+        <AddWorkerForm
+          className="mt-3"
+          onClose={() => setIsAddOpen(false)}
+          onCreated={refreshWorkers}
+        />
+      )}
 
       <SegmentedTabs
         className="mt-3"

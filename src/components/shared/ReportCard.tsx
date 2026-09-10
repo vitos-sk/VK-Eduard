@@ -55,18 +55,6 @@ export function ReportCard({ entry, siteName, thumbUrl, now, className }: Report
         className,
       )}
     >
-      {thumbUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage, не next/image-домен
-        <img
-          src={thumbUrl}
-          alt=""
-          loading="lazy"
-          className="h-[84px] w-[104px] shrink-0 rounded-[12px] object-cover"
-        />
-      ) : (
-        <Thumb name={name} gradient={gradientForId(entry.site_id ?? entry.id)} size="wide" />
-      )}
-
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <p className="truncate text-[15px] font-bold">{dateLabel}</p>
@@ -99,7 +87,7 @@ export function ReportCard({ entry, siteName, thumbUrl, now, className }: Report
           </p>
         )}
 
-        {entry.entry_photos.length > 0 && (
+        {entry.entry_photos.length > 1 && (
           <MetaRow
             className="mt-2"
             items={[
@@ -111,6 +99,18 @@ export function ReportCard({ entry, siteName, thumbUrl, now, className }: Report
           />
         )}
       </div>
+
+      {thumbUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage, не next/image-домен
+        <img
+          src={thumbUrl}
+          alt=""
+          loading="lazy"
+          className="h-[84px] w-[104px] shrink-0 rounded-[12px] object-cover"
+        />
+      ) : (
+        <Thumb name={name} gradient={gradientForId(entry.site_id ?? entry.id)} size="wide" />
+      )}
     </Link>
   );
 }

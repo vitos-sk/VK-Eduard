@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays, ChevronRight, Clock, Info } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Info } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
@@ -19,11 +19,14 @@ import {
 import { formatDateShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { gradientForId } from "@/lib/siteGradient";
-import { createManualEntry } from "@/modules/entries/actions";
+import { createManualEntry, updateEntry } from "@/modules/entries/actions";
+import type { WorkEntry } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
 import {
   isDurationValid,
   minutesBetweenWrapped,
+  minutesToTime,
+  timeToMinutes,
   dateKeyOf,
 } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
@@ -32,20 +35,35 @@ import { cn } from "@/lib/utils";
 const DEFAULT_START = "13:30";
 const DEFAULT_END = "16:00";
 
+/** Шаг стрілок часу — 15 хв, звична крупність для зміни. */
+const TIME_STEP_MIN = 15;
+
 interface ManualTimeScreenProps {
   sites: readonly Site[];
+  /** Задано — режим редагування наявного запису замість створення нового. */
+  entry?: WorkEntry;
 }
 
-/** Экран «Додати час вручну» — форма пишет закрытую запись прямо в базу. */
-export function ManualTimeScreen({ sites }: ManualTimeScreenProps) {
+/**
+ * Екран «Додати час вручну» (і, коли передано `entry`, редагування
+ * наявного запису) — форма пише закриту запис прямо в базу.
+ *
+ * Перерву в режимі редагування навмисно не показуємо і не чіпаємо: цей
+ * екран не вміє її вводити навіть при створенні (тільки `ReportForm` вміє,
+ * через тумблер), тож `updateEntry` завжди отримує break_start/break_end
+ * записи як є, без ризику тихо їх затерти.
+ */
+export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [siteId, setSiteId] = useState<string | null>(null);
-  const [date, setDate] = useState<Date>(() => new Date());
-  const [startAt, setStartAt] = useState(DEFAULT_START);
-  const [endAt, setEndAt] = useState(DEFAULT_END);
-  const [description, setDescription] = useState("");
+  const [siteId, setSiteId] = useState<string | null>(entry?.site_id ?? null);
+  const [date, setDate] = useState<Date>(() =>
+    entry ? new Date(`${entry.work_date}T00:00:00`) : new Date(),
+  );
+  const [startAt, setStartAt] = useState(entry?.started_at.slice(0, 5) ?? DEFAULT_START);
+  const [endAt, setEndAt] = useState(entry?.ended_at?.slice(0, 5) ?? DEFAULT_END);
+  const [description, setDescription] = useState(entry?.description ?? "");
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -54,29 +72,38 @@ export function ManualTimeScreen({ sites }: ManualTimeScreenProps) {
   // Переход через полночь — не ошибка: 22:00 → 06:00 это нічна зміна
   // (docs/DATA-MODEL.md), поэтому длительность считаем «завёрнутой».
   const durationMin = minutesBetweenWrapped(startAt, endAt);
-  const isValid = isDurationValid(durationMin);
-  const durationLabel = isValid
+  const isDurationOk = isDurationValid(durationMin);
+  const durationLabel = isDurationOk
     ? `${Math.floor(durationMin / 60)} год ${durationMin % 60} хв`
     : t.common.dash;
 
+  // Запись должна быть привязана хоть к чему-то: если не выбран объект,
+  // без описания непонятно, где вообще отработаны эти часы.
+  const hasSiteOrDescription = siteId !== null || description.trim() !== "";
+  const isValid = isDurationOk && hasSiteOrDescription;
+
   const handleSubmit = () => {
     startTransition(async () => {
-      const result = await createManualEntry({
+      const input = {
         workDate: dateKeyOf(date),
         siteId,
         startedAt: startAt,
         endedAt: endAt,
-        breakStart: null,
-        breakEnd: null,
+        breakStart: entry?.break_start ?? null,
+        breakEnd: entry?.break_end ?? null,
         description,
-      });
+      };
+
+      const result = entry
+        ? await updateEntry(entry.id, input)
+        : await createManualEntry(input);
 
       if (result.error) {
         toast(result.error);
         return;
       }
 
-      toast(t.manualTime.saved);
+      toast(entry ? t.manualTime.updated : t.manualTime.saved);
       router.push("/hours");
       router.refresh();
     });
@@ -84,13 +111,18 @@ export function ManualTimeScreen({ sites }: ManualTimeScreenProps) {
 
   return (
     <div className="pb-6">
-      <BackHeader title={t.manualTime.title} onBack={() => router.back()} />
+      <BackHeader
+        title={entry ? t.manualTime.editTitle : t.manualTime.title}
+        onBack={() => router.back()}
+      />
 
       <div className="space-y-6 px-4">
-        <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
-          <Info className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
-          {t.manualTime.hint}
-        </p>
+        {!entry && (
+          <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
+            <Info className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
+            {t.manualTime.hint}
+          </p>
+        )}
 
         <Field label={t.manualTime.objectLabel}>
           <button
@@ -192,34 +224,50 @@ export function ManualTimeScreen({ sites }: ManualTimeScreenProps) {
         <div>
           <div className="grid grid-cols-2 gap-3">
             <Field label={t.manualTime.start}>
-              <TimeInput value={startAt} onChange={setStartAt} invalid={!isValid} />
+              <TimeStepper
+                value={startAt}
+                onChange={setStartAt}
+                invalid={!isDurationOk}
+              />
             </Field>
 
             <Field label={t.manualTime.finish}>
-              <TimeInput value={endAt} onChange={setEndAt} invalid={!isValid} />
+              <TimeStepper
+                value={endAt}
+                onChange={setEndAt}
+                invalid={!isDurationOk}
+              />
             </Field>
           </div>
 
-          {!isValid && (
+          {!isDurationOk && (
             <p className="mt-2 text-[13px] font-medium text-danger">
               {t.manualTime.errorDuration}
             </p>
           )}
         </div>
 
-        <Field label={t.manualTime.description}>
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows={3}
-            placeholder={t.manualTime.descriptionPlaceholder}
-            className={cn(
-              "w-full resize-none rounded-[16px] border border-border bg-surface p-4",
-              "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-              "outline-none focus-visible:border-brand",
-            )}
-          />
-        </Field>
+        <div>
+          <Field label={t.manualTime.description}>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={3}
+              placeholder={t.manualTime.descriptionPlaceholder}
+              className={cn(
+                "w-full resize-none rounded-[16px] border border-border bg-surface p-4",
+                "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
+                "outline-none focus-visible:border-brand",
+              )}
+            />
+          </Field>
+
+          {!hasSiteOrDescription && (
+            <p className="mt-2 text-[13px] font-medium text-text-muted">
+              {t.manualTime.errorSiteOrDescription}
+            </p>
+          )}
+        </div>
 
         <button
           type="button"
@@ -233,7 +281,7 @@ export function ManualTimeScreen({ sites }: ManualTimeScreenProps) {
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
           )}
         >
-          {t.manualTime.submit}
+          {entry ? t.manualTime.saveChanges : t.manualTime.submit}
         </button>
       </div>
 
@@ -258,8 +306,13 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** `<input type="time">`, приведённый к тёмной теме: белые цифры, светлая иконка. */
-function TimeInput({
+/**
+ * Свій степер часу замість нативного `<input type="time">` — дві стрілки
+ * навколо значення, крок {@link TIME_STEP_MIN} хв. `minutesToTime` сама
+ * заводить значення в діапазон 0..1439, тож стрілка на 23:45 йде на 00:00,
+ * а не ламається — та сама «завёрнутая» арифметика, що й у нічній зміні.
+ */
+function TimeStepper({
   value,
   onChange,
   invalid,
@@ -268,18 +321,36 @@ function TimeInput({
   onChange: (value: string) => void;
   invalid: boolean;
 }) {
+  const shift = (deltaMin: number) => {
+    onChange(minutesToTime(timeToMinutes(value) + deltaMin));
+  };
+
   return (
-    <input
-      type="time"
-      value={value}
-      aria-invalid={invalid}
-      onChange={(event) => onChange(event.target.value)}
+    <div
       className={cn(
-        "tabular h-[52px] w-full rounded-[14px] border bg-surface px-3",
-        "text-[15px] font-bold text-text outline-none",
-        "[&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:invert",
-        invalid ? "border-danger" : "border-border focus-visible:border-brand",
+        "flex h-[52px] w-full items-center justify-between rounded-[14px] border bg-surface pr-1 pl-1",
+        invalid ? "border-danger" : "border-border",
       )}
-    />
+    >
+      <button
+        type="button"
+        onClick={() => shift(-TIME_STEP_MIN)}
+        aria-label={t.manualTime.decreaseTime}
+        className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-text-muted active:bg-surface-2"
+      >
+        <ChevronLeft className="size-5" strokeWidth={2.4} aria-hidden />
+      </button>
+
+      <span className="tabular text-[15px] font-bold text-text">{value}</span>
+
+      <button
+        type="button"
+        onClick={() => shift(TIME_STEP_MIN)}
+        aria-label={t.manualTime.increaseTime}
+        className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-text-muted active:bg-surface-2"
+      >
+        <ChevronRight className="size-5" strokeWidth={2.4} aria-hidden />
+      </button>
+    </div>
   );
 }

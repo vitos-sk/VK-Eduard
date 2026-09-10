@@ -1,4 +1,5 @@
-import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { LayoutDashboard, LogOut } from "lucide-react";
 
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { fmt } from "@/lib/format";
@@ -53,7 +54,17 @@ export default async function MorePage() {
         </dl>
       </div>
 
-      <form action={signOut} className="mx-4 mt-6">
+      {profile.role === "boss" && (
+        <Link
+          href="/admin"
+          className="mx-4 mt-6 flex h-14 items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-text transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        >
+          <LayoutDashboard className="size-5" strokeWidth={2} aria-hidden />
+          {t.admin.openLink}
+        </Link>
+      )}
+
+      <form action={signOut} className="mx-4 mt-3">
         <button
           type="submit"
           className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-danger transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"

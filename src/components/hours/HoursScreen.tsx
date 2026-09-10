@@ -324,6 +324,8 @@ export function HoursScreen({
           className="mt-3"
           entries={monthEntries}
           showAuthor={profile.role === "boss"}
+          isBoss={profile.role === "boss"}
+          onChanged={handleChanged}
         />
       </div>
     </div>

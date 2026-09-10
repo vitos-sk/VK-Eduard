@@ -320,3 +320,105 @@ export async function updateEntryDescription(
 
   return OK;
 }
+
+/**
+ * Полная правка записи — объект, дата, время, опис. Перерву навмисно не
+ * чіпаємо: форма редагування не дає її міняти, тож передаємо ті самі
+ * `breakStart`/`breakEnd`, що вже лежали в записі, інакше є ризик тихо
+ * затерти реальний перерву значенням за замовчуванням.
+ * Та сама розвилка `editWindowClosed`, що й у `updateEntryDescription`.
+ */
+export async function updateEntry(
+  entryId: string,
+  input: ManualEntryInput,
+): Promise<EntryActionState> {
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  if (!isBreakPairValid(input.breakStart, input.breakEnd)) {
+    return { error: t.hours.genericError };
+  }
+
+  const worked =
+    minutesBetweenWrapped(input.startedAt, input.endedAt) -
+    (input.breakStart && input.breakEnd
+      ? minutesBetweenWrapped(input.breakStart, input.breakEnd)
+      : 0);
+
+  if (!isDurationValid(worked)) {
+    return { error: t.manualTime.errorDuration };
+  }
+
+  // Форма редагування (ManualTimeScreen) вимагає об'єкт або опис — та сама
+  // умова тут, а не тільки на клієнті, бо `updateEntry` не має іншого
+  // виклику, якому ця вимога заважала б.
+  if (input.siteId === null && input.description.trim() === "") {
+    return { error: t.manualTime.errorSiteOrDescription };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("work_entries")
+    .update({
+      site_id: input.siteId,
+      work_date: input.workDate,
+      started_at: input.startedAt,
+      ended_at: input.endedAt,
+      break_start: input.breakStart,
+      break_end: input.breakEnd,
+      description: input.description,
+    })
+    .eq("id", entryId)
+    .select("id");
+
+  if (error) {
+    return { error: t.manualTime.saveError };
+  }
+
+  if (!data || data.length === 0) {
+    return { error: t.reportDetail.editWindowClosed };
+  }
+
+  revalidatePath("/", "layout");
+
+  return OK;
+}
+
+/**
+ * Видаляє запис. Фото видаляються каскадом на рівні бази (`on delete
+ * cascade`), файли в Storage залишаються — за ними прибирає фонова задача
+ * (ARCHITECTURE.md), а не цей запит, як і при видаленні одного фото
+ * (`modules/media/photos.deleteEntryPhoto`).
+ *
+ * `entries_delete` (міграція 0005) — та сама розвилка прав, що й у
+ * `entries_update`: своя запис за 7 днів рабочому, будь-яка шефу.
+ */
+export async function deleteEntry(entryId: string): Promise<EntryActionState> {
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("work_entries")
+    .delete()
+    .eq("id", entryId)
+    .select("id");
+
+  if (error) {
+    return { error: t.hours.deleteError };
+  }
+
+  if (!data || data.length === 0) {
+    return { error: t.reportDetail.editWindowClosed };
+  }
+
+  revalidatePath("/", "layout");
+
+  return OK;
+}

@@ -205,6 +205,14 @@ export const uk = {
     breakNotStarted: "Перерва ще не почалась",
     breakAlreadyEnded: "Перерва вже закінчилась",
     genericError: "Не вдалося зберегти. Спробуйте ще раз",
+    /** Іконки редагування/видалення в «Зміни за місяць» і на детальній сторінці запису. */
+    editEntry: "Редагувати запис",
+    deleteEntry: "Видалити запис",
+    deleteConfirmTitle: "Видалити запис?",
+    deleteConfirmBody: "Дію не можна скасувати — запис про робочий час буде видалено назавжди.",
+    deleteConfirmAction: "Видалити",
+    entryDeleted: "Запис видалено",
+    deleteError: "Не вдалося видалити запис. Спробуйте ще раз",
   },
 
   /** Экран «Звіти». */
@@ -229,6 +237,29 @@ export const uk = {
       export: "Експорт звітів",
       empty: "У компанії ще немає активних працівників",
       back: "Команда",
+      addWorker: "Додати співробітника",
+      form: {
+        title: "Новий співробітник",
+        nameLabel: "Ім'я",
+        namePlaceholder: "Наприклад: Андрій",
+        emailLabel: "Email",
+        emailPlaceholder: "andriy@firma.com",
+        roleLabel: "Роль",
+        roleWorker: "Робітник",
+        roleBoss: "Шеф",
+        save: "Створити",
+        cancel: "Скасувати",
+        nameRequired: "Вкажіть ім'я",
+        emailInvalid: "Перевірте email",
+        emailTaken: "Користувач з таким email вже є",
+        saveError: "Не вдалося створити співробітника. Спробуйте ще раз",
+        createdTitle: "Готово! Передайте ці дані співробітнику",
+        tempPasswordLabel: "Тимчасовий пароль",
+        tempPasswordHint: "Він знадобиться тільки для першого входу — після цього співробітник зможе працювати як завжди",
+        copy: "Скопіювати",
+        copied: "Скопійовано",
+        close: "Закрити",
+      },
     },
     today: "Сьогодні",
     yesterday: "Вчора",
@@ -255,6 +286,7 @@ export const uk = {
   reportDetail: {
     backTitle: "Звіт",
     edit: "Редагувати",
+    editTime: "Редагувати час",
     addDescriptionTitle: "Додати опис",
     addDescriptionPlaceholder: "Наприклад: Монтаж покрівельної мембрани",
     save: "Зберегти",
@@ -312,6 +344,7 @@ export const uk = {
   /** Экран «Додати час вручну». */
   manualTime: {
     title: "Додати час вручну",
+    editTitle: "Редагувати запис",
     hint: 'Додайте години, якщо забули натиснути "Почати роботу"',
     objectLabel: "Об'єкт (необов'язково)",
     objectPlaceholder: "Оберіть об'єкт",
@@ -323,7 +356,9 @@ export const uk = {
     description: "Опис (необов'язково)",
     descriptionPlaceholder: "Наприклад: Ремонт покрівлі",
     submit: "Зберегти запис",
+    saveChanges: "Зберегти зміни",
     saved: "Запис збережено",
+    updated: "Запис оновлено",
     /**
      * Один текст на обидва випадки: тривалість поза межами 1 хв — 18 год.
      * Раніше «завершення раніше початку» вважалося помилкою завжди — тепер
@@ -332,6 +367,67 @@ export const uk = {
     errorDuration: "Перевірте час — тривалість має бути від 1 хвилини до 18 годин",
     durationValue: "{hours} год {minutes} хв",
     saveError: "Не вдалося зберегти запис. Спробуйте ще раз",
+    /** Стрілки степера часу «Початок»/«Завершення». */
+    decreaseTime: "Раніше",
+    increaseTime: "Пізніше",
+    /** Не обрано об'єкт — тоді опис обов'язковий, інакше незрозуміло, де відпрацьовано. */
+    errorSiteOrDescription: "Вкажіть об'єкт або опишіть, де ви працювали",
+  },
+
+  /**
+   * Десктопна адмін-панель `/admin` — тільки boss, тільки на широкому екрані
+   * (докладніше — `components/admin/AdminShell.tsx`). Мобільний застосунок
+   * і `PhoneFrame` цього розділу не стосуються.
+   */
+  admin: {
+    nav: {
+      dashboard: "Дашборд",
+      team: "Команда",
+      objects: "Об'єкти",
+      reports: "Звіти",
+    },
+    openLink: "Адмін-панель (для комп'ютера)",
+    narrowGate: {
+      title: "Відкрийте на комп'ютері",
+      hint: "Адмін-панель розрахована на широкий екран. На телефоні користуйтесь звичайним застосунком — вкладка «Команда» в «Звітах» має ті самі дані.",
+      back: "На головну",
+    },
+    dashboard: {
+      title: "Дашборд",
+      subtitle: "{month}",
+      monthHours: "Годин за місяць",
+      activeWorkers: "Активних працівників",
+      activeObjects: "Активних об'єктів",
+      topWorkersTitle: "Найбільше годин цього місяця",
+      topWorkersEmpty: "Поки що немає відпрацьованих годин цього місяця",
+    },
+    objects: {
+      title: "Об'єкти",
+      addObject: "Додати об'єкт",
+      columnName: "Назва",
+      columnKind: "Вид робіт",
+      columnAddress: "Адреса",
+      columnStatus: "Статус",
+      empty: "Об'єктів ще немає",
+    },
+    reports: {
+      title: "Звіти",
+      columnWorker: "Робітник",
+      columnDate: "Дата",
+      columnTime: "Час",
+      columnObject: "Об'єкт",
+      columnDescription: "Опис",
+      columnPhotos: "Фото",
+      filterWorkerAll: "Усі робітники",
+      filterObjectAll: "Усі об'єкти",
+      empty: "За цей період звітів немає",
+    },
+    export: {
+      label: "Експорт",
+      csv: "CSV",
+      xlsx: "Excel (.xlsx)",
+      pdf: "PDF-табель",
+    },
   },
 
   /** Справочник статусов, раздел 3.4 плана. */
