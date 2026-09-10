@@ -129,18 +129,30 @@
   }
 
   body {
-    background: linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--bg) 78%, white 22%) 0%,
-      var(--bg) 45%,
-      var(--bg-outer) 100%
-    );
-    background-attachment: fixed;
+    background: var(--bg-outer);
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
   }
+}
+
+/* Мягкий узорчатый фон екрану додатку — кілька розмитих плям бренд- і
+   success-кольору поверх вертикального переходу, замість суцільної заливки
+   `--bg`. Живе окремим класом (не в `body`), бо `PhoneFrame` рендерить
+   екран у внутрішньому контейнері поверх body. */
+.app-bg {
+  background:
+    radial-gradient(55% 38% at 15% -5%, color-mix(in oklab, var(--brand) 18%, transparent) 0%, transparent 70%),
+    radial-gradient(65% 42% at 90% 10%, color-mix(in oklab, var(--success) 16%, transparent) 0%, transparent 65%),
+    radial-gradient(70% 50% at 30% 100%, color-mix(in oklab, var(--bg-outer) 70%, black) 0%, transparent 75%),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--bg) 75%, white 25%) 0%,
+      var(--bg) 42%,
+      var(--bg-outer) 100%
+    );
+  background-attachment: fixed;
 }
 
 /* Подложка нижних листов: в тёмной теме дефолтные 10% почти не видны */
