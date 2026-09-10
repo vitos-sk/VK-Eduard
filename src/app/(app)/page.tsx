@@ -46,7 +46,7 @@ export default async function HomePage() {
       <HomeHeader initials={initialsOf(profile)} />
 
       <div className="mt-6">
-        <h1 className="text-[30px] leading-tight font-extrabold tracking-tight">
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-tight">
           {fmt(t.home.greeting, { name: profile.full_name })}
         </h1>
         <p className="mt-1 text-[15px] font-medium text-text-muted">
