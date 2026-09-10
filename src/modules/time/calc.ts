@@ -105,13 +105,23 @@ export function splitWorkedOvertime(
 }
 
 /**
+ * `YYYY-MM-DD` + время → `Date`. Время принимает как `HH:mm` (то, что
+ * пишет на клиенте `hhmmOf`), так и `HH:mm:ss` (то, что реально отдаёт
+ * Supabase для колонок типа `time` в Postgres) — оба варианта встречаются
+ * в `openEntry`, пришедшем с сервера.
+ */
+function toDateTime(workDate: string, time: string): Date {
+  const [hh = "00", mm = "00", ss = "00"] = time.split(":");
+  return new Date(`${workDate}T${hh.padStart(2, "0")}:${mm.padStart(2, "0")}:${ss.padStart(2, "0")}`);
+}
+
+/**
  * Сколько секунд идёт смена прямо сейчас — источник для тикающего таймера.
  * Во время перерыва (`breakStart` задан, `breakEnd` — нет) секунды не растут:
  * таймер стоит, а не бежит поверх «Пауза».
  *
- * `workDate` — `YYYY-MM-DD`, `startedAt`/`breakStart`/`breakEnd` — `HH:mm`.
- * Приняты как строки, а не готовый `Date`, чтобы вызывающему не нужно было
- * самому склеивать дату со временем по тем же правилам, что и здесь.
+ * `workDate` — `YYYY-MM-DD`, `startedAt`/`breakStart`/`breakEnd` — `HH:mm`
+ * или `HH:mm:ss`.
  */
 export function elapsedSecondsNow(
   workDate: string,
@@ -120,14 +130,14 @@ export function elapsedSecondsNow(
   breakEnd: string | null,
   now: Date,
 ): number {
-  const start = new Date(`${workDate}T${startedAt}:00`);
+  const start = toDateTime(workDate, startedAt);
   const elapsedMs = now.getTime() - start.getTime();
 
   if (breakStart !== null) {
-    const breakStartDate = new Date(`${workDate}T${breakStart}:00`);
+    const breakStartDate = toDateTime(workDate, breakStart);
 
     if (breakEnd !== null) {
-      const breakEndDate = new Date(`${workDate}T${breakEnd}:00`);
+      const breakEndDate = toDateTime(workDate, breakEnd);
       const breakMs = Math.max(0, breakEndDate.getTime() - breakStartDate.getTime());
 
       return Math.max(0, Math.floor((elapsedMs - breakMs) / 1000));

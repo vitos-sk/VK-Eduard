@@ -158,6 +158,16 @@ describe("elapsedSecondsNow", () => {
     const now = new Date(`${workDate}T07:00:00`);
     expect(elapsedSecondsNow(workDate, "08:00", null, null, now)).toBe(0);
   });
+
+  it("не ломается, если время приходит с сервера в формате HH:mm:ss", () => {
+    const now = new Date(`${workDate}T09:30:00`);
+    expect(
+      elapsedSecondsNow(workDate, "08:00:00", null, null, now),
+    ).toBe(90 * 60);
+    expect(
+      elapsedSecondsNow(workDate, "08:00:00", "08:30:00", "09:00:00", now),
+    ).toBe((90 - 30) * 60);
+  });
 });
 
 describe("sumTotalMinutes", () => {
