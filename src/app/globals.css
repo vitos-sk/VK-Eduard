@@ -137,21 +137,20 @@
   }
 }
 
-/* Мягкий узорчатый фон екрану додатку — кілька розмитих плям бренд- і
-   success-кольору поверх вертикального переходу, замість суцільної заливки
-   `--bg`. Живе окремим класом (не в `body`), бо `PhoneFrame` рендерить
-   екран у внутрішньому контейнері поверх body. */
+/* Меш-фон екрану додатку: плями бренд-жовтого й мʼятного success
+   розкидані впереміш по всій висоті (а не проста заливка «зверху
+   світліше — знизу темніше»). Живе окремим класом (не в `body`), бо
+   `PhoneFrame` рендерить екран у внутрішньому контейнері поверх body. */
 .app-bg {
-  background:
-    radial-gradient(55% 38% at 15% -5%, color-mix(in oklab, var(--brand) 18%, transparent) 0%, transparent 70%),
-    radial-gradient(65% 42% at 90% 10%, color-mix(in oklab, var(--success) 16%, transparent) 0%, transparent 65%),
-    radial-gradient(70% 50% at 30% 100%, color-mix(in oklab, var(--bg-outer) 70%, black) 0%, transparent 75%),
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--bg) 75%, white 25%) 0%,
-      var(--bg) 42%,
-      var(--bg-outer) 100%
-    );
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(32% 24% at 14% 10%, color-mix(in oklab, var(--brand) 30%, transparent) 0%, transparent 70%),
+    radial-gradient(38% 28% at 88% 6%, color-mix(in oklab, var(--success) 26%, transparent) 0%, transparent 70%),
+    radial-gradient(34% 26% at 92% 46%, color-mix(in oklab, var(--brand) 22%, transparent) 0%, transparent 72%),
+    radial-gradient(40% 30% at 6% 52%, color-mix(in oklab, var(--success) 24%, transparent) 0%, transparent 72%),
+    radial-gradient(36% 28% at 78% 88%, color-mix(in oklab, var(--brand) 20%, transparent) 0%, transparent 72%),
+    radial-gradient(42% 32% at 16% 92%, color-mix(in oklab, var(--success) 22%, transparent) 0%, transparent 74%),
+    radial-gradient(60% 45% at 50% 50%, transparent 0%, var(--bg-outer) 100%);
   background-attachment: fixed;
 }
 
