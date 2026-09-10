@@ -72,7 +72,7 @@
   чтобы срабатывали `dark:`-варианты внутри компонентов shadcn.
 */
 :root {
-  --bg: #061204;
+  --bg: #0e220a;
   --bg-outer: #061204;
   --surface: #1d3418;
   --surface-2: #26421f;
@@ -129,7 +129,13 @@
   }
 
   body {
-    background: var(--bg);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--bg) 78%, white 22%) 0%,
+      var(--bg) 45%,
+      var(--bg-outer) 100%
+    );
+    background-attachment: fixed;
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
