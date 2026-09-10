@@ -15,13 +15,14 @@ const EXPIRES_IN_SECONDS = 60 * 60;
 export async function getSignedPhotoUrls(
   supabase: SupabaseClient<Database>,
   storagePaths: readonly string[],
+  bucket: string = BUCKET,
 ): Promise<Map<string, string>> {
   if (storagePaths.length === 0) {
     return new Map();
   }
 
   const { data, error } = await supabase.storage
-    .from(BUCKET)
+    .from(bucket)
     .createSignedUrls([...storagePaths], EXPIRES_IN_SECONDS);
 
   if (error) throw error;

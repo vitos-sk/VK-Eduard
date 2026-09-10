@@ -6,6 +6,7 @@ import { compressImage } from "./compress";
 export type EntryPhoto = Tables<"entry_photos">;
 
 const BUCKET = "entry-photos";
+const SITE_PHOTOS_BUCKET = "site-photos";
 
 /** Максимум 6 фото на запись — DATA-MODEL.md. Проверяется на клиенте, не в базе. */
 export const MAX_PHOTOS_PER_ENTRY = 6;
@@ -71,4 +72,54 @@ export async function deleteEntryPhoto(
     .eq("id", photo.id);
 
   if (deleteError) throw deleteError;
+}
+
+/**
+ * Загружает обложку объекта: сжимает, кладёт в приватный бакет
+ * `{company_id}/{site_id}/{uuid}.webp`, затем пишет путь в `sites.photo_path`.
+ * Старый файл (если был) не трогает — его подчищает вызывающая сторона
+ * через `deleteSitePhoto`, чтобы не потерять фото при неудачном апдейте.
+ */
+export async function uploadSitePhoto(
+  supabase: SupabaseClient<Database>,
+  params: { companyId: string; siteId: string },
+  file: File,
+): Promise<string> {
+  const { blob } = await compressImage(file);
+  const path = `${params.companyId}/${params.siteId}/${crypto.randomUUID()}.webp`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(SITE_PHOTOS_BUCKET)
+    .upload(path, blob, { contentType: "image/webp" });
+
+  if (uploadError) throw uploadError;
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ photo_path: path })
+    .eq("id", params.siteId);
+
+  if (updateError) throw updateError;
+
+  return path;
+}
+
+/** Удаляет обложку объекта: файл из Storage, затем `photo_path` в null. */
+export async function deleteSitePhoto(
+  supabase: SupabaseClient<Database>,
+  siteId: string,
+  photoPath: string,
+): Promise<void> {
+  const { error: removeError } = await supabase.storage
+    .from(SITE_PHOTOS_BUCKET)
+    .remove([photoPath]);
+
+  if (removeError) throw removeError;
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ photo_path: null })
+    .eq("id", siteId);
+
+  if (updateError) throw updateError;
 }

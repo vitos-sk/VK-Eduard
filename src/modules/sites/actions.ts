@@ -133,3 +133,30 @@ export async function setSiteArchived(
 
   return OK;
 }
+
+/**
+ * Удаляет объект насовсем — в отличие от архивации, объект перестаёт
+ * существовать как сущность. Записи (`work_entries`) не удаляются,
+ * `site_id` в них становится null (`on delete set null` на FK).
+ */
+export async function deleteSite(siteId: string): Promise<SiteActionState> {
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("sites").delete().eq("id", siteId);
+
+  if (error) {
+    return {
+      error: error.code === RLS_VIOLATION ? t.auth.noProfile : t.objects.form.saveError,
+    };
+  }
+
+  revalidatePath("/objects");
+  revalidatePath("/admin/objects");
+
+  return OK;
+}

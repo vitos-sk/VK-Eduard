@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { MapPin, Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
+import { getGoogleMapsDirectionsUrl } from "@/lib/utils";
 import { requireProfile } from "@/modules/auth/session";
 import { getEntriesFeed } from "@/modules/entries/queries";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
@@ -46,7 +47,13 @@ export default async function ObjectDetailPage({
   const firstPhotoPaths = entries
     .map((entry) => entry.entry_photos[0]?.storage_path)
     .filter((path): path is string => Boolean(path));
-  const thumbUrls = await getSignedPhotoUrls(supabase, firstPhotoPaths);
+  const [thumbUrls, coverPhotoUrls] = await Promise.all([
+    getSignedPhotoUrls(supabase, firstPhotoPaths),
+    site.photo_path
+      ? getSignedPhotoUrls(supabase, [site.photo_path], "site-photos")
+      : Promise.resolve(new Map<string, string>()),
+  ]);
+  const coverPhotoUrl = site.photo_path ? coverPhotoUrls.get(site.photo_path) : null;
   const now = new Date();
 
   const isBoss = profile.role === "boss";
@@ -71,12 +78,31 @@ export default async function ObjectDetailPage({
 
       <div className="px-4">
         <section className="rounded-[16px] border border-border bg-surface p-4">
+          {coverPhotoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
+            <img
+              src={coverPhotoUrl}
+              alt=""
+              className="mb-4 h-[160px] w-full rounded-[12px] object-cover"
+            />
+          )}
+
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-[20px] font-bold">{site.name}</p>
-              <p className="mt-1 text-[14px] font-medium text-text-muted">
-                {site.address || t.common.dash}
-              </p>
+              {site.address ? (
+                <a
+                  href={getGoogleMapsDirectionsUrl(site.address)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
+                >
+                  <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
+                  {site.address}
+                </a>
+              ) : (
+                <p className="mt-1 text-[14px] font-medium text-text-muted">{t.common.dash}</p>
+              )}
             </div>
             {site.archived_at ? (
               <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">

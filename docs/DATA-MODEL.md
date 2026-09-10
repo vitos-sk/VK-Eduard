@@ -97,7 +97,12 @@ work_entries (подробности в комментариях миграци�
 | `address` | text, null | «Freiburg, Schlossgasse 24» |
 | `status` | enum `not_started` \| `in_progress` \| `completed` \| `paused` | справочник уже есть в коде |
 | `archived_at` | timestamptz, null | закрытый объект уходит из выпадашки, остаётся в истории |
+| `photo_path` | text, null | путь в приватном бакете `site-photos`, обложка объекта |
 | `created_at` | timestamptz | |
+
+Объект можно и архивировать (`archived_at`, история остаётся), и удалить насовсем
+(`delete`, доступно только `boss`) — это разные действия. При удалении `work_entries.site_id`
+для его записей становится `null` (`on delete set null`), сами записи не пропадают.
 
 ### `work_entries` — ядро
 

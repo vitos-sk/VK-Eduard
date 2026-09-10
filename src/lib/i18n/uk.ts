@@ -138,6 +138,7 @@ export const uk = {
       edit: "Редагувати",
       archive: "Архівувати об'єкт",
       restore: "Розархівувати об'єкт",
+      openInMaps: "Прокласти маршрут",
     },
     /** Форма `/objects/new` і `/objects/[id]/edit` — тільки boss. */
     form: {
@@ -409,6 +410,16 @@ export const uk = {
       columnAddress: "Адреса",
       columnStatus: "Статус",
       empty: "Об'єктів ще немає",
+      openInMaps: "Прокласти маршрут",
+      deleteObject: "Видалити об'єкт",
+      deleteConfirm: "Видалити об'єкт назавжди? Записи по ньому залишаться, але втратять прив'язку до об'єкта.",
+      deleteError: "Не вдалося видалити об'єкт. Спробуйте ще раз",
+      photoLabel: "Фото об'єкта",
+      addPhoto: "Додати фото",
+      changePhoto: "Змінити фото",
+      removePhoto: "Прибрати фото",
+      uploading: "Завантаження...",
+      photoUploadError: "Не вдалося завантажити фото. Спробуйте ще раз",
     },
     reports: {
       title: "Звіти",
