@@ -29,6 +29,7 @@ export function ObjectCard({
         "flex w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
         "transition-transform duration-150 active:scale-[0.98]",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+        object.archivedAt && "opacity-60",
         className,
       )}
     >
@@ -57,7 +58,13 @@ export function ObjectCard({
               },
             ]}
           />
-          <StatusBadge status={object.status} />
+          {object.archivedAt ? (
+            <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">
+              {t.objects.archivedBadge}
+            </span>
+          ) : (
+            <StatusBadge status={object.status} />
+          )}
         </div>
       </div>
 

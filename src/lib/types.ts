@@ -23,6 +23,8 @@ export interface SiteObject {
   reportsCount: number;
   /** Пара цветов для градиента в `Thumb`. */
   gradient: readonly [string, string];
+  /** `sites.archived_at` — не `null`, если объект архивирован. */
+  archivedAt: string | null;
 }
 
 /** Один день в столбчатой диаграмме за неделю или месяц. */

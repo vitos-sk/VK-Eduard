@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -29,6 +29,8 @@ const FILTER_OPTIONS: readonly SegmentedOption<ObjectFilter>[] = [
 
 interface ObjectsScreenProps {
   objects: readonly SiteObject[];
+  /** Кнопка «+» ведёт на форму создания только у шефа — сама вставка тоже под RLS. */
+  isBoss: boolean;
 }
 
 /**
@@ -36,10 +38,8 @@ interface ObjectsScreenProps {
  * список площадок — уже настоящих, объекты приходят из базы через страницу.
  * Фильтр и поиск считаются на клиенте поверх готового списка: масштаб
  * компании (десятки объектов) этого не замечает.
- *
- * Кнопка «+» пока без экрана — создание объектов из интерфейса это этап 6.
  */
-export function ObjectsScreen({ objects }: ObjectsScreenProps) {
+export function ObjectsScreen({ objects, isBoss }: ObjectsScreenProps) {
   const [filter, setFilter] = useState<ObjectFilter>("all");
   const [query, setQuery] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -68,18 +68,19 @@ export function ObjectsScreen({ objects }: ObjectsScreenProps) {
       <ScreenHeader
         title={t.objects.title}
         action={
-          <button
-            type="button"
-            onClick={() => toast(t.common.comingSoon)}
-            aria-label={t.objects.addObject}
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
-              "transition-transform duration-150 active:scale-95",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
-            <Plus className="size-6" strokeWidth={2.6} aria-hidden />
-          </button>
+          isBoss && (
+            <Link
+              href="/objects/new"
+              aria-label={t.objects.addObject}
+              className={cn(
+                "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
+                "transition-transform duration-150 active:scale-95",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+              )}
+            >
+              <Plus className="size-6" strokeWidth={2.6} aria-hidden />
+            </Link>
+          )
         }
       />
 

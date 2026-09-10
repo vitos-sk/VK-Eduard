@@ -23,5 +23,5 @@ export default async function ObjectsPage() {
   const stats = aggregateSiteStats(entries);
   const objects = sites.map((site) => toSiteObject(site, stats.get(site.id)));
 
-  return <ObjectsScreen objects={objects} />;
+  return <ObjectsScreen objects={objects} isBoss={profile.role === "boss"} />;
 }

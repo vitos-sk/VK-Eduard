@@ -13,5 +13,6 @@ export function toSiteObject(site: Site, stats: SiteStats | undefined): SiteObje
     photosCount: stats?.photosCount ?? 0,
     reportsCount: stats?.reportsCount ?? 0,
     gradient: gradientForId(site.id),
+    archivedAt: site.archived_at,
   };
 }

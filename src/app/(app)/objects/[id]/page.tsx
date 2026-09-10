@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
+import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -46,9 +49,25 @@ export default async function ObjectDetailPage({
   const thumbUrls = await getSignedPhotoUrls(supabase, firstPhotoPaths);
   const now = new Date();
 
+  const isBoss = profile.role === "boss";
+
   return (
     <div className="pb-6">
-      <BackHeader title={site.name} href="/objects" />
+      <BackHeader
+        title={site.name}
+        href="/objects"
+        action={
+          isBoss && (
+            <Link
+              href={`/objects/${site.id}/edit`}
+              aria-label={t.objects.detail.edit}
+              className="flex size-11 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2"
+            >
+              <Pencil className="size-5" strokeWidth={2} aria-hidden />
+            </Link>
+          )
+        }
+      />
 
       <div className="px-4">
         <section className="rounded-[16px] border border-border bg-surface p-4">
@@ -59,7 +78,13 @@ export default async function ObjectDetailPage({
                 {site.address || t.common.dash}
               </p>
             </div>
-            <StatusBadge status={site.status} />
+            {site.archived_at ? (
+              <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">
+                {t.objects.archivedBadge}
+              </span>
+            ) : (
+              <StatusBadge status={site.status} />
+            )}
           </div>
 
           <dl className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
@@ -81,6 +106,14 @@ export default async function ObjectDetailPage({
             </div>
           </dl>
         </section>
+
+        {isBoss && (
+          <ObjectArchiveButton
+            className="mt-3"
+            siteId={site.id}
+            isArchived={site.archived_at !== null}
+          />
+        )}
 
         <h2 className="mt-6 text-[20px] font-bold">{t.objects.detail.myReports}</h2>
 

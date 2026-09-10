@@ -25,7 +25,6 @@ export const uk = {
     viewAll: "Дивитися всі",
     notFound: "Нічого не знайдено",
     notFoundHint: "Спробуйте змінити фільтри або пошуковий запит",
-    comingSoon: "Функція буде доступна незабаром",
     optional: "необов'язково",
     notifications: "Сповіщення",
     profile: "Профіль",
@@ -127,6 +126,7 @@ export const uk = {
     reportsCount: "{n} звіти",
     emptyTitle: "Об'єктів немає",
     emptyHint: "Тут з'являться майданчики, до яких вас призначать",
+    archivedBadge: "Архів",
     /** Детальна сторінка `/objects/[id]`. */
     detail: {
       kind: "Вид робіт",
@@ -135,6 +135,24 @@ export const uk = {
       myReports: "Мої звіти тут",
       emptyTitle: "Ви ще не працювали на цьому об'єкті",
       emptyHint: "Звіти з'являться тут, щойно ви відмітите час на цьому об'єкті",
+      edit: "Редагувати",
+      archive: "Архівувати об'єкт",
+      restore: "Розархівувати об'єкт",
+    },
+    /** Форма `/objects/new` і `/objects/[id]/edit` — тільки boss. */
+    form: {
+      createTitle: "Новий об'єкт",
+      editTitle: "Редагувати об'єкт",
+      nameLabel: "Назва",
+      namePlaceholder: "Наприклад: Reimond",
+      kindLabel: "Вид робіт",
+      kindPlaceholder: "Наприклад: Покрівля",
+      addressLabel: "Адреса",
+      addressPlaceholder: "Місто, вулиця",
+      statusLabel: "Статус",
+      save: "Зберегти",
+      nameRequired: "Вкажіть назву об'єкта",
+      saveError: "Не вдалося зберегти об'єкт. Спробуйте ще раз",
     },
   },
 
