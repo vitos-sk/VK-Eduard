@@ -10,3 +10,13 @@ export type EntryPhoto = Tables<"entry_photos">;
 export interface WorkEntryWithPhotos extends WorkEntry {
   entry_photos: EntryPhoto[];
 }
+
+/**
+ * Смена вместе с именем автора и объекта — таблица «Зміни за місяць» внизу
+ * экрана «Години». RLS сама решает, чьи строки попадут в выборку: рабочему —
+ * только свои, шефу — все по компании, поэтому автора нужно подписывать.
+ */
+export interface WorkEntryWithNames extends WorkEntry {
+  author_full_name: string;
+  site_name: string | null;
+}

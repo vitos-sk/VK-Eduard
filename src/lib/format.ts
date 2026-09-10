@@ -73,6 +73,16 @@ export function formatDayMonth(date: Date): string {
   return format(date, "d MMMM", { locale: ukLocale });
 }
 
+/** `YYYY-MM-DD` → `30.07` — узкая колонка «Дата» в таблице «Зміни за місяць». */
+export function formatWorkDateShort(workDate: string): string {
+  return format(fromDateKey(workDate), "dd.MM", { locale: ukLocale });
+}
+
+/** `14:58:00` → `14:58` — без секунд, для узких таблиц. */
+export function formatTimeShort(time: string): string {
+  return time.slice(0, 5);
+}
+
 /** `08:00`. */
 export function formatTime(date: Date): string {
   return format(date, "HH:mm", { locale: ukLocale });

@@ -173,6 +173,13 @@ export const uk = {
     emptyTitle: "За цей період даних немає",
     emptyHint: "Оберіть інший період або додайте час вручну",
     noEntriesToday: "Записів за цей день ще немає",
+    /** Таблиця «Зміни за місяць» внизу екрана — своя рабочому, вся компанія шефу. */
+    monthTableTitle: "Зміни за місяць",
+    monthTableWorkerColumn: "Ім'я",
+    monthTableDateColumn: "Дата",
+    monthTableTimeColumn: "Час",
+    monthTableObjectColumn: "Об'єкт",
+    monthTableEmpty: "За цей місяць змін ще немає",
     /** Ошибки действий таймера — один текст на разные причины отказа базы. */
     alreadyRunning: "Зміна вже триває",
     noOpenShift: "Немає активної зміни",

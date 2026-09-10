@@ -9,6 +9,7 @@ import { DayActions } from "@/components/hours/DayActions";
 import { DayDetailsCard } from "@/components/hours/DayDetailsCard";
 import { DayEntriesCard } from "@/components/hours/DayEntriesCard";
 import { DaySummaryCard } from "@/components/hours/DaySummaryCard";
+import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
@@ -26,9 +27,14 @@ import { formatDateFull, formatDayMonth } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/modules/auth/session";
-import { getEntriesForDate, getEntriesInRange, getOpenEntry } from "@/modules/entries/queries";
+import {
+  getCompanyEntriesInRange,
+  getEntriesForDate,
+  getEntriesInRange,
+  getOpenEntry,
+} from "@/modules/entries/queries";
 import { aggregateDay, buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
-import type { WorkEntry } from "@/modules/entries/types";
+import type { WorkEntry, WorkEntryWithNames } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
@@ -89,6 +95,7 @@ export function HoursScreen({
 
   const [dayEntries, setDayEntries] = useState<readonly WorkEntry[]>(initialEntries);
   const [rangeEntries, setRangeEntries] = useState<readonly WorkEntry[]>([]);
+  const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
   const [openEntry, setOpenEntry] = useState<WorkEntry | null>(initialOpenEntry);
   const [refreshToken, setRefreshToken] = useState(0);
 
@@ -154,6 +161,24 @@ export function HoursScreen({
       cancelled = true;
     };
   }, [supabase, profile.id, period, date, refreshToken]);
+
+  // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты,
+  // независимо от вкладки День/Тиждень/Місяць наверху.
+  useEffect(() => {
+    let cancelled = false;
+    const from = dateKeyOf(startOfMonth(date));
+    const to = dateKeyOf(endOfMonth(date));
+
+    getCompanyEntriesInRange(supabase, profile.company_id, from, to)
+      .then((entries) => {
+        if (!cancelled) setMonthEntries(entries);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, profile.company_id, date, refreshToken]);
 
   const handleChanged = useCallback(() => {
     setRefreshToken((token) => token + 1);
@@ -294,6 +319,12 @@ export function HoursScreen({
         {period === "month" && monthSummary && (
           <PeriodView className="mt-3" summary={monthSummary} labelEvery={5} />
         )}
+
+        <MonthEntriesTable
+          className="mt-3"
+          entries={monthEntries}
+          showAuthor={profile.role === "boss"}
+        />
       </div>
     </div>
   );

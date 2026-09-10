@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types.gen";
-import type { WorkEntry, WorkEntryWithPhotos } from "./types";
+import type { WorkEntry, WorkEntryWithNames, WorkEntryWithPhotos } from "./types";
 
 type Client = SupabaseClient<Database>;
 
@@ -85,6 +85,43 @@ export async function getEntryWithPhotos(
   if (error) throw error;
 
   return data as WorkEntryWithPhotos | null;
+}
+
+type CompanyEntryRow = WorkEntry & {
+  profiles: { full_name: string } | null;
+  sites: { name: string } | null;
+};
+
+/**
+ * Все смены компании за диапазон дат вместе с именем автора и объекта —
+ * таблица «Зміни за місяць» внизу экрана «Години».
+ *
+ * Фильтр только по `company_id` — RLS сама решает, что вернуть: рабочему
+ * (`entries_select`) — только его собственные строки, шефу (`is_boss()`) —
+ * все по компании. Дублировать эту развилку в коде не нужно.
+ */
+export async function getCompanyEntriesInRange(
+  supabase: Client,
+  companyId: string,
+  fromDate: string,
+  toDate: string,
+): Promise<WorkEntryWithNames[]> {
+  const { data, error } = await supabase
+    .from("work_entries")
+    .select("*, profiles(full_name), sites(name)")
+    .eq("company_id", companyId)
+    .gte("work_date", fromDate)
+    .lte("work_date", toDate)
+    .order("work_date", { ascending: false })
+    .order("started_at", { ascending: false });
+
+  if (error) throw error;
+
+  return ((data ?? []) as CompanyEntryRow[]).map(({ profiles, sites, ...entry }) => ({
+    ...entry,
+    author_full_name: profiles?.full_name ?? "",
+    site_name: sites?.name ?? null,
+  }));
 }
 
 /** Записи автора в диапазоне дат включительно — для сводок «Тиждень» / «Місяць». */
