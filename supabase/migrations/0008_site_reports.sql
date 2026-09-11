@@ -118,6 +118,10 @@ create policy report_categories_insert on report_categories for insert to authen
     where r.id = report_id
       and r.company_id = private.current_company_id()
       and r.author_id = auth.uid()
+  ) and exists (
+    select 1 from work_categories wc
+    where wc.id = category_id
+      and wc.company_id = private.current_company_id()
   ));
 
 create policy report_categories_delete on report_categories for delete to authenticated
