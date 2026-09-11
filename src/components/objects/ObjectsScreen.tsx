@@ -101,7 +101,7 @@ export function ObjectsScreen({ objects, isBoss }: ObjectsScreenProps) {
         />
 
         {visibleObjects.length > 0 ? (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
             {visibleObjects.map((object) => (
               <ObjectCard key={object.id} object={object} showChevron />
             ))}

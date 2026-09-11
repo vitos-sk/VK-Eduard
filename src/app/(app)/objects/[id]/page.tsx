@@ -76,7 +76,7 @@ export default async function ObjectDetailPage({
         }
       />
 
-      <div className="px-4">
+      <div className="px-4 lg:hidden">
         <section className="rounded-[16px] border border-border bg-surface p-4">
           {coverPhotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
@@ -166,6 +166,111 @@ export default async function ObjectDetailPage({
             description={t.objects.detail.emptyHint}
           />
         )}
+      </div>
+
+      {/* Desktop: фото/карта зліва, деталі + звіти справа — паралельна гілка, мобільна розмітка вище лишається без змін. */}
+      <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8">
+        <div className="flex flex-col gap-4">
+          <section className="rounded-[16px] border border-border bg-surface p-4">
+            {coverPhotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
+              <img
+                src={coverPhotoUrl}
+                alt=""
+                className="h-[280px] w-full rounded-[12px] object-cover"
+              />
+            ) : (
+              <div className="flex h-[280px] w-full items-center justify-center rounded-[12px] bg-surface-2 text-[14px] font-medium text-text-dim">
+                {t.common.dash}
+              </div>
+            )}
+          </section>
+
+          {site.address && (
+            <a
+              href={getGoogleMapsDirectionsUrl(site.address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
+            >
+              <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
+              {site.address}
+            </a>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <section className="rounded-[16px] border border-border bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[20px] font-bold">{site.name}</p>
+                {!site.address && (
+                  <p className="mt-1 text-[14px] font-medium text-text-muted">{t.common.dash}</p>
+                )}
+              </div>
+              {site.archived_at ? (
+                <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">
+                  {t.objects.archivedBadge}
+                </span>
+              ) : (
+                <StatusBadge status={site.status} />
+              )}
+            </div>
+
+            <dl className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
+              {site.kind && (
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-[14px] font-medium text-text-muted">
+                    {t.objects.detail.kind}
+                  </dt>
+                  <dd className="text-[14px] font-bold">{site.kind}</dd>
+                </div>
+              )}
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-[14px] font-medium text-text-muted">
+                  {t.objects.detail.totalWorked}
+                </dt>
+                <dd className="tabular text-[14px] font-bold">
+                  {formatHoursShort(totalMinutes)}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          {isBoss && (
+            <ObjectArchiveButton
+              className="mt-3"
+              siteId={site.id}
+              isArchived={site.archived_at !== null}
+            />
+          )}
+
+          <h2 className="mt-6 text-[20px] font-bold">{t.objects.detail.myReports}</h2>
+
+          {entries.length > 0 ? (
+            <div className="mt-3 space-y-3">
+              {entries.map((entry) => (
+                <ReportCard
+                  key={entry.id}
+                  entry={entry}
+                  siteName={site.name}
+                  thumbUrl={
+                    entry.entry_photos[0]
+                      ? (thumbUrls.get(entry.entry_photos[0].storage_path) ?? null)
+                      : null
+                  }
+                  now={now}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              className="mt-4"
+              title={t.objects.detail.emptyTitle}
+              description={t.objects.detail.emptyHint}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -67,7 +67,7 @@ export function ObjectForm({ site }: ObjectFormProps) {
         onBack={() => router.back()}
       />
 
-      <div className="flex flex-col gap-4 px-4">
+      <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[640px]">
         <Field label={t.objects.form.nameLabel}>
           <input
             value={name}
@@ -78,23 +78,25 @@ export function ObjectForm({ site }: ObjectFormProps) {
           />
         </Field>
 
-        <Field label={t.objects.form.kindLabel}>
-          <input
-            value={kind}
-            onChange={(event) => setKind(event.target.value)}
-            placeholder={t.objects.form.kindPlaceholder}
-            className={inputClassName}
-          />
-        </Field>
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4">
+          <Field label={t.objects.form.kindLabel}>
+            <input
+              value={kind}
+              onChange={(event) => setKind(event.target.value)}
+              placeholder={t.objects.form.kindPlaceholder}
+              className={inputClassName}
+            />
+          </Field>
 
-        <Field label={t.objects.form.addressLabel}>
-          <input
-            value={address}
-            onChange={(event) => setAddress(event.target.value)}
-            placeholder={t.objects.form.addressPlaceholder}
-            className={inputClassName}
-          />
-        </Field>
+          <Field label={t.objects.form.addressLabel}>
+            <input
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
+              placeholder={t.objects.form.addressPlaceholder}
+              className={inputClassName}
+            />
+          </Field>
+        </div>
 
         <Field label={t.objects.form.statusLabel}>
           <SegmentedTabs
