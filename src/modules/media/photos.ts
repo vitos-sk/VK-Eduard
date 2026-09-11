@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Tables } from "@/lib/supabase/types.gen";
+import type { ReportPhoto } from "@/modules/reports/types";
 import { compressImage } from "./compress";
 
 export type EntryPhoto = Tables<"entry_photos">;
@@ -68,6 +69,60 @@ export async function deleteEntryPhoto(
 
   const { error: deleteError } = await supabase
     .from("entry_photos")
+    .delete()
+    .eq("id", photo.id);
+
+  if (deleteError) throw deleteError;
+}
+
+/**
+ * Сжимает и загружает фото звіту в той самий бакет `entry-photos`
+ * (Global Constraints плану: окремий бакет зламав би бэкфілл), по шляху
+ * `{company_id}/{report_id}/{uuid}.webp`, потім рядок метаданих у `report_photos`.
+ */
+export async function uploadReportPhoto(
+  supabase: SupabaseClient<Database>,
+  params: { companyId: string; reportId: string; sortOrder: number },
+  file: File,
+): Promise<ReportPhoto> {
+  const { blob, width, height } = await compressImage(file);
+  const path = `${params.companyId}/${params.reportId}/${crypto.randomUUID()}.webp`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, blob, { contentType: "image/webp" });
+
+  if (uploadError) throw uploadError;
+
+  const { data, error: insertError } = await supabase
+    .from("report_photos")
+    .insert({
+      report_id: params.reportId,
+      storage_path: path,
+      width,
+      height,
+      size_bytes: blob.size,
+      sort_order: params.sortOrder,
+    })
+    .select("*")
+    .single();
+
+  if (insertError) throw insertError;
+
+  return data;
+}
+
+/** Удаляет фото звіту: сначала файл из Storage, потом строку метаданных. */
+export async function deleteReportPhoto(
+  supabase: SupabaseClient<Database>,
+  photo: Pick<ReportPhoto, "id" | "storage_path">,
+): Promise<void> {
+  const { error: removeError } = await supabase.storage.from(BUCKET).remove([photo.storage_path]);
+
+  if (removeError) throw removeError;
+
+  const { error: deleteError } = await supabase
+    .from("report_photos")
     .delete()
     .eq("id", photo.id);
 
