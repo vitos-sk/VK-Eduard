@@ -4,20 +4,26 @@ import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 
-interface AdminDashboardProps {
+interface CompanyDashboardProps {
   month: Date;
   entries: readonly WorkEntryWithNames[];
   workersCount: number;
   activeObjectsCount: number;
+  className?: string;
 }
 
-/** Сводные цифры по компании за месяц + топ работников по часам. */
-export function AdminDashboard({
+/**
+ * Сводные цифры по компании за месяц + топ работников по часам.
+ * Показывается на «Головній» только для `boss` — раньше жил в отдельной
+ * десктопной `/admin`, теперь часть обычной адаптивной вёрстки.
+ */
+export function CompanyDashboard({
   month,
   entries,
   workersCount,
   activeObjectsCount,
-}: AdminDashboardProps) {
+  className,
+}: CompanyDashboardProps) {
   const totalMinutes = entries.reduce((sum, entry) => sum + (entry.total_minutes ?? 0), 0);
 
   const minutesByWorker = new Map<string, number>();
@@ -35,8 +41,8 @@ export function AdminDashboard({
   const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
 
   return (
-    <div>
-      <h1 className="text-[26px] font-extrabold tracking-tight">{t.admin.dashboard.title}</h1>
+    <div className={className}>
+      <h2 className="text-[22px] font-extrabold tracking-tight">{t.admin.dashboard.title}</h2>
       <p className="mt-1 text-[14px] font-semibold text-text-muted">
         {fmt(t.admin.dashboard.subtitle, { month: monthTitle })}
       </p>
@@ -60,7 +66,7 @@ export function AdminDashboard({
       </div>
 
       <section className="mt-8 rounded-[16px] border border-border bg-surface p-5">
-        <h2 className="text-[17px] font-bold">{t.admin.dashboard.topWorkersTitle}</h2>
+        <h3 className="text-[17px] font-bold">{t.admin.dashboard.topWorkersTitle}</h3>
 
         {topWorkers.length === 0 ? (
           <p className="mt-2 text-[14px] font-medium text-text-muted">

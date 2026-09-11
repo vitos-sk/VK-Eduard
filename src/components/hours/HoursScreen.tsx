@@ -1,114 +1,75 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { addDays, addMonths, addWeeks, eachDayOfInterval, endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
+import { addMonths, eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { DayActions } from "@/components/hours/DayActions";
-import { DayDetailsCard } from "@/components/hours/DayDetailsCard";
-import { DayEntriesCard } from "@/components/hours/DayEntriesCard";
-import { DaySummaryCard } from "@/components/hours/DaySummaryCard";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
-import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
 import { PeriodView } from "@/components/hours/PeriodView";
+import { SalaryCalculator } from "@/components/hours/SalaryCalculator";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import {
-  SegmentedTabs,
-  type SegmentedOption,
-} from "@/components/shared/SegmentedTabs";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { formatDateFull, formatDayMonth } from "@/lib/format";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/modules/auth/session";
-import {
-  getCompanyEntriesInRange,
-  getEntriesForDate,
-  getEntriesInRange,
-  getOpenEntry,
-} from "@/modules/entries/queries";
-import { aggregateDay, buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
+import { getCompanyEntriesInRange, getOpenEntry } from "@/modules/entries/queries";
+import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
 import type { WorkEntry, WorkEntryWithNames } from "@/modules/entries/types";
-import type { Site } from "@/modules/sites/queries";
+import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 
-type Period = "day" | "week" | "month";
-
-const PERIOD_OPTIONS: readonly SegmentedOption<Period>[] = [
-  { value: "day", label: t.hours.tabs.day },
-  { value: "week", label: t.hours.tabs.week },
-  { value: "month", label: t.hours.tabs.month },
-];
-
-/** Заголовок навигатора: день, диапазон недели или месяц с годом. */
-function getPeriodTitle(period: Period, date: Date): string {
-  if (period === "day") {
-    return formatDateFull(date);
-  }
-
-  if (period === "week") {
-    const from = startOfWeek(date, { locale: ukLocale });
-    const to = endOfWeek(date, { locale: ukLocale });
-
-    return `${formatDayMonth(from)} — ${formatDayMonth(to)}`;
-  }
-
+/** Заголовок навигатора: месяц з роком. */
+function getMonthTitle(date: Date): string {
   return `${t.months.nominative[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 interface HoursScreenProps {
   profile: Profile;
-  sites: readonly Site[];
-  /** Сегодняшняя дата и данные по ней — с сервера, чтобы первый экран не мигал пустотой. */
+  /** Сегодняшняя дата — с сервера, чтобы первый экран не мигал пустотой. */
   initialDate: string;
-  initialEntries: readonly WorkEntry[];
   initialOpenEntry: WorkEntry | null;
 }
 
 /**
- * Экран «Години». Данные читает браузерный клиент Supabase при каждой смене
- * периода/даты — офлайн-кеша (модуль `sync`) пока нет, это этап 5.
+ * Экран «Години». Показывает только зведення за місяць — вкладок День/Тиждень
+ * немає, перемикання періодів прибрали, залишили лише навігацію по місяцях.
+ * Дані читає браузерний клиент Supabase при каждой смене даты — офлайн-кеша
+ * (модуль `sync`) пока нет, это этап 5.
  */
 export function HoursScreen({
   profile,
-  sites,
   initialDate,
-  initialEntries,
   initialOpenEntry,
 }: HoursScreenProps) {
   const supabase = useMemo(() => createClient(), []);
-  const siteNameById = useMemo(
-    () => new Map(sites.map((site) => [site.id, site.name] as const)),
-    [sites],
-  );
 
-  const [period, setPeriod] = useState<Period>("day");
+  const isBoss = profile.role === "boss";
+
   const [date, setDate] = useState<Date>(() => new Date(`${initialDate}T00:00:00`));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const [dayEntries, setDayEntries] = useState<readonly WorkEntry[]>(initialEntries);
-  const [rangeEntries, setRangeEntries] = useState<readonly WorkEntry[]>([]);
   const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
   const [openEntry, setOpenEntry] = useState<WorkEntry | null>(initialOpenEntry);
   const [refreshToken, setRefreshToken] = useState(0);
 
-  // Таймер большой цифры на «Дне» тикает раз в секунду, но только пока
-  // вкладка открыта — иначе смысла в интервале нет.
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    if (period !== "day") return;
-
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, [period]);
+  // Перемикач «чиї години показувати» — тільки шефу, рабочий завжди бачить себе.
+  const [workers, setWorkers] = useState<readonly Worker[]>([]);
+  const [selectedWorkerId, setSelectedWorkerId] = useState(profile.id);
 
   const todayKey = dateKeyOf(new Date());
   const isToday = dateKeyOf(date) === todayKey;
@@ -133,37 +94,22 @@ export function HoursScreen({
   }, [supabase, profile.id, refreshToken]);
 
   useEffect(() => {
+    if (!isBoss) return;
+
     let cancelled = false;
-    const key = dateKeyOf(date);
 
-    if (period === "day") {
-      getEntriesForDate(supabase, profile.id, key)
-        .then((entries) => {
-          if (!cancelled) setDayEntries(entries);
-        })
-        .catch(() => {});
-
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const from = period === "week" ? startOfWeek(date, { locale: ukLocale }) : startOfMonth(date);
-    const to = period === "week" ? endOfWeek(date, { locale: ukLocale }) : endOfMonth(date);
-
-    getEntriesInRange(supabase, profile.id, dateKeyOf(from), dateKeyOf(to))
-      .then((entries) => {
-        if (!cancelled) setRangeEntries(entries);
+    getCompanyWorkers(supabase, profile.company_id)
+      .then((data) => {
+        if (!cancelled) setWorkers(data);
       })
       .catch(() => {});
 
     return () => {
       cancelled = true;
     };
-  }, [supabase, profile.id, period, date, refreshToken]);
+  }, [supabase, isBoss, profile.company_id]);
 
-  // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты,
-  // независимо от вкладки День/Тиждень/Місяць наверху.
+  // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты.
   useEffect(() => {
     let cancelled = false;
     const from = dateKeyOf(startOfMonth(date));
@@ -184,40 +130,24 @@ export function HoursScreen({
     setRefreshToken((token) => token + 1);
   }, []);
 
-  const shiftPeriod = (direction: 1 | -1) => {
-    setDate((current) => {
-      if (period === "day") return addDays(current, direction);
-      return period === "week" ? addWeeks(current, direction) : addMonths(current, direction);
-    });
+  const shiftMonth = (direction: 1 | -1) => {
+    setDate((current) => addMonths(current, direction));
   };
 
-  const dayAggregate = useMemo(
-    () => aggregateDay(dayEntries, now),
-    [dayEntries, now],
+  // Норма обраного співробітника, а не завжди своя: шеф дивиться чужий
+  // місяць — і денна норма має бути того, чий це місяць.
+  const selectedNormMinutes =
+    selectedWorkerId === profile.id
+      ? profile.daily_norm_minutes
+      : (workers.find((worker) => worker.id === selectedWorkerId)?.daily_norm_minutes ??
+        profile.daily_norm_minutes);
+
+  const selectedWorkerEntries = useMemo(
+    () => monthEntries.filter((entry) => entry.author_id === selectedWorkerId),
+    [monthEntries, selectedWorkerId],
   );
 
-  const weekSummary = useMemo(() => {
-    if (period !== "week") return null;
-
-    const from = startOfWeek(date, { locale: ukLocale });
-    const days = eachDayOfInterval({ start: from, end: endOfWeek(date, { locale: ukLocale }) });
-    const slots: DaySlot[] = days.map((day) => ({
-      date: dateKeyOf(day),
-      label: t.weekdays.short[day.getDay()],
-      isOffDay: day.getDay() === 0 || day.getDay() === 6,
-    }));
-
-    return buildPeriodSummary(
-      getPeriodTitle("week", date),
-      5 * profile.daily_norm_minutes,
-      slots,
-      rangeEntries,
-    );
-  }, [period, date, rangeEntries, profile.daily_norm_minutes]);
-
   const monthSummary = useMemo(() => {
-    if (period !== "month") return null;
-
     const from = startOfMonth(date);
     const days = eachDayOfInterval({ start: from, end: endOfMonth(date) });
     const slots: DaySlot[] = days.map((day) => ({
@@ -228,103 +158,136 @@ export function HoursScreen({
     const workDays = days.filter((day) => day.getDay() !== 0 && day.getDay() !== 6).length;
 
     return buildPeriodSummary(
-      getPeriodTitle("month", date),
-      workDays * profile.daily_norm_minutes,
+      getMonthTitle(date),
+      workDays * selectedNormMinutes,
       slots,
-      rangeEntries,
+      selectedWorkerEntries,
     );
-  }, [period, date, rangeEntries, profile.daily_norm_minutes]);
+  }, [date, selectedWorkerEntries, selectedNormMinutes]);
 
   return (
     <div className="pb-6">
       <ScreenHeader
         title={t.hours.title}
         action={
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                aria-label={t.hours.pickDate}
-                className={cn(
-                  "flex size-11 shrink-0 items-center justify-center rounded-full",
-                  "border border-border bg-surface-2 text-text",
-                  "transition-transform duration-150 active:scale-95",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                )}
-              >
-                <CalendarDays className="size-5" strokeWidth={2} aria-hidden />
-              </button>
-            </PopoverTrigger>
-
-            <PopoverContent
-              align="end"
-              className="w-auto border border-border bg-surface p-2"
+          <div
+            className={cn(
+              "flex shrink-0 items-center gap-0.5 rounded-full border border-border",
+              "bg-surface-2 p-1",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => shiftMonth(-1)}
+              aria-label={t.hours.prevPeriod}
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
+                "transition-colors duration-150 active:bg-surface",
+                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
+              )}
             >
-              <Calendar
-                mode="single"
-                selected={date}
-                defaultMonth={date}
-                onSelect={(next) => {
-                  if (next) {
-                    setDate(next);
-                    setIsCalendarOpen(false);
-                  }
-                }}
-                locale={ukLocale}
-              />
-            </PopoverContent>
-          </Popover>
+              <ChevronLeft className="size-4" strokeWidth={2.4} aria-hidden />
+            </button>
+
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t.hours.pickDate}
+                  className={cn(
+                    "flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3",
+                    "text-[13px] font-bold text-text",
+                    "transition-transform duration-150 active:scale-95",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                  )}
+                >
+                  <CalendarDays
+                    className="size-4 shrink-0 text-brand"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
+                </button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                align="end"
+                className="w-auto border border-border bg-surface p-2"
+              >
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  defaultMonth={date}
+                  onSelect={(next) => {
+                    if (next) {
+                      setDate(next);
+                      setIsCalendarOpen(false);
+                    }
+                  }}
+                  locale={ukLocale}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <button
+              type="button"
+              onClick={() => shiftMonth(1)}
+              aria-label={t.hours.nextPeriod}
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
+                "transition-colors duration-150 active:bg-surface",
+                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
+              )}
+            >
+              <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
+            </button>
+          </div>
         }
       />
 
       <div className="px-4">
-        <SegmentedTabs
-          options={PERIOD_OPTIONS}
-          value={period}
-          onChange={setPeriod}
-          label={t.hours.title}
-        />
-
-        {period === "day" && isToday && (
+        {isToday && (
           <DayActions
-            className="mt-3"
             openEntry={openEntry}
             onChanged={handleChanged}
           />
         )}
 
-        <PeriodNavigator
-          className="mt-3"
-          title={getPeriodTitle(period, date)}
-          onPrev={() => shiftPeriod(-1)}
-          onNext={() => shiftPeriod(1)}
-        />
-
-        {period === "day" && (
-          <div className="mt-3 space-y-3">
-            <DaySummaryCard aggregate={dayAggregate} />
-            <DayEntriesCard entries={dayEntries} siteNameById={siteNameById} now={now} />
-            <DayDetailsCard
-              aggregate={dayAggregate}
-              entries={dayEntries}
-              siteNameById={siteNameById}
-            />
-          </div>
+        {isBoss && (
+          <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
+            <SelectTrigger className="mt-3 h-11 w-full rounded-[12px] px-3">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={profile.id}>{t.hours.salaryCalcSelf}</SelectItem>
+              {workers
+                .filter((worker) => worker.id !== profile.id)
+                .map((worker) => (
+                  <SelectItem key={worker.id} value={worker.id}>
+                    {worker.full_name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         )}
 
-        {period === "week" && weekSummary && (
-          <PeriodView className="mt-3" summary={weekSummary} />
-        )}
-
-        {period === "month" && monthSummary && (
+        {monthSummary && (
           <PeriodView className="mt-3" summary={monthSummary} labelEvery={5} />
         )}
+
+        <SalaryCalculator
+          className="mt-3"
+          monthTitle={getMonthTitle(date)}
+          selfId={profile.id}
+          isBoss={isBoss}
+          companyId={profile.company_id}
+          monthEntries={monthEntries}
+        />
 
         <MonthEntriesTable
           className="mt-3"
           entries={monthEntries}
-          showAuthor={profile.role === "boss"}
-          isBoss={profile.role === "boss"}
+          showAuthor={isBoss}
           onChanged={handleChanged}
         />
       </div>

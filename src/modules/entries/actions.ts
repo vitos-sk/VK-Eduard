@@ -286,8 +286,8 @@ export async function createManualEntry(
 
 /**
  * Дозаполнение описания — «Дописати» на карточці «Без опису» и правка
- * в детальной странице. RLS сам решает, можно ли: своя запись за последние
- * 7 дней или что угодно, если шеф.
+ * в детальной странице. RLS сам решает, можно ли: своя запись или что
+ * угодно, если шеф.
  */
 export async function updateEntryDescription(
   entryId: string,
@@ -313,7 +313,7 @@ export async function updateEntryDescription(
   // UPDATE, которому RLS не даёт совпасть ни с одной строкой, не ошибка,
   // а пустой результат — окно правки закрылось, а не «что-то пошло не так».
   if (!data || data.length === 0) {
-    return { error: t.reportDetail.editWindowClosed };
+    return { error: t.reportDetail.saveRejected };
   }
 
   revalidatePath("/", "layout");
@@ -326,7 +326,7 @@ export async function updateEntryDescription(
  * чіпаємо: форма редагування не дає її міняти, тож передаємо ті самі
  * `breakStart`/`breakEnd`, що вже лежали в записі, інакше є ризик тихо
  * затерти реальний перерву значенням за замовчуванням.
- * Та сама розвилка `editWindowClosed`, що й у `updateEntryDescription`.
+ * Та сама розвилка `saveRejected`, що й у `updateEntryDescription`.
  */
 export async function updateEntry(
   entryId: string,
@@ -379,7 +379,7 @@ export async function updateEntry(
   }
 
   if (!data || data.length === 0) {
-    return { error: t.reportDetail.editWindowClosed };
+    return { error: t.reportDetail.saveRejected };
   }
 
   revalidatePath("/", "layout");
@@ -393,8 +393,8 @@ export async function updateEntry(
  * (ARCHITECTURE.md), а не цей запит, як і при видаленні одного фото
  * (`modules/media/photos.deleteEntryPhoto`).
  *
- * `entries_delete` (міграція 0005) — та сама розвилка прав, що й у
- * `entries_update`: своя запис за 7 днів рабочому, будь-яка шефу.
+ * `entries_delete` (міграції 0005, 0007) — та сама розвилка прав, що й у
+ * `entries_update`: своя запис рабочому, будь-яка шефу.
  */
 export async function deleteEntry(entryId: string): Promise<EntryActionState> {
   const profile = await getProfile();
@@ -415,7 +415,7 @@ export async function deleteEntry(entryId: string): Promise<EntryActionState> {
   }
 
   if (!data || data.length === 0) {
-    return { error: t.reportDetail.editWindowClosed };
+    return { error: t.reportDetail.saveRejected };
   }
 
   revalidatePath("/", "layout");

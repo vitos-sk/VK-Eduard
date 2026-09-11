@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
-import { ChevronLeft, Download, UserPlus } from "lucide-react";
+import { ChevronLeft, UserPlus } from "lucide-react";
 
 import { AddWorkerForm } from "@/components/reports/AddWorkerForm";
+import { ExportMenu } from "@/components/reports/ExportMenu";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
@@ -137,24 +138,31 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
       .finally(() => setIsOpenLoading(false));
   };
 
+  const monthFrom = dateKeyOf(startOfMonth(month));
+  const monthTo = dateKeyOf(endOfMonth(month));
+
   if (openWorkerId) {
     const worker = workers.find((item) => item.id === openWorkerId);
 
     return (
       <div>
-        <div className="px-4 pb-1">
-          <button
-            type="button"
-            onClick={() => setOpenWorkerId(null)}
-            className="flex items-center gap-1 py-3 text-[15px] font-bold text-text-muted active:text-text"
-          >
-            <ChevronLeft className="size-5" strokeWidth={2.4} aria-hidden />
-            {t.reports.team.back}
-          </button>
+        <div className="flex items-start justify-between gap-3 px-4 pb-1">
+          <div>
+            <button
+              type="button"
+              onClick={() => setOpenWorkerId(null)}
+              className="flex items-center gap-1 py-3 text-[15px] font-bold text-text-muted active:text-text"
+            >
+              <ChevronLeft className="size-5" strokeWidth={2.4} aria-hidden />
+              {t.reports.team.back}
+            </button>
 
-          <p className="text-[22px] font-extrabold tracking-tight">
-            {worker?.full_name}
-          </p>
+            <p className="text-[22px] font-extrabold tracking-tight">
+              {worker?.full_name}
+            </p>
+          </div>
+
+          <ExportMenu className="mt-3" from={monthFrom} to={monthTo} workerId={openWorkerId} />
         </div>
 
         {isOpenLoading ? null : (
@@ -165,7 +173,6 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
   }
 
   const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
-  const exportHref = `/api/export?from=${dateKeyOf(startOfMonth(month))}&to=${dateKeyOf(endOfMonth(month))}`;
 
   return (
     <div className="px-4">
@@ -240,17 +247,11 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
         </ul>
       )}
 
-      <a
-        href={exportHref}
-        className={cn(
-          "mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-[14px]",
-          "border border-border text-[15px] font-bold text-text",
-          "transition-transform duration-150 active:scale-[0.98]",
-        )}
-      >
-        <Download className="size-[18px]" strokeWidth={2} aria-hidden />
-        {t.reports.team.export}
-      </a>
+      <ExportMenu
+        className="mt-4 h-12 w-full justify-center"
+        from={monthFrom}
+        to={monthTo}
+      />
     </div>
   );
 }

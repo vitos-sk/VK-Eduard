@@ -5,9 +5,9 @@ import { requireProfile } from "@/modules/auth/session";
 
 /**
  * Серверный layout: профиль нужен и мобильной, и десктопной ветке
- * (десктопный сайдбар показывает имя/роль и форму выхода — как
- * `admin/layout.tsx` передаёт его в `AdminShell`). Сама интерактивная
- * оболочка (стейт листа быстрых действий, обе ветки вёрстки) — в `AppShell`.
+ * (десктопный сайдбар показывает имя/роль и форму выхода). Сама
+ * интерактивная оболочка (стейт листа быстрых действий, обе ветки
+ * вёрстки) — в `AppShell`.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const profile = await requireProfile();

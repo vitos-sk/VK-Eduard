@@ -199,6 +199,7 @@ export const uk = {
     monthTableTimeColumn: "Час",
     monthTableObjectColumn: "Об'єкт",
     monthTableEmpty: "За цей місяць змін ще немає",
+    monthTableScrollHint: "Гортати таблицю по горизонталі",
     /** Ошибки действий таймера — один текст на разные причины отказа базы. */
     alreadyRunning: "Зміна вже триває",
     noOpenShift: "Немає активної зміни",
@@ -214,6 +215,15 @@ export const uk = {
     deleteConfirmAction: "Видалити",
     entryDeleted: "Запис видалено",
     deleteError: "Не вдалося видалити запис. Спробуйте ще раз",
+    /** Калькулятор зарплати — вкладка «Місяць». Ставка не зберігається, тільки на сесію. */
+    salaryCalcTitle: "Калькулятор зарплати",
+    salaryCalcWorkerLabel: "Співробітник",
+    salaryCalcSelf: "Я",
+    salaryCalcRateLabel: "Ставка, грн/год",
+    salaryCalcRatePlaceholder: "Наприклад: 150",
+    salaryCalcAmount: "Заробіток за місяць",
+    salaryCalcCopy: "Скопіювати",
+    salaryCalcCopied: "Скопійовано",
   },
 
   /** Экран «Звіти». */
@@ -235,7 +245,6 @@ export const uk = {
     team: {
       allWorkers: "Усі працівники",
       thisWeek: "Цей тиждень: {hours}",
-      export: "Експорт звітів",
       empty: "У компанії ще немає активних працівників",
       back: "Команда",
       addWorker: "Додати співробітника",
@@ -303,7 +312,8 @@ export const uk = {
     uploadError: "Не вдалося завантажити фото",
     deletePhotoError: "Не вдалося видалити фото",
     maxPhotos: "Максимум {max} фото",
-    editWindowClosed: "Минуло більше 7 днів — звертайтеся до шефа",
+    /** RLS відхилила зміну — запис не ваш, або з ним щось відбулось паралельно. */
+    saveRejected: "Не вдалося зберегти зміни. Спробуйте ще раз або зверніться до шефа",
   },
 
   /** Форма `/reports/new` — створення звіту з нуля. */
@@ -376,23 +386,12 @@ export const uk = {
   },
 
   /**
-   * Десктопна адмін-панель `/admin` — тільки boss, тільки на широкому екрані
-   * (докладніше — `components/admin/AdminShell.tsx`). Мобільний застосунок
-   * і `PhoneFrame` цього розділу не стосуються.
+   * Зведена статистика по компанії (`CompanyDashboard`, на «Головній» —
+   * тільки `boss`) і розширений експорт (`ExportMenu`, у вкладці «Команда»).
+   * Раніше жили в окремій десктопній `/admin`, тепер частина звичайного
+   * адаптивного застосунку — назва секції лишилась історичною.
    */
   admin: {
-    nav: {
-      dashboard: "Дашборд",
-      team: "Команда",
-      objects: "Об'єкти",
-      reports: "Звіти",
-    },
-    openLink: "Адмін-панель (для комп'ютера)",
-    narrowGate: {
-      title: "Відкрийте на комп'ютері",
-      hint: "Адмін-панель розрахована на широкий екран. На телефоні користуйтесь звичайним застосунком — вкладка «Команда» в «Звітах» має ті самі дані.",
-      back: "На головну",
-    },
     dashboard: {
       title: "Дашборд",
       subtitle: "{month}",
@@ -402,42 +401,13 @@ export const uk = {
       topWorkersTitle: "Найбільше годин цього місяця",
       topWorkersEmpty: "Поки що немає відпрацьованих годин цього місяця",
     },
-    objects: {
-      title: "Об'єкти",
-      addObject: "Додати об'єкт",
-      columnName: "Назва",
-      columnKind: "Вид робіт",
-      columnAddress: "Адреса",
-      columnStatus: "Статус",
-      empty: "Об'єктів ще немає",
-      openInMaps: "Прокласти маршрут",
-      deleteObject: "Видалити об'єкт",
-      deleteConfirm: "Видалити об'єкт назавжди? Записи по ньому залишаться, але втратять прив'язку до об'єкта.",
-      deleteError: "Не вдалося видалити об'єкт. Спробуйте ще раз",
-      photoLabel: "Фото об'єкта",
-      addPhoto: "Додати фото",
-      changePhoto: "Змінити фото",
-      removePhoto: "Прибрати фото",
-      uploading: "Завантаження...",
-      photoUploadError: "Не вдалося завантажити фото. Спробуйте ще раз",
-    },
-    reports: {
-      title: "Звіти",
-      columnWorker: "Робітник",
-      columnDate: "Дата",
-      columnTime: "Час",
-      columnObject: "Об'єкт",
-      columnDescription: "Опис",
-      columnPhotos: "Фото",
-      filterWorkerAll: "Усі робітники",
-      filterObjectAll: "Усі об'єкти",
-      empty: "За цей період звітів немає",
-    },
     export: {
       label: "Експорт",
       csv: "CSV",
       xlsx: "Excel (.xlsx)",
       pdf: "PDF-табель",
+      /** Назва аркуша Excel-файлу (`modules/export/xlsx.ts`). */
+      sheetTitle: "Звіти",
     },
   },
 
@@ -453,6 +423,7 @@ export const uk = {
   units: {
     hoursShort: "год",
     minutesShort: "хв",
+    currency: "грн",
   },
 
   /** Дни недели. `long` — для дат, `short` — для подписей диаграммы. */

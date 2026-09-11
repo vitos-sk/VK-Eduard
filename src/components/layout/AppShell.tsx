@@ -48,8 +48,10 @@ export function AppShell({ profile, children }: AppShellProps) {
         </PhoneFrame>
       </div>
 
-      {/* Desktop-ветка */}
-      <div className="hidden min-h-dvh bg-bg text-text lg:flex">
+      {/* Desktop-ветка: h-dvh (не min-h-dvh) — контейнер не растягивается
+          вместе с контентом, поэтому скроллится только `main`, а сайдбар
+          остаётся статичным по высоте вьюпорта. */}
+      <div className="hidden h-dvh bg-bg text-text lg:flex">
         <DesktopSidebar
           profile={profile}
           onFabClick={() => setIsQuickOpen((open) => !open)}

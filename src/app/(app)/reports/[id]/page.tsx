@@ -3,11 +3,9 @@ import { notFound } from "next/navigation";
 import { ReportDetail } from "@/components/reports/ReportDetail";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { isWithinEditWindow } from "@/modules/entries/editWindow";
 import { getEntryWithPhotos } from "@/modules/entries/queries";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { getSiteById } from "@/modules/sites/queries";
-import { dateKeyOf } from "@/modules/time/calc";
 
 export default async function ReportDetailPage({
   params,
@@ -34,12 +32,6 @@ export default async function ReportDetailPage({
     ),
   ]);
 
-  const editable = isWithinEditWindow(
-    entry.work_date,
-    profile.role === "boss",
-    dateKeyOf(new Date()),
-  );
-
   return (
     <ReportDetail
       entry={entry}
@@ -47,7 +39,10 @@ export default async function ReportDetailPage({
       companyId={profile.company_id}
       authorName={entry.author_full_name}
       normMinutes={entry.author_daily_norm_minutes}
-      editable={editable}
+      // `getEntryWithPhotos` уже прогнала запись через `entries_select`:
+      // якщо вона тут — це або своя, або ми шеф, а обидва варианты
+      // `entries_update`/`entries_delete` дозволяють без обмежень.
+      editable
       photoUrls={Object.fromEntries(photoUrls)}
     />
   );

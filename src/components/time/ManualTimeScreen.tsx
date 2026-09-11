@@ -23,20 +23,24 @@ import { createManualEntry, updateEntry } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
 import {
+  breakMinutes as calcBreakMinutes,
   isDurationValid,
-  minutesBetweenWrapped,
   minutesToTime,
   timeToMinutes,
+  totalMinutes,
   dateKeyOf,
 } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 
 /** Значения по умолчанию — те же, что на макете. */
-const DEFAULT_START = "13:30";
+const DEFAULT_START = "07:00";
 const DEFAULT_END = "16:00";
 
 /** Шаг стрілок часу — 15 хв, звична крупність для зміни. */
 const TIME_STEP_MIN = 15;
+
+/** Швидкі кнопки тривалості перерви. */
+const BREAK_OPTIONS_MIN = [15, 30, 45, 60] as const;
 
 interface ManualTimeScreenProps {
   sites: readonly Site[];
@@ -48,10 +52,10 @@ interface ManualTimeScreenProps {
  * Екран «Додати час вручну» (і, коли передано `entry`, редагування
  * наявного запису) — форма пише закриту запис прямо в базу.
  *
- * Перерву в режимі редагування навмисно не показуємо і не чіпаємо: цей
- * екран не вміє її вводити навіть при створенні (тільки `ReportForm` вміє,
- * через тумблер), тож `updateEntry` завжди отримує break_start/break_end
- * записи як є, без ризику тихо їх затерти.
+ * Перерва вводиться кнопками {@link BREAK_OPTIONS_MIN} і завжди ставиться
+ * одразу після «Початок» (breakStart = startAt). В режимі редагування
+ * початковий вибір рахується з наявних break_start/break_end запису, тож
+ * нічого тихо не затирається, поки користувач не змінить кнопку сам.
  */
 export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
   const router = useRouter();
@@ -63,15 +67,22 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
   );
   const [startAt, setStartAt] = useState(entry?.started_at.slice(0, 5) ?? DEFAULT_START);
   const [endAt, setEndAt] = useState(entry?.ended_at?.slice(0, 5) ?? DEFAULT_END);
+  const [breakMin, setBreakMin] = useState(() =>
+    calcBreakMinutes(entry?.break_start ?? null, entry?.break_end ?? null),
+  );
   const [description, setDescription] = useState(entry?.description ?? "");
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
+  // Перерва завжди одразу після початку зміни — просто і предсказувано.
+  const breakStart = breakMin > 0 ? startAt : null;
+  const breakEnd = breakMin > 0 ? minutesToTime(timeToMinutes(startAt) + breakMin) : null;
+
   // Переход через полночь — не ошибка: 22:00 → 06:00 это нічна зміна
   // (docs/DATA-MODEL.md), поэтому длительность считаем «завёрнутой».
-  const durationMin = minutesBetweenWrapped(startAt, endAt);
+  const durationMin = totalMinutes(startAt, endAt, breakStart, breakEnd) ?? 0;
   const isDurationOk = isDurationValid(durationMin);
   const durationLabel = isDurationOk
     ? `${Math.floor(durationMin / 60)} год ${durationMin % 60} хв`
@@ -89,8 +100,8 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
         siteId,
         startedAt: startAt,
         endedAt: endAt,
-        breakStart: entry?.break_start ?? null,
-        breakEnd: entry?.break_end ?? null,
+        breakStart,
+        breakEnd,
         description,
       };
 
@@ -238,6 +249,28 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
                 invalid={!isDurationOk}
               />
             </Field>
+          </div>
+
+          <p className="mt-3 mb-2 text-[13px] font-semibold text-text-muted">
+            {t.hours.break}
+          </p>
+          <div className="flex gap-2">
+            {BREAK_OPTIONS_MIN.map((minutes) => (
+              <button
+                key={minutes}
+                type="button"
+                onClick={() => setBreakMin((current) => (current === minutes ? 0 : minutes))}
+                aria-pressed={breakMin === minutes}
+                className={cn(
+                  "flex h-9 items-center gap-1 rounded-full border px-3 text-[13px] font-bold active:scale-95",
+                  breakMin === minutes
+                    ? "border-brand bg-brand text-brand-ink"
+                    : "border-border bg-surface-2 text-text",
+                )}
+              >
+                {minutes < 60 ? `${minutes} ${t.units.minutesShort}` : `1 ${t.units.hoursShort}`}
+              </button>
+            ))}
           </div>
 
           {!isDurationOk && (

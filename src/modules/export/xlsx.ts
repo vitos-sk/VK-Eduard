@@ -31,7 +31,7 @@ export async function buildXlsx(
   workbook.creator = meta.companyName || "K work";
   workbook.created = new Date();
 
-  const sheet = workbook.addWorksheet(t.admin.reports.title, {
+  const sheet = workbook.addWorksheet(t.admin.export.sheetTitle, {
     views: [{ state: "frozen", ySplit: 1 }],
   });
 

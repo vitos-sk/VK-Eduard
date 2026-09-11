@@ -1,3 +1,6 @@
+import { endOfMonth, startOfMonth } from "date-fns";
+
+import { CompanyDashboard } from "@/components/home/CompanyDashboard";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { WorkTimeCard } from "@/components/home/WorkTimeCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -7,10 +10,12 @@ import { fmt, formatDateLong } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { initialsOf, requireProfile } from "@/modules/auth/session";
-import { getEntriesFeed, getOpenEntry } from "@/modules/entries/queries";
+import { getCompanyEntriesInRange, getEntriesFeed, getOpenEntry } from "@/modules/entries/queries";
 import { aggregateSiteStats } from "@/modules/entries/siteStats";
 import { toSiteObject } from "@/modules/sites/present";
 import { getActiveSites } from "@/modules/sites/queries";
+import { getCompanyWorkers } from "@/modules/team/queries";
+import { dateKeyOf } from "@/modules/time/calc";
 
 /** Сколько объектов показывать в блоке «Мої об'єкти» на главной. */
 const HOME_OBJECTS_LIMIT = 3;
@@ -18,11 +23,22 @@ const HOME_OBJECTS_LIMIT = 3;
 export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
+  const isBoss = profile.role === "boss";
+  const now = new Date();
 
-  const [openEntry, entries, sites] = await Promise.all([
+  const [openEntry, entries, sites, companyMonthEntries, workers] = await Promise.all([
     getOpenEntry(supabase, profile.id),
     getEntriesFeed(supabase, profile.id),
     getActiveSites(supabase),
+    isBoss
+      ? getCompanyEntriesInRange(
+          supabase,
+          profile.company_id,
+          dateKeyOf(startOfMonth(now)),
+          dateKeyOf(endOfMonth(now)),
+        )
+      : Promise.resolve([]),
+    isBoss ? getCompanyWorkers(supabase, profile.company_id) : Promise.resolve([]),
   ]);
 
   const stats = aggregateSiteStats(entries);
@@ -53,6 +69,16 @@ export default async function HomePage() {
           {formatDateLong(new Date())}
         </p>
       </div>
+
+      {isBoss && (
+        <CompanyDashboard
+          className="mt-6"
+          month={now}
+          entries={companyMonthEntries}
+          workersCount={workers.length}
+          activeObjectsCount={sites.length}
+        />
+      )}
 
       {/* Мобільна колонка — без змін, прихована від lg */}
       <div className="lg:hidden">

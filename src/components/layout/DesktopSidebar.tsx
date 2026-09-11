@@ -17,9 +17,9 @@ interface DesktopSidebarProps {
 }
 
 /**
- * Десктопный сайдбар (`lg:` и шире) — параллель мобильному `BottomNav`,
- * по образцу `AdminShell.tsx`. Мобильную вёрстку не трогает: показывается
- * только внутри `hidden lg:flex`-ветки `(app)/layout.tsx`.
+ * Десктопный сайдбар (`lg:` и шире) — параллель мобильному `BottomNav`.
+ * Мобильную вёрстку не трогает: показывается только внутри
+ * `hidden lg:flex`-ветки `(app)/layout.tsx`.
  */
 export function DesktopSidebar({ profile, onFabClick }: DesktopSidebarProps) {
   const pathname = usePathname();

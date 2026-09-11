@@ -25,7 +25,7 @@ interface PhotoUploaderProps {
   urls: Readonly<Record<string, string>>;
   onPhotosChange: (photos: EntryPhoto[]) => void;
   onUrlsChange: (patch: Record<string, string>) => void;
-  /** Вне окна правки (>7 дней рабочему) фото можно только смотреть. */
+  /** Чужая запись — фото можно только смотреть. */
   editable: boolean;
   className?: string;
 }

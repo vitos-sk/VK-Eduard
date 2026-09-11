@@ -25,6 +25,7 @@ export function HomeHeader({
     <header
       className={cn(
         "flex items-center justify-between gap-3 pt-[calc(env(safe-area-inset-top)+1.25rem)]",
+        "lg:sticky lg:top-0 lg:z-20 lg:-mt-8 lg:bg-bg lg:pt-8",
         className,
       )}
     >
