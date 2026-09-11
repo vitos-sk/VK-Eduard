@@ -9,21 +9,26 @@ import { FabButton } from "@/components/layout/FabButton";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-interface NavItem {
+export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
 }
 
-const leftItems: readonly NavItem[] = [
+/**
+ * Единый источник пунктов навигации — таб-бар (мобильный) и сайдбар
+ * (десктопный, `DesktopSidebar`) рендерят один и тот же список, чтобы
+ * порядок/тексты/иконки не разъезжались между вёрстками.
+ */
+export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: t.nav.home, icon: House },
   { href: "/objects", label: t.nav.objects, icon: Building2 },
-];
-
-const rightItems: readonly NavItem[] = [
   { href: "/hours", label: t.nav.hours, icon: Clock },
   { href: "/reports", label: t.nav.reports, icon: FileText },
 ];
+
+const leftItems = NAV_ITEMS.slice(0, 2);
+const rightItems = NAV_ITEMS.slice(2);
 
 interface BottomNavProps {
   onFabClick: () => void;
