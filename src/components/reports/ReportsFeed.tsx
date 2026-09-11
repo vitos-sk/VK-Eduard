@@ -123,19 +123,22 @@ export function ReportsFeed({ entries, sites, thumbUrls }: ReportsFeedProps) {
 
   return (
     <div className="px-4">
-      <SearchField
-        value={query}
-        onChange={setQuery}
-        placeholder={t.reports.searchPlaceholder}
-      />
+      <div className="lg:flex lg:items-center lg:gap-4">
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder={t.reports.searchPlaceholder}
+          className="lg:flex-1"
+        />
 
-      <SegmentedTabs
-        className="mt-3"
-        options={FILTER_OPTIONS}
-        value={filter}
-        onChange={setFilter}
-        label={t.reports.title}
-      />
+        <SegmentedTabs
+          className="mt-3 lg:mt-0 lg:shrink-0"
+          options={FILTER_OPTIONS}
+          value={filter}
+          onChange={setFilter}
+          label={t.reports.title}
+        />
+      </div>
 
       {visible.length > 0 && (
         <div className="mt-4 flex items-baseline justify-between rounded-[16px] border border-border bg-surface px-4 py-3">
@@ -160,7 +163,7 @@ export function ReportsFeed({ entries, sites, thumbUrls }: ReportsFeedProps) {
               </span>
             </div>
 
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
               {group.entries.map((entry) => (
                 <ReportCard
                   key={entry.id}
