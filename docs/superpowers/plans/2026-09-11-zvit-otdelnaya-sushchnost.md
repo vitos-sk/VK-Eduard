@@ -18,7 +18,7 @@
 - i18n — только через `t.*` (`src/lib/i18n/uk.ts`), никаких строк в JSX.
 - Server actions — `"use server"`, `getProfile()`/`requireProfile()`, `revalidatePath("/", "layout")` по образцу `src/modules/entries/actions.ts`.
 - Тесты — vitest, `*.test.ts` рядом с модулем (см. `src/modules/time/calc.test.ts`).
-- Типы Supabase генерируются командой `npx supabase gen types typescript --project-id lhtcocvnqmfdxtukuels > src/lib/supabase/types.gen.ts` (из шапки `src/lib/supabase/types.gen.ts`) — руками не править.
+- Типы Supabase генерируются командой `npx supabase gen types typescript --project-id pqehyhdfcxgfnustdstm > src/lib/supabase/types.gen.ts` (из шапки `src/lib/supabase/types.gen.ts`) — руками не править.
 - Проверочные команды: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`.
 
 ---
@@ -276,7 +276,7 @@ Expected: `site_reports`/`report_photos` заполняются существу
 
 - [ ] **Step 3: Регенерировать типы**
 
-Run: `npx supabase gen types typescript --project-id lhtcocvnqmfdxtukuels > src/lib/supabase/types.gen.ts`
+Run: `npx supabase gen types typescript --project-id pqehyhdfcxgfnustdstm > src/lib/supabase/types.gen.ts`
 Expected: файл обновился, в нём появились `site_reports`, `report_photos`, `work_categories`, `report_categories` в `Database["public"]["Tables"]`.
 
 - [ ] **Step 4: Проверить типы компилируются**
