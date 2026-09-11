@@ -261,6 +261,7 @@ export type Database = {
           id: string
           kind: string | null
           name: string
+          photo_path: string | null
           status: Database["public"]["Enums"]["site_status"]
         }
         Insert: {
@@ -271,6 +272,7 @@ export type Database = {
           id?: string
           kind?: string | null
           name: string
+          photo_path?: string | null
           status?: Database["public"]["Enums"]["site_status"]
         }
         Update: {
@@ -281,6 +283,7 @@ export type Database = {
           id?: string
           kind?: string | null
           name?: string
+          photo_path?: string | null
           status?: Database["public"]["Enums"]["site_status"]
         }
         Relationships: [
