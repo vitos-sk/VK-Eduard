@@ -1,7 +1,7 @@
 /**
  * Сгенерировано из схемы Supabase — руками не править.
  * Обновление после каждой миграции:
- *   npx supabase gen types typescript --project-id lhtcocvnqmfdxtukuels > src/lib/supabase/types.gen.ts
+ *   npx supabase gen types typescript --project-id pqehyhdfcxgfnustdstm > src/lib/supabase/types.gen.ts
  */
 export type Json =
   | string
@@ -126,6 +126,132 @@ export type Database = {
           },
         ]
       }
+      report_categories: {
+        Row: {
+          category_id: string
+          report_id: string
+        }
+        Insert: {
+          category_id: string
+          report_id: string
+        }
+        Update: {
+          category_id?: string
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "work_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_categories_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "site_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_photos: {
+        Row: {
+          height: number | null
+          id: string
+          report_id: string
+          size_bytes: number | null
+          sort_order: number
+          storage_path: string
+          width: number | null
+        }
+        Insert: {
+          height?: number | null
+          id?: string
+          report_id: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          height?: number | null
+          id?: string
+          report_id?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_photos_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "site_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_reports: {
+        Row: {
+          author_id: string
+          client_id: string
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          site_id: string | null
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          author_id: string
+          client_id: string
+          company_id: string
+          created_at?: string
+          description?: string
+          id?: string
+          site_id?: string | null
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          author_id?: string
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          site_id?: string | null
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_reports_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_reports_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sites: {
         Row: {
           address: string | null
@@ -135,7 +261,6 @@ export type Database = {
           id: string
           kind: string | null
           name: string
-          photo_path: string | null
           status: Database["public"]["Enums"]["site_status"]
         }
         Insert: {
@@ -146,7 +271,6 @@ export type Database = {
           id?: string
           kind?: string | null
           name: string
-          photo_path?: string | null
           status?: Database["public"]["Enums"]["site_status"]
         }
         Update: {
@@ -157,12 +281,43 @@ export type Database = {
           id?: string
           kind?: string | null
           name?: string
-          photo_path?: string | null
           status?: Database["public"]["Enums"]["site_status"]
         }
         Relationships: [
           {
             foreignKeyName: "sites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_categories: {
+        Row: {
+          archived_at: string | null
+          company_id: string
+          id: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          archived_at?: string | null
+          company_id: string
+          id?: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          archived_at?: string | null
+          company_id?: string
+          id?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_categories_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
