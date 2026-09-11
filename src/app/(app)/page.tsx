@@ -42,7 +42,7 @@ export default async function HomePage() {
   const homeObjects = orderedSites.map((site) => toSiteObject(site, stats.get(site.id)));
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-4 pb-6 lg:px-0">
       <HomeHeader initials={initialsOf(profile)} />
 
       <div className="mt-6">
@@ -54,27 +54,58 @@ export default async function HomePage() {
         </p>
       </div>
 
-      <WorkTimeCard className="mt-5" openEntry={openEntry} />
+      {/* Мобільна колонка — без змін, прихована від lg */}
+      <div className="lg:hidden">
+        <WorkTimeCard className="mt-5" openEntry={openEntry} />
 
-      <SectionHeader
-        className="mt-6"
-        title={t.home.myObjects}
-        action={{ label: t.home.viewAll, href: "/objects" }}
-      />
-
-      {homeObjects.length > 0 ? (
-        <div className="mt-3 space-y-3">
-          {homeObjects.map((object) => (
-            <ObjectCard key={object.id} object={object} />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          className="mt-3"
-          title={t.objects.emptyTitle}
-          description={t.objects.emptyHint}
+        <SectionHeader
+          className="mt-6"
+          title={t.home.myObjects}
+          action={{ label: t.home.viewAll, href: "/objects" }}
         />
-      )}
+
+        {homeObjects.length > 0 ? (
+          <div className="mt-3 space-y-3">
+            {homeObjects.map((object) => (
+              <ObjectCard key={object.id} object={object} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            className="mt-3"
+            title={t.objects.emptyTitle}
+            description={t.objects.emptyHint}
+          />
+        )}
+      </div>
+
+      {/* Десктопна двоколонкова розкладка — видима тільки від lg */}
+      <div className="hidden lg:grid lg:mt-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-6">
+        <div>
+          <WorkTimeCard openEntry={openEntry} />
+        </div>
+
+        <div>
+          <SectionHeader
+            title={t.home.myObjects}
+            action={{ label: t.home.viewAll, href: "/objects" }}
+          />
+
+          {homeObjects.length > 0 ? (
+            <div className="mt-3 grid grid-cols-2 gap-4">
+              {homeObjects.map((object) => (
+                <ObjectCard key={object.id} object={object} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              className="mt-3"
+              title={t.objects.emptyTitle}
+              description={t.objects.emptyHint}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
