@@ -139,6 +139,12 @@ export const uk = {
       archive: "Архівувати об'єкт",
       restore: "Розархівувати об'єкт",
       openInMaps: "Прокласти маршрут",
+      delete: "Видалити об'єкт",
+      deleteConfirmTitle: "Видалити об'єкт?",
+      deleteConfirmBody:
+        "Об'єкт зникне назавжди. Звіти, де його вказано, залишаться, але втратять прив'язку до нього.",
+      deleteConfirmAction: "Видалити",
+      deleteError: "Не вдалося видалити об'єкт. Спробуйте ще раз",
     },
     /** Форма `/objects/new` і `/objects/[id]/edit` — тільки boss. */
     form: {
@@ -151,6 +157,12 @@ export const uk = {
       addressLabel: "Адреса",
       addressPlaceholder: "Місто, вулиця",
       statusLabel: "Статус",
+      photoLabel: "Фото об'єкта",
+      addPhoto: "Додати фото",
+      changePhoto: "Змінити фото",
+      uploadingPhoto: "Завантаження...",
+      uploadPhotoError: "Не вдалося завантажити фото",
+      removePhotoError: "Не вдалося видалити фото",
       save: "Зберегти",
       nameRequired: "Вкажіть назву об'єкта",
       saveError: "Не вдалося зберегти об'єкт. Спробуйте ще раз",
@@ -270,6 +282,12 @@ export const uk = {
         copied: "Скопійовано",
         close: "Закрити",
       },
+      deactivate: "Деактивувати співробітника",
+      deactivateConfirmTitle: "Деактивувати співробітника?",
+      deactivateConfirmBody:
+        "Співробітник втратить доступ до застосунку і зникне зі списку команди. Його звіти та години залишаться в історії.",
+      deactivateConfirmAction: "Деактивувати",
+      deactivateError: "Не вдалося деактивувати співробітника. Спробуйте ще раз",
     },
     today: "Сьогодні",
     yesterday: "Вчора",
@@ -314,11 +332,14 @@ export const uk = {
     maxPhotos: "Максимум {max} фото",
     /** RLS відхилила зміну — запис не ваш, або з ним щось відбулось паралельно. */
     saveRejected: "Не вдалося зберегти зміни. Спробуйте ще раз або зверніться до шефа",
+    categoriesLabel: "Вид робіт",
+    noCategoriesLabel: "Не вказано",
   },
 
   /** Форма `/reports/new` — створення звіту з нуля. */
   reportForm: {
     title: "Новий звіт",
+    categoriesLabel: "Вид робіт",
     repeatYesterday: "Повторити останній звіт",
     breakToggle: "Перерва 1 година",
     quickDuration: "{hours} год",
