@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import { buildHoursChartData, getPeriodRange } from "./period";
+import { dateKeyOf } from "@/modules/time/calc";
 
 describe("getPeriodRange", () => {
   it("місяць — від 1 до останнього числа", () => {
     const { from, to } = getPeriodRange("month", new Date("2026-09-11T00:00:00"));
-    expect(from.toISOString().slice(0, 10)).toBe("2026-09-01");
-    expect(to.toISOString().slice(0, 10)).toBe("2026-09-30");
+    expect(dateKeyOf(from)).toBe("2026-09-01");
+    expect(dateKeyOf(to)).toBe("2026-09-30");
   });
 
   it("квартал — 3 місяці, що містять reference", () => {
     const { from, to } = getPeriodRange("quarter", new Date("2026-09-11T00:00:00"));
-    expect(from.toISOString().slice(0, 10)).toBe("2026-07-01");
-    expect(to.toISOString().slice(0, 10)).toBe("2026-09-30");
+    expect(dateKeyOf(from)).toBe("2026-07-01");
+    expect(dateKeyOf(to)).toBe("2026-09-30");
   });
 
   it("рік — з 1 січня по 31 грудня", () => {
     const { from, to } = getPeriodRange("year", new Date("2026-09-11T00:00:00"));
-    expect(from.toISOString().slice(0, 10)).toBe("2026-01-01");
-    expect(to.toISOString().slice(0, 10)).toBe("2026-12-31");
+    expect(dateKeyOf(from)).toBe("2026-01-01");
+    expect(dateKeyOf(to)).toBe("2026-12-31");
   });
 });
 
