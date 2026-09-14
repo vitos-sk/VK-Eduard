@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Plus } from "lucide-react";
+import { LayoutDashboard, LogOut, Plus } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
 import { NAV_ITEMS } from "@/components/layout/BottomNav";
@@ -51,6 +51,23 @@ export function DesktopSidebar({ profile, onFabClick }: DesktopSidebarProps) {
             </Link>
           );
         })}
+
+        {profile.role === "boss" && (
+          <Link
+            href="/dashboard"
+            aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
+            className={cn(
+              "flex h-11 items-center gap-3 rounded-[10px] px-2 text-[14px] font-bold",
+              "transition-colors duration-150",
+              pathname.startsWith("/dashboard")
+                ? "bg-brand text-brand-ink"
+                : "text-text-muted hover:bg-surface-2 hover:text-text",
+            )}
+          >
+            <LayoutDashboard className="size-[18px] shrink-0" strokeWidth={2.2} aria-hidden />
+            {t.nav.dashboard}
+          </Link>
+        )}
 
         <button
           type="button"

@@ -1,4 +1,5 @@
-import { LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut } from "lucide-react";
+import Link from "next/link";
 
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { fmt } from "@/lib/format";
@@ -35,33 +36,47 @@ export default async function MorePage() {
     <div className="pb-6">
       <ScreenHeader title={t.profile.title} />
 
-      <div className="mx-4 rounded-[18px] border border-border bg-surface-2 p-5">
-        <p className="text-[22px] font-extrabold tracking-tight">
-          {profile.full_name}
-        </p>
-        <p className="mt-1 text-[15px] font-semibold text-text-muted">
-          {profile.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}
-        </p>
+      <div className="mx-4 lg:mx-auto lg:max-w-[480px]">
+        <div className="rounded-[18px] border border-border bg-surface-2 p-5">
+          <p className="text-[22px] font-extrabold tracking-tight">
+            {profile.full_name}
+          </p>
+          <p className="mt-1 text-[15px] font-semibold text-text-muted">
+            {profile.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}
+          </p>
 
-        <dl className="mt-5 flex flex-col gap-3">
-          {rows.map((row) => (
-            <div key={row.label} className="flex items-baseline justify-between gap-4">
-              <dt className="text-[15px] font-medium text-text-muted">{row.label}</dt>
-              <dd className="text-[15px] font-bold">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
+          <dl className="mt-5 flex flex-col gap-3">
+            {rows.map((row) => (
+              <div key={row.label} className="flex items-baseline justify-between gap-4">
+                <dt className="text-[15px] font-medium text-text-muted">{row.label}</dt>
+                <dd className="text-[15px] font-bold">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-3">
+          {profile.role === "boss" && (
+            <Link
+              href="/dashboard"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-brand transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              <LayoutDashboard className="size-5" strokeWidth={2} aria-hidden />
+              {t.nav.dashboard}
+            </Link>
+          )}
+
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-danger transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              <LogOut className="size-5" strokeWidth={2} aria-hidden />
+              {t.auth.signOut}
+            </button>
+          </form>
+        </div>
       </div>
-
-      <form action={signOut} className="mx-4 mt-6">
-        <button
-          type="submit"
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-danger transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-        >
-          <LogOut className="size-5" strokeWidth={2} aria-hidden />
-          {t.auth.signOut}
-        </button>
-      </form>
     </div>
   );
 }
