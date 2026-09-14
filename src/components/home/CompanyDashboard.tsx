@@ -1,5 +1,6 @@
 import { Clock, MapPin, Users } from "lucide-react";
 
+import { StatTile } from "@/components/dashboard/StatTile";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
@@ -93,24 +94,6 @@ export function CompanyDashboard({
           </ul>
         )}
       </section>
-    </div>
-  );
-}
-
-function StatTile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Clock;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-[16px] border border-border bg-surface p-5">
-      <Icon className="size-5 text-brand" strokeWidth={2} aria-hidden />
-      <p className="tabular mt-3 text-[28px] font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-[13px] font-semibold text-text-muted">{label}</p>
     </div>
   );
 }
