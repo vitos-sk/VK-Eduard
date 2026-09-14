@@ -4,129 +4,89 @@ import { useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays, ChevronRight, Clock, History, Info } from "lucide-react";
+import { CalendarDays, ChevronRight, History, Info } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
-import { PhotoUploader } from "@/components/reports/PhotoUploader";
+import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
+import { WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { Thumb } from "@/components/shared/Thumb";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatDateShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { gradientForId } from "@/lib/siteGradient";
-import { createManualEntry } from "@/modules/entries/actions";
-import type { WorkEntryWithPhotos } from "@/modules/entries/types";
-import type { EntryPhoto } from "@/modules/media/photos";
+import { createReport } from "@/modules/reports/actions";
+import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
-import {
-  dateKeyOf,
-  isDurationValid,
-  minutesBetweenWrapped,
-  minutesToTime,
-  timeToMinutes,
-} from "@/modules/time/calc";
+import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
-
-const DEFAULT_START = "08:00";
-/** Быстрые кнопки конца смены от начала — REPORTS.md, раздел 6. */
-const QUICK_DURATIONS_H = [8, 10] as const;
-/** Перерыв по умолчанию 1:00 включается с середины типовой смены. */
-const BREAK_OFFSET_MIN = 4 * 60;
-const BREAK_LENGTH_MIN = 60;
 
 interface ReportFormProps {
   companyId: string;
   sites: readonly Site[];
-  /** Самая свежая запись автора — источник «останнього об'єкта» и повтора. */
-  lastEntry: WorkEntryWithPhotos | null;
+  categories: readonly WorkCategory[];
+  /** Самый свежий звіт автора — источник «останнього об'єкта» и повтора. */
+  lastReport: SiteReportWithPhotos | null;
 }
 
 /**
- * Форма `/reports/new`. Два шага в одном экране: сперва час/об'єкт/опис
- * сохраняются одной записью, потом (уже с готовым `entryId`) можно сразу
+ * Форма `/reports/new`. Два шага в одном экране: сперва об'єкт/дата/категорії/опис
+ * сохраняются одной записью, потом (уже с готовым `reportId`) можно сразу
  * добавить фото — до этого их физически некуда прикреплять.
  */
-export function ReportForm({ companyId, sites, lastEntry }: ReportFormProps) {
+export function ReportForm({ companyId, sites, categories, lastReport }: ReportFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [siteId, setSiteId] = useState<string | null>(lastEntry?.site_id ?? null);
+  const [siteId, setSiteId] = useState<string | null>(lastReport?.site_id ?? null);
   const [date, setDate] = useState<Date>(() => new Date());
-  const [startAt, setStartAt] = useState(DEFAULT_START);
-  const [endAt, setEndAt] = useState("");
-  const [breakEnabled, setBreakEnabled] = useState(false);
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const [createdEntryId, setCreatedEntryId] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<EntryPhoto[]>([]);
+  const [createdReportId, setCreatedReportId] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<ReportPhoto[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
-  const breakStart = breakEnabled ? minutesToTime(timeToMinutes(startAt) + BREAK_OFFSET_MIN) : null;
-  const breakEnd = breakEnabled
-    ? minutesToTime(timeToMinutes(startAt) + BREAK_OFFSET_MIN + BREAK_LENGTH_MIN)
-    : null;
-
-  const durationMin =
-    endAt === ""
-      ? 0
-      : minutesBetweenWrapped(startAt, endAt) -
-        (breakStart && breakEnd ? minutesBetweenWrapped(breakStart, breakEnd) : 0);
-  const isValid = endAt !== "" && isDurationValid(durationMin);
-
-  const applyQuickDuration = (hours: number) => {
-    setEndAt(minutesToTime(timeToMinutes(startAt) + hours * 60));
-  };
-
   const applyRepeatLast = () => {
-    if (!lastEntry) return;
+    if (!lastReport) return;
 
-    setSiteId(lastEntry.site_id);
-    setStartAt(lastEntry.started_at.slice(0, 5));
-    if (lastEntry.ended_at) setEndAt(lastEntry.ended_at.slice(0, 5));
-    setBreakEnabled(lastEntry.break_start !== null);
+    setSiteId(lastReport.site_id);
+    setCategoryIds(lastReport.category_ids);
     // Описание намеренно не копируем — REPORTS.md: «описание чистое».
   };
 
   const handleSubmit = () => {
     startTransition(async () => {
-      const result = await createManualEntry({
+      const result = await createReport({
         workDate: dateKeyOf(date),
         siteId,
-        startedAt: startAt,
-        endedAt: endAt,
-        breakStart,
-        breakEnd,
         description,
+        categoryIds,
       });
 
-      if (result.error || !result.entryId) {
-        toast(result.error ?? t.manualTime.saveError);
+      if (result.error || !result.reportId) {
+        toast(result.error ?? t.reportForm.saveError);
         return;
       }
 
       toast(t.reportForm.saved);
-      setCreatedEntryId(result.entryId);
+      setCreatedReportId(result.reportId);
       router.refresh();
     });
   };
 
-  if (createdEntryId) {
+  if (createdReportId) {
     return (
       <div className="pb-6">
-        <BackHeader title={t.reportForm.title} href={`/reports/${createdEntryId}`} />
+        <BackHeader title={t.reportForm.title} href={`/reports/${createdReportId}`} />
 
-        <div className="space-y-4 px-4 lg:mx-auto lg:max-w-[640px]">
+        <div className="space-y-4 px-4">
           <div>
             <h2 className="text-[17px] font-bold">{t.reportForm.photosStepTitle}</h2>
             <p className="mt-1 text-[13px] font-medium text-text-muted">
@@ -134,9 +94,9 @@ export function ReportForm({ companyId, sites, lastEntry }: ReportFormProps) {
             </p>
           </div>
 
-          <PhotoUploader
+          <ReportPhotoUploader
             companyId={companyId}
-            entryId={createdEntryId}
+            reportId={createdReportId}
             photos={photos}
             urls={photoUrls}
             onPhotosChange={setPhotos}
@@ -146,7 +106,7 @@ export function ReportForm({ companyId, sites, lastEntry }: ReportFormProps) {
 
           <button
             type="button"
-            onClick={() => router.push(`/reports/${createdEntryId}`)}
+            onClick={() => router.push(`/reports/${createdReportId}`)}
             className={cn(
               "flex h-[56px] w-full items-center justify-center rounded-[14px]",
               "bg-brand text-[15px] font-bold text-brand-ink",
@@ -165,8 +125,8 @@ export function ReportForm({ companyId, sites, lastEntry }: ReportFormProps) {
     <div className="pb-6">
       <BackHeader title={t.reportForm.title} onBack={() => router.back()} />
 
-      <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
-        {lastEntry && (
+      <div className="space-y-6 px-4">
+        {lastReport && (
           <button
             type="button"
             onClick={applyRepeatLast}
@@ -249,48 +209,11 @@ export function ReportForm({ companyId, sites, lastEntry }: ReportFormProps) {
           </Popover>
         </Field>
 
-        <div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t.manualTime.start}>
-              <TimeInput value={startAt} onChange={setStartAt} invalid={false} />
-            </Field>
-
-            <Field label={t.manualTime.finish}>
-              <TimeInput value={endAt} onChange={setEndAt} invalid={endAt !== "" && !isValid} />
-            </Field>
-          </div>
-
-          <div className="mt-2 flex gap-2">
-            {QUICK_DURATIONS_H.map((hours) => (
-              <button
-                key={hours}
-                type="button"
-                onClick={() => applyQuickDuration(hours)}
-                className="flex h-9 items-center gap-1 rounded-full border border-border bg-surface-2 px-3 text-[13px] font-bold text-text active:scale-95"
-              >
-                <Clock className="size-3.5" strokeWidth={2.2} aria-hidden />
-                {`${hours} ${t.units.hoursShort}`}
-              </button>
-            ))}
-          </div>
-
-          {endAt !== "" && !isValid && (
-            <p className="mt-2 text-[13px] font-medium text-danger">
-              {t.manualTime.errorDuration}
-            </p>
-          )}
-        </div>
-
-        <label className="flex min-h-[60px] w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-4">
-          <span className="min-w-0 flex-1 text-[15px] font-medium text-text">
-            {t.reportForm.breakToggle}
-          </span>
-          <Switch
-            checked={breakEnabled}
-            onCheckedChange={setBreakEnabled}
-            className="h-6 w-11 [&>[data-slot=switch-thumb]]:size-5"
-          />
-        </label>
+        {categories.length > 0 && (
+          <Field label={t.reportForm.categoriesLabel}>
+            <WorkCategoryChips categories={[...categories]} value={categoryIds} onChange={setCategoryIds} />
+          </Field>
+        )}
 
         <Field label={t.manualTime.description}>
           <textarea
@@ -308,13 +231,13 @@ export function ReportForm({ companyId, sites, lastEntry }: ReportFormProps) {
 
         <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
           <Info className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
-          {t.manualTime.hint}
+          {t.reportForm.hint}
         </p>
 
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!isValid || isPending}
+          disabled={isPending}
           className={cn(
             "flex h-[56px] w-full items-center justify-center rounded-[14px]",
             "bg-brand text-[15px] font-bold text-brand-ink",
@@ -344,30 +267,5 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <p className="mb-2 text-[13px] font-semibold text-text-muted">{label}</p>
       {children}
     </div>
-  );
-}
-
-function TimeInput({
-  value,
-  onChange,
-  invalid,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  invalid: boolean;
-}) {
-  return (
-    <input
-      type="time"
-      value={value}
-      aria-invalid={invalid}
-      onChange={(event) => onChange(event.target.value)}
-      className={cn(
-        "tabular h-[52px] w-full rounded-[14px] border bg-surface px-3",
-        "text-[15px] font-bold text-text outline-none",
-        "[&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:invert",
-        invalid ? "border-danger" : "border-border focus-visible:border-brand",
-      )}
-    />
   );
 }

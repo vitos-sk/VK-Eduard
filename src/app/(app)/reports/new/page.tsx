@@ -1,23 +1,25 @@
 import { ReportForm } from "@/components/reports/ReportForm";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { getEntriesFeed } from "@/modules/entries/queries";
+import { getReportsFeed, getWorkCategories } from "@/modules/reports/queries";
 import { getActiveSites } from "@/modules/sites/queries";
 
 export default async function NewReportPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [sites, entries] = await Promise.all([
+  const [sites, reports, categories] = await Promise.all([
     getActiveSites(supabase),
-    getEntriesFeed(supabase, profile.id),
+    getReportsFeed(supabase, profile.id),
+    getWorkCategories(supabase, profile.company_id),
   ]);
 
   return (
     <ReportForm
       companyId={profile.company_id}
       sites={sites}
-      lastEntry={entries[0] ?? null}
+      categories={categories}
+      lastReport={reports[0] ?? null}
     />
   );
 }

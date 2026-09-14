@@ -72,15 +72,13 @@ export async function createReport(input: ReportInput): Promise<CreateReportStat
     .single();
 
   if (error) {
-    // `reportForm` не має власного ключа помилки збереження — використовуємо
-    // той самий загальний текст, що й `createManualEntry` для вставки.
-    return { error: t.manualTime.saveError, reportId: null };
+    return { error: t.reportForm.saveError, reportId: null };
   }
 
   try {
     await replaceReportCategories(supabase, data.id, input.categoryIds);
   } catch {
-    return { error: t.manualTime.saveError, reportId: data.id };
+    return { error: t.reportForm.saveError, reportId: data.id };
   }
 
   revalidatePath("/", "layout");
@@ -111,7 +109,7 @@ export async function updateReport(
     .select("id");
 
   if (error) {
-    return { error: t.manualTime.saveError };
+    return { error: t.reportForm.saveError };
   }
 
   if (!data || data.length === 0) {
@@ -121,7 +119,7 @@ export async function updateReport(
   try {
     await replaceReportCategories(supabase, reportId, input.categoryIds);
   } catch {
-    return { error: t.manualTime.saveError };
+    return { error: t.reportForm.saveError };
   }
 
   revalidatePath("/", "layout");
