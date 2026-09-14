@@ -6,7 +6,6 @@ import { uk as ukLocale } from "date-fns/locale";
 import { ChevronLeft, UserPlus } from "lucide-react";
 
 import { AddWorkerForm } from "@/components/reports/AddWorkerForm";
-import { DeactivateWorkerButton } from "@/components/reports/DeactivateWorkerButton";
 import { ExportMenu } from "@/components/reports/ExportMenu";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -172,16 +171,6 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
             <ExportMenu from={monthFrom} to={monthTo} workerId={openWorkerId} />
             <ExportMenu kind="reports" from={monthFrom} to={monthTo} workerId={openWorkerId} />
           </div>
-        </div>
-
-        <div className="px-4">
-          <DeactivateWorkerButton
-            workerId={openWorkerId}
-            onDeactivated={() => {
-              setOpenWorkerId(null);
-              refreshWorkers();
-            }}
-          />
         </div>
 
         {isOpenLoading ? null : (
