@@ -1,58 +1,58 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
-import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
-import { PhotoUploader } from "@/components/reports/PhotoUploader";
+import { DeleteReportButton } from "@/components/reports/DeleteReportButton";
+import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
+import { WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { fmt, formatDateFull, formatDateShort, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { updateEntryDescription } from "@/modules/entries/actions";
-import type { WorkEntryWithPhotos } from "@/modules/entries/types";
-import type { EntryPhoto } from "@/modules/media/photos";
-import { splitWorkedOvertime } from "@/modules/time/calc";
+import { updateReportCategories, updateReportDescription } from "@/modules/reports/actions";
+import type { ReportPhoto, SiteReportDetail, WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
 
 interface ReportDetailProps {
-  entry: WorkEntryWithPhotos;
+  report: SiteReportDetail;
   siteName: string | null;
   companyId: string;
   authorName: string;
-  normMinutes: number;
+  categories: readonly WorkCategory[];
   editable: boolean;
   photoUrls: Readonly<Record<string, string>>;
 }
 
-/** Детальная страница `/reports/[id]` — REPORTS.md, раздел 5. */
+/** Детальная страница `/reports/[id]` — REPORTS.md, раздел 5 (без блоку часу). */
 export function ReportDetail({
-  entry,
+  report,
   siteName,
   companyId,
   authorName,
-  normMinutes,
+  categories,
   editable,
   photoUrls,
 }: ReportDetailProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [description, setDescription] = useState(entry.description);
-  const [isEditing, setIsEditing] = useState(description === "");
+  const [isDescPending, startDescTransition] = useTransition();
+  const [isCatPending, startCatTransition] = useTransition();
+
+  const [description, setDescription] = useState(report.description);
+  const [isEditingDescription, setIsEditingDescription] = useState(description === "");
   const [draft, setDraft] = useState(description);
-  const [photos, setPhotos] = useState<EntryPhoto[]>(entry.entry_photos);
+
+  const [categoryIds, setCategoryIds] = useState<string[]>(report.category_ids);
+  const [isEditingCategories, setIsEditingCategories] = useState(false);
+  const [categoryDraft, setCategoryDraft] = useState<string[]>(categoryIds);
+
+  const [photos, setPhotos] = useState<ReportPhoto[]>(report.report_photos);
   const [urls, setUrls] = useState<Record<string, string>>({ ...photoUrls });
 
-  const isOngoing = entry.ended_at === null;
-  const { workedMinutes, overtimeMinutes } = entry.total_minutes
-    ? splitWorkedOvertime(entry.total_minutes, normMinutes)
-    : { workedMinutes: 0, overtimeMinutes: 0 };
-
   const handleSaveDescription = () => {
-    startTransition(async () => {
-      const result = await updateEntryDescription(entry.id, draft.trim());
+    startDescTransition(async () => {
+      const result = await updateReportDescription(report.id, draft.trim());
 
       if (result.error) {
         toast(result.error);
@@ -60,309 +60,192 @@ export function ReportDetail({
       }
 
       setDescription(draft.trim());
-      setIsEditing(false);
+      setIsEditingDescription(false);
       toast(t.reportDetail.saved);
     });
   };
+
+  const handleSaveCategories = () => {
+    startCatTransition(async () => {
+      const result = await updateReportCategories(report.id, categoryDraft);
+
+      if (result.error) {
+        toast(result.error);
+        return;
+      }
+
+      setCategoryIds(categoryDraft);
+      setIsEditingCategories(false);
+      toast(t.reportDetail.saved);
+    });
+  };
+
+  const photosSection = (photos.length > 0 || editable) && (
+    <section className="rounded-[16px] border border-border bg-surface p-4">
+      <h2 className="text-[17px] font-bold">{t.reportDetail.photosTitle}</h2>
+      <ReportPhotoUploader
+        className="mt-3"
+        companyId={companyId}
+        reportId={report.id}
+        photos={photos}
+        urls={urls}
+        onPhotosChange={setPhotos}
+        onUrlsChange={(patch) => setUrls((current) => ({ ...current, ...patch }))}
+        editable={editable}
+      />
+    </section>
+  );
+
+  const content = (
+    <>
+      <section className="rounded-[16px] border border-border bg-surface p-4">
+        <p className="text-[20px] font-bold">{siteName ?? t.hours.noObject}</p>
+        <p className="mt-1 text-[14px] font-medium text-text-muted">
+          {formatDateFull(fromDateKey(report.work_date))}
+        </p>
+
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
+          <h2 className="text-[15px] font-bold">{t.reportDetail.categoriesLabel}</h2>
+
+          {editable && !isEditingCategories && (
+            <button
+              type="button"
+              onClick={() => {
+                setCategoryDraft(categoryIds);
+                setIsEditingCategories(true);
+              }}
+              aria-label={t.reportDetail.edit}
+              className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+            >
+              <Pencil className="size-4" strokeWidth={2} aria-hidden />
+            </button>
+          )}
+        </div>
+
+        {isEditingCategories ? (
+          <div className="mt-3 space-y-3">
+            <WorkCategoryChips categories={[...categories]} value={categoryDraft} onChange={setCategoryDraft} />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleSaveCategories}
+                disabled={isCatPending}
+                className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-brand text-[14px] font-bold text-brand-ink disabled:opacity-60"
+              >
+                {t.reportDetail.save}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditingCategories(false)}
+                className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border text-[14px] font-bold text-text"
+              >
+                {t.common.cancel}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <WorkCategoryChips
+            className="mt-3"
+            categories={[...categories]}
+            value={categoryIds}
+            onChange={() => {}}
+            readOnly
+          />
+        )}
+      </section>
+
+      <section className="rounded-[16px] border border-border bg-surface p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[17px] font-bold">
+            {description === "" ? t.reportDetail.addDescriptionTitle : t.manualTime.description}
+          </h2>
+
+          {editable && !isEditingDescription && description !== "" && (
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(description);
+                setIsEditingDescription(true);
+              }}
+              aria-label={t.reportDetail.edit}
+              className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+            >
+              <Pencil className="size-4" strokeWidth={2} aria-hidden />
+            </button>
+          )}
+        </div>
+
+        {isEditingDescription ? (
+          <div className="mt-3 space-y-3">
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              rows={4}
+              placeholder={t.reportDetail.addDescriptionPlaceholder}
+              autoFocus
+              className={cn(
+                "w-full resize-none rounded-[14px] border border-border bg-surface-2 p-4",
+                "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
+                "outline-none focus-visible:border-brand",
+              )}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleSaveDescription}
+                disabled={isDescPending}
+                className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-brand text-[14px] font-bold text-brand-ink disabled:opacity-60"
+              >
+                {t.reportDetail.save}
+              </button>
+              {description !== "" && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingDescription(false)}
+                  className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border text-[14px] font-bold text-text"
+                >
+                  {t.common.cancel}
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-[15px] leading-[1.45] font-medium whitespace-pre-wrap text-text">
+            {description}
+          </p>
+        )}
+      </section>
+
+      <div className="lg:hidden">{photosSection}</div>
+
+      <p className="px-1 text-[13px] font-medium text-text-dim">
+        {fmt(t.reportDetail.createdBy, { name: authorName })} · {formatDateShort(new Date(report.created_at))}
+      </p>
+
+      {editable && (
+        <DeleteReportButton
+          reportId={report.id}
+          onDeleted={() => {
+            router.push("/reports");
+            router.refresh();
+          }}
+        />
+      )}
+    </>
+  );
 
   return (
     <div className="pb-6">
       <BackHeader title={t.reportDetail.backTitle} href="/reports" />
 
-      <div className="space-y-4 px-4 lg:hidden">
-        <section className="rounded-[16px] border border-border bg-surface p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[20px] font-bold">{siteName ?? t.hours.noObject}</p>
-              <p className="mt-1 text-[14px] font-medium text-text-muted">
-                {formatDateFull(fromDateKey(entry.work_date))}
-              </p>
-            </div>
+      <div className="space-y-4 px-4 lg:hidden">{content}</div>
 
-            {editable && !isOngoing && (
-              <Link
-                href={`/time/manual/${entry.id}`}
-                aria-label={t.reportDetail.editTime}
-                className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
-              >
-                <Pencil className="size-4" strokeWidth={2} aria-hidden />
-              </Link>
-            )}
-          </div>
+      {/* Desktop: галерея фото зліва/ширше, деталі справа — паралельна гілка. */}
+      <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8">
+        <div className="flex flex-col gap-4">{photosSection}</div>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
-            <TimeCell label={t.hours.start} value={entry.started_at.slice(0, 5)} />
-            <TimeCell
-              label={t.hours.break}
-              value={
-                entry.break_start
-                  ? `${entry.break_start.slice(0, 5)}–${entry.break_end?.slice(0, 5) ?? t.common.dash}`
-                  : t.common.dash
-              }
-            />
-            <TimeCell
-              label={t.hours.finish}
-              value={isOngoing ? t.hours.now : (entry.ended_at?.slice(0, 5) ?? t.common.dash)}
-            />
-          </div>
-
-          {!isOngoing && (
-            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
-              <TimeCell label={t.reportDetail.worked} value={`${workedMinutes} ${t.units.minutesShort}`} />
-              <TimeCell
-                label={t.reportDetail.overtime}
-                value={overtimeMinutes > 0 ? `${overtimeMinutes} ${t.units.minutesShort}` : t.common.dash}
-              />
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-[16px] border border-border bg-surface p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[17px] font-bold">
-              {description === "" ? t.reportDetail.addDescriptionTitle : t.manualTime.description}
-            </h2>
-
-            {editable && !isEditing && description !== "" && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDraft(description);
-                  setIsEditing(true);
-                }}
-                aria-label={t.reportDetail.edit}
-                className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
-              >
-                <Pencil className="size-4" strokeWidth={2} aria-hidden />
-              </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="mt-3 space-y-3">
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                rows={4}
-                placeholder={t.reportDetail.addDescriptionPlaceholder}
-                autoFocus
-                className={cn(
-                  "w-full resize-none rounded-[14px] border border-border bg-surface-2 p-4",
-                  "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-                  "outline-none focus-visible:border-brand",
-                )}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveDescription}
-                  disabled={isPending}
-                  className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-brand text-[14px] font-bold text-brand-ink disabled:opacity-60"
-                >
-                  {t.reportDetail.save}
-                </button>
-                {description !== "" && (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(false)}
-                    className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border text-[14px] font-bold text-text"
-                  >
-                    {t.common.cancel}
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-[15px] leading-[1.45] font-medium whitespace-pre-wrap text-text">
-              {description}
-            </p>
-          )}
-        </section>
-
-        {(photos.length > 0 || editable) && (
-          <section className="rounded-[16px] border border-border bg-surface p-4">
-            <h2 className="text-[17px] font-bold">{t.reportDetail.photosTitle}</h2>
-            <PhotoUploader
-              className="mt-3"
-              companyId={companyId}
-              entryId={entry.id}
-              photos={photos}
-              urls={urls}
-              onPhotosChange={setPhotos}
-              onUrlsChange={(patch) => setUrls((current) => ({ ...current, ...patch }))}
-              editable={editable}
-            />
-          </section>
-        )}
-
-        <p className="px-1 text-[13px] font-medium text-text-dim">
-          {fmt(t.reportDetail.createdBy, { name: authorName })} · {formatDateShort(new Date(entry.created_at))}
-        </p>
-
-        {editable && (
-          <DeleteEntryButton
-            entryId={entry.id}
-            onDeleted={() => {
-              router.push("/reports");
-              router.refresh();
-            }}
-          />
-        )}
+        <div className="flex flex-col gap-4">{content}</div>
       </div>
-
-      {/* Desktop: галерея фото зліва/ширше, текст опису й деталі справа — паралельна гілка, мобільна розмітка вище лишається без змін. */}
-      <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-8">
-        <div className="flex flex-col gap-4">
-          {(photos.length > 0 || editable) && (
-            <section className="rounded-[16px] border border-border bg-surface p-4">
-              <h2 className="text-[17px] font-bold">{t.reportDetail.photosTitle}</h2>
-              <PhotoUploader
-                className="mt-3"
-                companyId={companyId}
-                entryId={entry.id}
-                photos={photos}
-                urls={urls}
-                onPhotosChange={setPhotos}
-                onUrlsChange={(patch) => setUrls((current) => ({ ...current, ...patch }))}
-                editable={editable}
-              />
-            </section>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <section className="rounded-[16px] border border-border bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[20px] font-bold">{siteName ?? t.hours.noObject}</p>
-                <p className="mt-1 text-[14px] font-medium text-text-muted">
-                  {formatDateFull(fromDateKey(entry.work_date))}
-                </p>
-              </div>
-
-              {editable && !isOngoing && (
-                <Link
-                  href={`/time/manual/${entry.id}`}
-                  aria-label={t.reportDetail.editTime}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
-                >
-                  <Pencil className="size-4" strokeWidth={2} aria-hidden />
-                </Link>
-              )}
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
-              <TimeCell label={t.hours.start} value={entry.started_at.slice(0, 5)} />
-              <TimeCell
-                label={t.hours.break}
-                value={
-                  entry.break_start
-                    ? `${entry.break_start.slice(0, 5)}–${entry.break_end?.slice(0, 5) ?? t.common.dash}`
-                    : t.common.dash
-                }
-              />
-              <TimeCell
-                label={t.hours.finish}
-                value={isOngoing ? t.hours.now : (entry.ended_at?.slice(0, 5) ?? t.common.dash)}
-              />
-            </div>
-
-            {!isOngoing && (
-              <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
-                <TimeCell label={t.reportDetail.worked} value={`${workedMinutes} ${t.units.minutesShort}`} />
-                <TimeCell
-                  label={t.reportDetail.overtime}
-                  value={overtimeMinutes > 0 ? `${overtimeMinutes} ${t.units.minutesShort}` : t.common.dash}
-                />
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-[16px] border border-border bg-surface p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[17px] font-bold">
-                {description === "" ? t.reportDetail.addDescriptionTitle : t.manualTime.description}
-              </h2>
-
-              {editable && !isEditing && description !== "" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDraft(description);
-                    setIsEditing(true);
-                  }}
-                  aria-label={t.reportDetail.edit}
-                  className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
-                >
-                  <Pencil className="size-4" strokeWidth={2} aria-hidden />
-                </button>
-              )}
-            </div>
-
-            {isEditing ? (
-              <div className="mt-3 space-y-3">
-                <textarea
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  rows={4}
-                  placeholder={t.reportDetail.addDescriptionPlaceholder}
-                  className={cn(
-                    "w-full resize-none rounded-[14px] border border-border bg-surface-2 p-4",
-                    "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-                    "outline-none focus-visible:border-brand",
-                  )}
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSaveDescription}
-                    disabled={isPending}
-                    className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-brand text-[14px] font-bold text-brand-ink disabled:opacity-60"
-                  >
-                    {t.reportDetail.save}
-                  </button>
-                  {description !== "" && (
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border text-[14px] font-bold text-text"
-                    >
-                      {t.common.cancel}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="mt-2 text-[15px] leading-[1.45] font-medium whitespace-pre-wrap text-text">
-                {description}
-              </p>
-            )}
-          </section>
-
-          <p className="px-1 text-[13px] font-medium text-text-dim">
-            {fmt(t.reportDetail.createdBy, { name: authorName })} · {formatDateShort(new Date(entry.created_at))}
-          </p>
-
-          {editable && (
-            <DeleteEntryButton
-              entryId={entry.id}
-              onDeleted={() => {
-                router.push("/reports");
-                router.refresh();
-              }}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TimeCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[13px] font-medium text-text-muted">{label}</p>
-      <p className="tabular mt-1 text-[15px] font-bold">{value}</p>
     </div>
   );
 }

@@ -333,6 +333,12 @@ export const uk = {
     maxPhotos: "Максимум {max} фото",
     /** RLS відхилила зміну — запис не ваш, або з ним щось відбулось паралельно. */
     saveRejected: "Не вдалося зберегти зміни. Спробуйте ще раз або зверніться до шефа",
+    deleteEntry: "Видалити звіт",
+    deleteConfirmTitle: "Видалити звіт?",
+    deleteConfirmBody: "Дію не можна скасувати — звіт буде видалено назавжди.",
+    deleteConfirmAction: "Видалити",
+    entryDeleted: "Звіт видалено",
+    deleteError: "Не вдалося видалити звіт. Спробуйте ще раз",
     categoriesLabel: "Вид робіт",
     noCategoriesLabel: "Не вказано",
   },

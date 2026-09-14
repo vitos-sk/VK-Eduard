@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { ReportDetail } from "@/components/reports/ReportDetail";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { getEntryWithPhotos } from "@/modules/entries/queries";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
+import { getReportWithPhotos, getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
 
 export default async function ReportDetailPage({
@@ -16,32 +16,32 @@ export default async function ReportDetailPage({
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const entry = await getEntryWithPhotos(supabase, id);
+  const report = await getReportWithPhotos(supabase, id);
 
-  // RLS прячет чужие записи как отсутствующие, а не как «нет доступа» —
-  // 404 не выдаёт, что запись вообще существует у кого-то другого.
-  if (!entry) {
+  // RLS прячет чужие записи как отсутствующие, а не как «нет доступа».
+  if (!report) {
     notFound();
   }
 
-  const [site, photoUrls] = await Promise.all([
-    entry.site_id ? getSiteById(supabase, entry.site_id) : Promise.resolve(null),
+  const [site, photoUrls, categories] = await Promise.all([
+    report.site_id ? getSiteById(supabase, report.site_id) : Promise.resolve(null),
     getSignedPhotoUrls(
       supabase,
-      entry.entry_photos.map((photo) => photo.storage_path),
+      report.report_photos.map((photo) => photo.storage_path),
     ),
+    getWorkCategories(supabase, profile.company_id),
   ]);
 
   return (
     <ReportDetail
-      entry={entry}
+      report={report}
       siteName={site?.name ?? null}
       companyId={profile.company_id}
-      authorName={entry.author_full_name}
-      normMinutes={entry.author_daily_norm_minutes}
-      // `getEntryWithPhotos` уже прогнала запись через `entries_select`:
+      authorName={report.author_full_name}
+      categories={categories}
+      // `getReportWithPhotos` уже прогнала запись через `reports_select`:
       // якщо вона тут — це або своя, або ми шеф, а обидва варианты
-      // `entries_update`/`entries_delete` дозволяють без обмежень.
+      // `reports_update`/`reports_delete` дозволяють без обмежень.
       editable
       photoUrls={Object.fromEntries(photoUrls)}
     />
