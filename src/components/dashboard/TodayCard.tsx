@@ -1,4 +1,5 @@
 // src/components/dashboard/TodayCard.tsx
+import { cn } from "@/lib/utils";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { TodayOverview } from "@/modules/dashboard/aggregate";
@@ -6,12 +7,13 @@ import type { TodayOverview } from "@/modules/dashboard/aggregate";
 interface TodayCardProps {
   overview: TodayOverview;
   activeWorkersCount: number;
+  className?: string;
 }
 
 /** Блок «Сьогодні»: скільки з усіх активних відмітились + бейджі відкритих змін. */
-export function TodayCard({ overview, activeWorkersCount }: TodayCardProps) {
+export function TodayCard({ overview, activeWorkersCount, className }: TodayCardProps) {
   return (
-    <section className="rounded-[16px] border border-border bg-surface p-5">
+    <section className={cn("rounded-[16px] border border-border bg-surface p-5", className)}>
       <h3 className="text-[13px] font-bold tracking-wide text-text-muted uppercase">
         {t.dashboard.todayTitle}
       </h3>
