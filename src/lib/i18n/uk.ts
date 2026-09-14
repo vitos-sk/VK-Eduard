@@ -52,6 +52,7 @@ export const uk = {
     add: "Додати",
     hours: "Години",
     reports: "Звіти",
+    dashboard: "Дашборд",
   },
 
   /** Вход. Регистрации нет: людей заводит шеф. */
@@ -341,10 +342,10 @@ export const uk = {
     title: "Новий звіт",
     categoriesLabel: "Вид робіт",
     repeatYesterday: "Повторити останній звіт",
-    breakToggle: "Перерва 1 година",
-    quickDuration: "{hours} год",
+    hint: "Опишіть, що зробили сьогодні — фото можна додати одразу після збереження",
     submit: "Зберегти звіт",
     saved: "Звіт збережено",
+    saveError: "Не вдалося зберегти звіт. Спробуйте ще раз",
     photosStepTitle: "Тепер додайте фото",
     photosStepHint: "Необов'язково, але зі знімками звіт зрозуміліший",
     done: "Готово",
@@ -430,6 +431,34 @@ export const uk = {
       /** Назва аркуша Excel-файлу (`modules/export/xlsx.ts`). */
       sheetTitle: "Звіти",
     },
+  },
+
+  /**
+   * Окрема сторінка дашборда для шефа (`/dashboard`, `DesktopSidebar`).
+   * На відміну від `admin.dashboard` (міні-блок на «Головній», лише
+   * поточний місяць) тут є вибір періоду, графік і рейтинги.
+   */
+  dashboard: {
+    title: "Дашборд",
+    periodMonth: "Місяць",
+    periodQuarter: "Квартал",
+    periodYear: "Рік",
+    totalHours: "Годин за період",
+    avgPerWorkday: "Ø на робочий день",
+    activeWorkers: "Активних співробітників",
+    objectsWorked: "Об'єктів у роботі",
+    todayTitle: "Сьогодні",
+    /** {active} — скільки відмітились, {total} — всього активних співробітників. */
+    todayActive: "{active} з {total} активні",
+    todayOpen: "Відкрито",
+    /** {hours} — форматована рядком через formatHoursShort. */
+    todayHoursLogged: "{hours} відмічено сьогодні",
+    chartTitle: "Динаміка годин",
+    chartEmpty: "Немає годин за цей період",
+    topSitesTitle: "Топ-об'єкти",
+    topSitesEmpty: "Немає годин за цей період",
+    topWorkersTitle: "Години по співробітниках",
+    topWorkersEmpty: "Немає годин за цей період",
   },
 
   /** Справочник статусов, раздел 3.4 плана. */
