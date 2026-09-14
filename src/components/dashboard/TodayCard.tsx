@@ -26,12 +26,12 @@ export function TodayCard({ overview, activeWorkersCount, className }: TodayCard
           })}
         </p>
 
-        {overview.openShiftNames.map((name) => (
+        {overview.openShifts.map((shift) => (
           <span
-            key={name}
+            key={shift.id}
             className="rounded-full bg-surface-2 px-3 py-1 text-[13px] font-semibold text-text-muted"
           >
-            {t.dashboard.todayOpen} · {name}
+            {t.dashboard.todayOpen} · {shift.name}
           </span>
         ))}
       </div>

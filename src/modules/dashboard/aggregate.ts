@@ -73,30 +73,33 @@ export function buildTopWorkers(entries: readonly WorkEntryWithNames[]): RankedI
 
 export interface TodayOverview {
   activeCount: number;
-  openShiftNames: string[];
+  openShifts: { id: string; name: string }[];
   totalMinutes: number;
 }
 
 /**
  * Блок «Сьогодні». `activeCount` — скільки різних людей сьогодні хоч щось
- * відмітили (закриту чи відкриту зміну), `openShiftNames` — тільки ті, у
+ * відмітили (закриту чи відкриту зміну), `openShifts` — тільки ті, у
  * кого зміна ще триває (`ended_at === null`) — це і є бейджі «Відкрито».
+ * Дедуплікація йде по `author_id`, не по імені — двоє тезок з відкритими
+ * змінами повинні дати два окремих бейджі, а не один.
  */
 export function buildTodayOverview(
   todayEntries: readonly WorkEntryWithNames[],
 ): TodayOverview {
   const activeAuthorIds = new Set(todayEntries.map((entry) => entry.author_id));
-  const openShiftNames = [
-    ...new Set(
-      todayEntries
-        .filter((entry) => entry.ended_at === null)
-        .map((entry) => entry.author_full_name),
-    ),
-  ];
+
+  const openShiftsById = new Map<string, string>();
+  for (const entry of todayEntries) {
+    if (entry.ended_at === null) {
+      openShiftsById.set(entry.author_id, entry.author_full_name);
+    }
+  }
+  const openShifts = [...openShiftsById.entries()].map(([id, name]) => ({ id, name }));
 
   return {
     activeCount: activeAuthorIds.size,
-    openShiftNames,
+    openShifts,
     totalMinutes: sumTotalMinutes(todayEntries),
   };
 }

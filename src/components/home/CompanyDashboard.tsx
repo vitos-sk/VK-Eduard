@@ -1,8 +1,10 @@
-import { Clock, MapPin, Users } from "lucide-react";
+import { Building2, Clock, Users } from "lucide-react";
 
 import { StatTile } from "@/components/dashboard/StatTile";
+import { TopList } from "@/components/dashboard/TopList";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { buildOverview, buildTopWorkers } from "@/modules/dashboard/aggregate";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 
 interface CompanyDashboardProps {
@@ -17,6 +19,12 @@ interface CompanyDashboardProps {
  * Сводные цифры по компании за месяц + топ работников по часам.
  * Показывается на «Головній» только для `boss` — раньше жил в отдельной
  * десктопной `/admin`, теперь часть обычной адаптивной вёрстки.
+ *
+ * Переиспользует ту же агрегацію (`buildOverview`/`buildTopWorkers`) і
+ * список (`TopList`), що і повна сторінка `/dashboard` — щоб цифри за
+ * місяць на обох екранах завжди збігались (раніше тут була окрема
+ * ручна агрегація по `author_full_name`, яка розходилась з `/dashboard`
+ * при однакових іменах у різних співробітників).
  */
 export function CompanyDashboard({
   month,
@@ -25,19 +33,8 @@ export function CompanyDashboard({
   activeObjectsCount,
   className,
 }: CompanyDashboardProps) {
-  const totalMinutes = entries.reduce((sum, entry) => sum + (entry.total_minutes ?? 0), 0);
-
-  const minutesByWorker = new Map<string, number>();
-  for (const entry of entries) {
-    minutesByWorker.set(
-      entry.author_full_name,
-      (minutesByWorker.get(entry.author_full_name) ?? 0) + (entry.total_minutes ?? 0),
-    );
-  }
-
-  const topWorkers = [...minutesByWorker.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
+  const overview = buildOverview(entries);
+  const topWorkers = buildTopWorkers(entries).slice(0, 8);
 
   const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
 
@@ -52,7 +49,7 @@ export function CompanyDashboard({
         <StatTile
           icon={Clock}
           label={t.admin.dashboard.monthHours}
-          value={formatHoursShort(totalMinutes)}
+          value={formatHoursShort(overview.totalMinutes)}
         />
         <StatTile
           icon={Users}
@@ -60,40 +57,18 @@ export function CompanyDashboard({
           value={String(workersCount)}
         />
         <StatTile
-          icon={MapPin}
+          icon={Building2}
           label={t.admin.dashboard.activeObjects}
           value={String(activeObjectsCount)}
         />
       </div>
 
-      <section className="mt-8 rounded-[16px] border border-border bg-surface p-5">
-        <h3 className="text-[17px] font-bold">{t.admin.dashboard.topWorkersTitle}</h3>
-
-        {topWorkers.length === 0 ? (
-          <p className="mt-2 text-[14px] font-medium text-text-muted">
-            {t.admin.dashboard.topWorkersEmpty}
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-3">
-            {topWorkers.map(([name, minutes]) => (
-              <li key={name} className="flex items-center gap-3">
-                <p className="min-w-0 flex-1 truncate text-[14px] font-bold">{name}</p>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
-                  <div
-                    className="h-full rounded-full bg-brand"
-                    style={{
-                      width: `${Math.min(100, (minutes / topWorkers[0][1]) * 100)}%`,
-                    }}
-                  />
-                </div>
-                <p className="tabular w-16 shrink-0 text-right text-[14px] font-bold">
-                  {formatHoursShort(minutes)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <TopList
+        className="mt-8"
+        title={t.admin.dashboard.topWorkersTitle}
+        items={topWorkers}
+        emptyLabel={t.admin.dashboard.topWorkersEmpty}
+      />
     </div>
   );
 }

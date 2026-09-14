@@ -104,14 +104,14 @@ describe("buildTodayOverview", () => {
     ]);
 
     expect(overview.activeCount).toBe(2);
-    expect(overview.openShiftNames).toEqual(["Петро"]);
+    expect(overview.openShifts).toEqual([{ id: "a2", name: "Петро" }]);
     expect(overview.totalMinutes).toBe(480);
   });
 
   it("без записів сьогодні — всі нулі", () => {
     expect(buildTodayOverview([])).toEqual({
       activeCount: 0,
-      openShiftNames: [],
+      openShifts: [],
       totalMinutes: 0,
     });
   });

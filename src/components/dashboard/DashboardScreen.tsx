@@ -1,7 +1,7 @@
 // src/components/dashboard/DashboardScreen.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Building2, Clock, Users } from "lucide-react";
 
 import { HoursChart } from "@/components/dashboard/HoursChart";
@@ -58,7 +58,14 @@ export function DashboardScreen({
     initialPeriodEntries,
   );
 
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     let cancelled = false;
     const { from, to } = getPeriodRange(period, referenceDate);
 
@@ -85,7 +92,7 @@ export function DashboardScreen({
   const today = useMemo(() => buildTodayOverview(todayEntries), [todayEntries]);
 
   return (
-    <div className="px-4 pb-6 lg:px-0">
+    <div className="pb-6">
       <ScreenHeader
         title={t.dashboard.title}
         action={
@@ -94,30 +101,32 @@ export function DashboardScreen({
             options={PERIOD_OPTIONS}
             value={period}
             onChange={setPeriod}
-            className="-mx-0 w-auto px-0"
+            className="mx-0 w-auto px-0"
           />
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile icon={Clock} label={t.dashboard.totalHours} value={formatHoursShort(overview.totalMinutes)} />
-        <StatTile icon={Clock} label={t.dashboard.avgPerWorkday} value={formatHoursShort(overview.avgPerWorkdayMinutes)} />
-        <StatTile icon={Users} label={t.dashboard.activeWorkers} value={String(activeWorkersCount)} />
-        <StatTile icon={Building2} label={t.dashboard.objectsWorked} value={String(overview.objectsWorkedCount)} />
-      </div>
-
-      <TodayCard className="mt-4" overview={today} activeWorkersCount={activeWorkersCount} />
-
-      <section className="mt-4 rounded-[16px] border border-border bg-surface p-5">
-        <h3 className="text-[17px] font-bold">{t.dashboard.chartTitle}</h3>
-        <div className="mt-4">
-          <HoursChart data={chartData} emptyLabel={t.dashboard.chartEmpty} />
+      <div className="px-4 lg:px-0">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatTile icon={Clock} label={t.dashboard.totalHours} value={formatHoursShort(overview.totalMinutes)} />
+          <StatTile icon={Clock} label={t.dashboard.avgPerWorkday} value={formatHoursShort(overview.avgPerWorkdayMinutes)} />
+          <StatTile icon={Users} label={t.dashboard.activeWorkers} value={String(activeWorkersCount)} />
+          <StatTile icon={Building2} label={t.dashboard.objectsWorked} value={String(overview.objectsWorkedCount)} />
         </div>
-      </section>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <TopList title={t.dashboard.topSitesTitle} items={topSites} emptyLabel={t.dashboard.topSitesEmpty} />
-        <TopList title={t.dashboard.topWorkersTitle} items={topWorkers} emptyLabel={t.dashboard.topWorkersEmpty} />
+        <TodayCard className="mt-4" overview={today} activeWorkersCount={activeWorkersCount} />
+
+        <section className="mt-4 rounded-[16px] border border-border bg-surface p-5">
+          <h3 className="text-[17px] font-bold">{t.dashboard.chartTitle}</h3>
+          <div className="mt-4">
+            <HoursChart data={chartData} emptyLabel={t.dashboard.chartEmpty} />
+          </div>
+        </section>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <TopList title={t.dashboard.topSitesTitle} items={topSites} emptyLabel={t.dashboard.topSitesEmpty} />
+          <TopList title={t.dashboard.topWorkersTitle} items={topWorkers} emptyLabel={t.dashboard.topWorkersEmpty} />
+        </div>
       </div>
     </div>
   );

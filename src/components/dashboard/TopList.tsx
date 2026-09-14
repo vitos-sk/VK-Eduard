@@ -1,4 +1,5 @@
 // src/components/dashboard/TopList.tsx
+import { cn } from "@/lib/utils";
 import { formatHoursShort } from "@/lib/format";
 import type { RankedItem } from "@/modules/dashboard/aggregate";
 
@@ -6,6 +7,7 @@ interface TopListProps {
   title: string;
   items: readonly RankedItem[];
   emptyLabel: string;
+  className?: string;
 }
 
 /**
@@ -13,11 +15,11 @@ interface TopListProps {
  * раніше жила тільки в `CompanyDashboard.topWorkers`, тепер спільна для
  * «Топ-об'єкти» і «Години по співробітниках» на повній сторінці дашборда.
  */
-export function TopList({ title, items, emptyLabel }: TopListProps) {
+export function TopList({ title, items, emptyLabel, className }: TopListProps) {
   const maxMinutes = items[0]?.minutes ?? 0;
 
   return (
-    <section className="rounded-[16px] border border-border bg-surface p-5">
+    <section className={cn("rounded-[16px] border border-border bg-surface p-5", className)}>
       <h3 className="text-[17px] font-bold">{title}</h3>
 
       {items.length === 0 ? (
