@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
@@ -9,12 +9,13 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
-import { fmt, formatDayMonth, formatHoursShort, fromDateKey } from "@/lib/format";
+import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { reportState } from "@/modules/entries/reportState";
-import type { WorkEntryWithPhotos } from "@/modules/entries/types";
+import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
+import { reportState } from "@/modules/reports/reportState";
+import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
-import { dateKeyOf, sumTotalMinutes } from "@/modules/time/calc";
+import { dateKeyOf } from "@/modules/time/calc";
 
 type ReportFilter = "all" | "no_description" | "with_photo";
 
@@ -27,7 +28,7 @@ const FILTER_OPTIONS: readonly SegmentedOption<ReportFilter>[] = [
 interface DateGroup {
   date: string;
   title: string;
-  entries: WorkEntryWithPhotos[];
+  reports: SiteReportWithPhotos[];
 }
 
 function groupTitle(date: string, todayKey: string, yesterdayKey: string): string {
@@ -37,63 +38,60 @@ function groupTitle(date: string, todayKey: string, yesterdayKey: string): strin
 }
 
 interface ReportsFeedProps {
-  entries: readonly WorkEntryWithPhotos[];
+  reports: readonly SiteReportWithPhotos[];
   sites: readonly Site[];
+  categories: readonly WorkCategory[];
   thumbUrls: Readonly<Record<string, string>>;
 }
 
 /**
  * Лента звітів: фільтр по вмісту (не по статусу — REPORTS.md, розділ 2),
- * пошук, групування по датах, зведення годин по видимій вибірці.
+ * пошук, групування по датах, зведення по видимій вибірці — кількість
+ * звітів і домінуюча категорія (замінили колишню суму годин, якої у звіту
+ * більше немає).
  *
  * Винесена з `ReportsScreen`, щоб той самий список можна було показати
  * і на вкладці «Мої», і на вкладці «Команда» для одного обраного
  * співробітника (`TeamTab`) — без дублювання розмітки й логіки фільтрів.
  */
-export function ReportsFeed({ entries, sites, thumbUrls }: ReportsFeedProps) {
+export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFeedProps) {
   const [filter, setFilter] = useState<ReportFilter>("all");
   const [query, setQuery] = useState("");
-  // Раз в минуту достаточно: секунды тут никто не считает, только «з HH:mm».
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   const siteNameById = useMemo(
     () => new Map(sites.map((site) => [site.id, site.name] as const)),
     [sites],
   );
 
+  const now = new Date();
   const todayKey = dateKeyOf(now);
   const yesterdayKey = dateKeyOf(new Date(now.getTime() - 24 * 60 * 60 * 1000));
 
   const visible = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("uk");
 
-    return entries.filter((entry) => {
-      const state = reportState(entry, entry.entry_photos.length);
+    return reports.filter((report) => {
+      const state = reportState(report, report.report_photos.length);
 
       if (filter === "no_description" && state !== "no_description") return false;
-      if (filter === "with_photo" && entry.entry_photos.length === 0) return false;
+      if (filter === "with_photo" && report.report_photos.length === 0) return false;
 
       if (!needle) return true;
 
-      const siteName = entry.site_id ? (siteNameById.get(entry.site_id) ?? "") : "";
-      const haystack = `${siteName} ${entry.description}`.toLocaleLowerCase("uk");
+      const siteName = report.site_id ? (siteNameById.get(report.site_id) ?? "") : "";
+      const haystack = `${siteName} ${report.description}`.toLocaleLowerCase("uk");
 
       return haystack.includes(needle);
     });
-  }, [entries, filter, query, siteNameById]);
+  }, [reports, filter, query, siteNameById]);
 
   const groups = useMemo<DateGroup[]>(() => {
-    const byDate = new Map<string, WorkEntryWithPhotos[]>();
+    const byDate = new Map<string, SiteReportWithPhotos[]>();
 
-    for (const entry of visible) {
-      const bucket = byDate.get(entry.work_date);
-      if (bucket) bucket.push(entry);
-      else byDate.set(entry.work_date, [entry]);
+    for (const report of visible) {
+      const bucket = byDate.get(report.work_date);
+      if (bucket) bucket.push(report);
+      else byDate.set(report.work_date, [report]);
     }
 
     return [...byDate.entries()]
@@ -101,23 +99,23 @@ export function ReportsFeed({ entries, sites, thumbUrls }: ReportsFeedProps) {
       .map(([date, items]) => ({
         date,
         title: groupTitle(date, todayKey, yesterdayKey),
-        entries: items,
+        reports: items,
       }));
   }, [visible, todayKey, yesterdayKey]);
 
-  const visibleMinutes = sumTotalMinutes(visible);
+  const dominantCategory = aggregateCategoryStats(visible, categories)[0] ?? null;
 
   const emptyTitle =
     filter === "no_description"
       ? t.reports.emptyNoDescriptionTitle
-      : entries.length === 0
+      : reports.length === 0
         ? t.reports.emptyTitle
         : t.reports.emptyFilterTitle;
 
   const emptyHint =
     filter === "no_description"
       ? undefined
-      : entries.length === 0
+      : reports.length === 0
         ? t.reports.emptyHint
         : t.reports.emptyFilterHint;
 
@@ -143,11 +141,13 @@ export function ReportsFeed({ entries, sites, thumbUrls }: ReportsFeedProps) {
       {visible.length > 0 && (
         <div className="mt-4 flex items-baseline justify-between rounded-[16px] border border-border bg-surface px-4 py-3">
           <p className="text-[13px] font-medium text-text-muted">
-            {t.reports.periodSummary}
+            {fmt(t.reports.reportsSummaryCount, { n: visible.length })}
           </p>
-          <p className="tabular text-[15px] font-bold">
-            {formatHoursShort(visibleMinutes)}
-          </p>
+          {dominantCategory && (
+            <p className="text-[13px] font-bold text-text-muted">
+              {fmt(t.reports.reportsSummaryDominant, { label: dominantCategory.label })}
+            </p>
+          )}
         </div>
       )}
 
@@ -159,22 +159,22 @@ export function ReportsFeed({ entries, sites, thumbUrls }: ReportsFeedProps) {
                 {group.title}
               </h2>
               <span className="shrink-0 text-[13px] font-medium text-text-muted">
-                {fmt(t.reports.reportsCount, { n: group.entries.length })}
+                {fmt(t.reports.reportsCount, { n: group.reports.length })}
               </span>
             </div>
 
             <div className="mt-3 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-              {group.entries.map((entry) => (
+              {group.reports.map((report) => (
                 <ReportCard
-                  key={entry.id}
-                  entry={entry}
-                  siteName={entry.site_id ? (siteNameById.get(entry.site_id) ?? null) : null}
+                  key={report.id}
+                  report={report}
+                  siteName={report.site_id ? (siteNameById.get(report.site_id) ?? null) : null}
+                  categories={categories}
                   thumbUrl={
-                    entry.entry_photos[0]
-                      ? (thumbUrls[entry.entry_photos[0].storage_path] ?? null)
+                    report.report_photos[0]
+                      ? (thumbUrls[report.report_photos[0].storage_path] ?? null)
                       : null
                   }
-                  now={now}
                 />
               ))}
             </div>

@@ -13,7 +13,7 @@ import {
 } from "@/components/shared/SegmentedTabs";
 import { t } from "@/lib/i18n";
 import type { Profile } from "@/modules/auth/session";
-import type { WorkEntryWithPhotos } from "@/modules/entries/types";
+import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +26,9 @@ const SCREEN_TAB_OPTIONS: readonly SegmentedOption<ScreenTab>[] = [
 
 interface ReportsScreenProps {
   profile: Profile;
-  entries: readonly WorkEntryWithPhotos[];
+  reports: readonly SiteReportWithPhotos[];
   sites: readonly Site[];
+  categories: readonly WorkCategory[];
   /** Подписанные ссылки первых фото: `storage_path` → URL, на час. */
   thumbUrls: Readonly<Record<string, string>>;
 }
@@ -37,7 +38,7 @@ interface ReportsScreenProps {
  * раніше) і «Команда» (REPORTS.md, розділ 4); у рядового робітника
  * вкладок нема, він завжди бачить тільки свою стрічку.
  */
-export function ReportsScreen({ profile, entries, sites, thumbUrls }: ReportsScreenProps) {
+export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }: ReportsScreenProps) {
   const [tab, setTab] = useState<ScreenTab>("mine");
   const isBoss = profile.role === "boss";
 
@@ -73,9 +74,9 @@ export function ReportsScreen({ profile, entries, sites, thumbUrls }: ReportsScr
       )}
 
       {isBoss && tab === "team" ? (
-        <TeamTab companyId={profile.company_id} sites={sites} />
+        <TeamTab companyId={profile.company_id} sites={sites} categories={categories} />
       ) : (
-        <ReportsFeed entries={entries} sites={sites} thumbUrls={thumbUrls} />
+        <ReportsFeed reports={reports} sites={sites} categories={categories} thumbUrls={thumbUrls} />
       )}
     </div>
   );

@@ -6,6 +6,7 @@ import { uk as ukLocale } from "date-fns/locale";
 import { ChevronLeft, UserPlus } from "lucide-react";
 
 import { AddWorkerForm } from "@/components/reports/AddWorkerForm";
+import { DeactivateWorkerButton } from "@/components/reports/DeactivateWorkerButton";
 import { ExportMenu } from "@/components/reports/ExportMenu";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -17,9 +18,11 @@ import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import { getCompanyEntriesInRange, getEntriesFeed } from "@/modules/entries/queries";
-import type { WorkEntryWithNames, WorkEntryWithPhotos } from "@/modules/entries/types";
+import { getCompanyEntriesInRange } from "@/modules/entries/queries";
+import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
+import { getReportsFeed } from "@/modules/reports/queries";
+import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { dateKeyOf } from "@/modules/time/calc";
@@ -42,17 +45,20 @@ function sumMinutesByAuthor(
 interface TeamTabProps {
   companyId: string;
   sites: readonly Site[];
+  categories: readonly WorkCategory[];
 }
 
 /**
  * Вкладка «Команда» (REPORTS.md, розділ 4) — тільки boss. Список
- * працівників компанії з їхніми годинами за обраний місяць, фільтр по
- * одному працівнику, перехід у стрічку його звітів і кнопка експорту CSV.
+ * працівників компанії з їхніми годинами за обраний місяць (джерело —
+ * `work_entries`, «Години» цю вкладку не чіпаємо), фільтр по одному
+ * працівнику, перехід у стрічку його звітів (вже з `site_reports`) і
+ * кнопки експорту CSV.
  *
  * Хто саме бачить цю вкладку — вирішує `ReportsScreen` (перевіряє
  * `profile.role`), тут це вже не перевіряється повторно.
  */
-export function TeamTab({ companyId, sites }: TeamTabProps) {
+export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const supabase = useMemo(() => createClient(), []);
 
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
@@ -62,7 +68,7 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
   const [workerFilter, setWorkerFilter] = useState(WORKER_FILTER_ALL);
 
   const [openWorkerId, setOpenWorkerId] = useState<string | null>(null);
-  const [openEntries, setOpenEntries] = useState<readonly WorkEntryWithPhotos[]>([]);
+  const [openReports, setOpenReports] = useState<readonly SiteReportWithPhotos[]>([]);
   const [openThumbUrls, setOpenThumbUrls] = useState<Readonly<Record<string, string>>>({});
   const [isOpenLoading, setIsOpenLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -125,14 +131,14 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
     setOpenWorkerId(workerId);
     setIsOpenLoading(true);
 
-    getEntriesFeed(supabase, workerId)
-      .then(async (entries) => {
-        const paths = entries
-          .map((entry) => entry.entry_photos[0]?.storage_path)
+    getReportsFeed(supabase, workerId)
+      .then(async (reports) => {
+        const paths = reports
+          .map((report) => report.report_photos[0]?.storage_path)
           .filter((path): path is string => Boolean(path));
         const urls = await getSignedPhotoUrls(supabase, paths);
 
-        setOpenEntries(entries);
+        setOpenReports(reports);
         setOpenThumbUrls(Object.fromEntries(urls));
       })
       .finally(() => setIsOpenLoading(false));
@@ -162,11 +168,24 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
             </p>
           </div>
 
-          <ExportMenu className="mt-3" from={monthFrom} to={monthTo} workerId={openWorkerId} />
+          <div className="mt-3 flex gap-2">
+            <ExportMenu from={monthFrom} to={monthTo} workerId={openWorkerId} />
+            <ExportMenu kind="reports" from={monthFrom} to={monthTo} workerId={openWorkerId} />
+          </div>
+        </div>
+
+        <div className="px-4">
+          <DeactivateWorkerButton
+            workerId={openWorkerId}
+            onDeactivated={() => {
+              setOpenWorkerId(null);
+              refreshWorkers();
+            }}
+          />
         </div>
 
         {isOpenLoading ? null : (
-          <ReportsFeed entries={openEntries} sites={sites} thumbUrls={openThumbUrls} />
+          <ReportsFeed reports={openReports} sites={sites} categories={categories} thumbUrls={openThumbUrls} />
         )}
       </div>
     );
@@ -216,7 +235,7 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
       {rows.length === 0 ? (
         <EmptyState className="mt-6" title={t.reports.team.empty} />
       ) : (
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-4 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
           {rows.map(({ worker, monthMinutes: workerMonthMinutes, weekMinutes: workerWeekMinutes }) => (
             <li key={worker.id}>
               <button
@@ -247,11 +266,10 @@ export function TeamTab({ companyId, sites }: TeamTabProps) {
         </ul>
       )}
 
-      <ExportMenu
-        className="mt-4 h-12 w-full justify-center"
-        from={monthFrom}
-        to={monthTo}
-      />
+      <div className="mt-4 flex gap-2">
+        <ExportMenu className="h-12 flex-1 justify-center" from={monthFrom} to={monthTo} />
+        <ExportMenu kind="reports" className="h-12 flex-1 justify-center" from={monthFrom} to={monthTo} />
+      </div>
     </div>
   );
 }

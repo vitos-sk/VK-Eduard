@@ -1,8 +1,8 @@
 import { ReportsScreen } from "@/components/reports/ReportsScreen";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { getEntriesFeed } from "@/modules/entries/queries";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
+import { getReportsFeed, getWorkCategories } from "@/modules/reports/queries";
 import { getAllSites } from "@/modules/sites/queries";
 
 /**
@@ -13,13 +13,14 @@ export default async function ReportsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [entries, sites] = await Promise.all([
-    getEntriesFeed(supabase, profile.id),
+  const [reports, sites, categories] = await Promise.all([
+    getReportsFeed(supabase, profile.id),
     getAllSites(supabase),
+    getWorkCategories(supabase, profile.company_id),
   ]);
 
-  const firstPhotoPaths = entries
-    .map((entry) => entry.entry_photos[0]?.storage_path)
+  const firstPhotoPaths = reports
+    .map((report) => report.report_photos[0]?.storage_path)
     .filter((path): path is string => Boolean(path));
 
   const thumbUrls = await getSignedPhotoUrls(supabase, firstPhotoPaths);
@@ -27,8 +28,9 @@ export default async function ReportsPage() {
   return (
     <ReportsScreen
       profile={profile}
-      entries={entries}
+      reports={reports}
       sites={sites}
+      categories={categories}
       thumbUrls={Object.fromEntries(thumbUrls)}
     />
   );
