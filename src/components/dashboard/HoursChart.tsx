@@ -39,8 +39,8 @@ export function HoursChart({ data, emptyLabel }: HoursChartProps) {
             interval="preserveStartEnd"
           />
           <Tooltip
-            formatter={(value: any) => formatHoursShort(value)}
-            labelFormatter={(label: any) => label}
+            formatter={(value) => formatHoursShort(Number(value))}
+            labelFormatter={(label) => label}
             contentStyle={{ borderRadius: 12, fontSize: 13 }}
           />
           <Bar dataKey="minutes" fill="var(--color-brand)" radius={[4, 4, 0, 0]} />
