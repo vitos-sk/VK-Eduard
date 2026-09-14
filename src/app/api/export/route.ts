@@ -7,8 +7,10 @@ import { requireProfile } from "@/modules/auth/session";
 import { getCompanyEntryHoursInRange } from "@/modules/entries/queries";
 import { buildCsv } from "@/modules/export/csv";
 import { buildPdf } from "@/modules/export/pdf";
-import type { ExportRow } from "@/modules/export/types";
+import { buildReportsCsv } from "@/modules/export/reportsCsv";
+import type { ExportRow, ReportExportRow } from "@/modules/export/types";
 import { buildXlsx } from "@/modules/export/xlsx";
+import { getCompanyReportsInRange } from "@/modules/reports/queries";
 import { getAllSites } from "@/modules/sites/queries";
 
 // exceljs/pdfkit читають файли й працюють з Buffer — потребують Node,
@@ -28,16 +30,19 @@ function isExportFormat(value: string): value is ExportFormat {
 }
 
 /**
- * Експорт годин за діапазон дат — CSV (як і раніше), Excel .xlsx і
- * PDF-табель (`docs/ROADMAP.md`, етап 6, доповнений десктоп-адмінкою).
+ * Експорт годин (`kind=hours`, за замовч.) або звітів (`kind=reports`) за
+ * діапазон дат. Години — CSV/Excel .xlsx/PDF-табель (`docs/ROADMAP.md`,
+ * етап 6, доповнений десктоп-адмінкою). Звіти — тільки CSV
+ * (дата/робітник/об'єкт/категорії/опис/фото, без часу).
  * Формат — `?format=`, дефолт `csv` для сумісності зі старими посиланнями.
  * `?workerId=` звужує вибірку до одного робітника (експорт з картки
  * робітника в адмінці) — фільтр застосовується вже після RLS-вибірки.
  *
- * RLS на `entry_hours` сама вирішує обсяг: рядовому робітнику віддасть
- * тільки його зміни, шефу (`is_boss()`) — усі по компанії. Кнопка в
- * інтерфейсі показана тільки шефу, але навіть пряме звернення сюди
- * не дає рядовому чужих даних — розмежування вже на рівні бази.
+ * RLS на `entry_hours`/`site_reports` сама вирішує обсяг: рядовому
+ * робітнику віддасть тільки його дані, шефу (`is_boss()`) — усі по
+ * компанії. Кнопка в інтерфейсі показана тільки шефу, але навіть пряме
+ * звернення сюди не дає рядовому чужих даних — розмежування вже на
+ * рівні бази.
  */
 export async function GET(request: Request) {
   const profile = await requireProfile();
@@ -46,6 +51,7 @@ export async function GET(request: Request) {
   const to = searchParams.get("to");
   const workerId = searchParams.get("workerId");
   const formatParam = searchParams.get("format") ?? "csv";
+  const kind = searchParams.get("kind") === "reports" ? "reports" : "hours";
 
   if (!from || !to) {
     return NextResponse.json(
@@ -58,7 +64,40 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Невідомий формат експорту" }, { status: 400 });
   }
 
+  if (kind === "reports" && formatParam !== "csv") {
+    return NextResponse.json({ error: "Для звітів підтримується тільки CSV" }, { status: 400 });
+  }
+
   const supabase = await createClient();
+
+  if (kind === "reports") {
+    const [reports, sites] = await Promise.all([
+      getCompanyReportsInRange(supabase, profile.company_id, from, to),
+      getAllSites(supabase),
+    ]);
+
+    const siteNameById = new Map(sites.map((site) => [site.id, site.name] as const));
+
+    const rows: ReportExportRow[] = reports
+      .filter((report) => !workerId || report.author_id === workerId)
+      .map((report) => ({
+        date: formatWorkDateShort(report.work_date),
+        worker: report.author_full_name,
+        site: report.site_id ? (siteNameById.get(report.site_id) ?? "") : t.hours.noObject,
+        categories: report.category_labels.join("; "),
+        description: report.description,
+        photoCount: report.photo_count,
+      }));
+
+    const fileName = `reports_${from}_${to}.csv`;
+
+    return new NextResponse(buildReportsCsv(rows), {
+      headers: {
+        "Content-Type": CONTENT_TYPES.csv,
+        "Content-Disposition": `attachment; filename="${fileName}"`,
+      },
+    });
+  }
 
   const [entryHours, sites, company] = await Promise.all([
     getCompanyEntryHoursInRange(supabase, profile.company_id, from, to),

@@ -24,3 +24,14 @@ export interface ExportMeta {
   /** Заголовок періоду — «Липень 2025» тощо, вже готовий рядок. */
   periodTitle: string;
 }
+
+/** Один рядок «звіту» для CSV-експорту — на відміну від `ExportRow`, без часу. */
+export interface ReportExportRow {
+  date: string;
+  worker: string;
+  site: string;
+  /** Мітки категорій через «; ». */
+  categories: string;
+  description: string;
+  photoCount: number;
+}

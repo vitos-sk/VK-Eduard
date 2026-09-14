@@ -432,6 +432,7 @@ export const uk = {
     },
     export: {
       label: "Експорт",
+      labelReports: "Експорт звітів",
       csv: "CSV",
       xlsx: "Excel (.xlsx)",
       pdf: "PDF-табель",
