@@ -5,9 +5,9 @@ import type { WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
 
 interface WorkCategoryChipsProps {
-  categories: readonly WorkCategory[];
-  value: readonly string[];
-  onChange?: (ids: string[]) => void;
+  categories: WorkCategory[];
+  value: string[];
+  onChange: (ids: string[]) => void;
   /** Тільки перегляд — на детальній сторінці поза режимом правки. */
   readOnly?: boolean;
   className?: string;
@@ -42,12 +42,12 @@ export function WorkCategoryChips({
             type="button"
             disabled={readOnly}
             onClick={() => {
-              if (!onChange) return;
               onChange(selected ? value.filter((id) => id !== category.id) : [...value, category.id]);
             }}
             aria-pressed={selected}
             className={cn(
               "flex h-9 items-center rounded-full border px-3 text-[13px] font-bold",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
               !readOnly && "transition-transform duration-150 active:scale-95",
               selected
                 ? "border-brand bg-brand text-brand-ink"
