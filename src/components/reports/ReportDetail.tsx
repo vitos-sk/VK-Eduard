@@ -124,7 +124,7 @@ export function ReportDetail({
 
         {isEditingCategories ? (
           <div className="mt-3 space-y-3">
-            <WorkCategoryChips categories={[...categories]} value={categoryDraft} onChange={setCategoryDraft} />
+            <WorkCategoryChips categories={categories} value={categoryDraft} onChange={setCategoryDraft} />
             <div className="flex gap-2">
               <button
                 type="button"
@@ -146,7 +146,7 @@ export function ReportDetail({
         ) : (
           <WorkCategoryChips
             className="mt-3"
-            categories={[...categories]}
+            categories={categories}
             value={categoryIds}
             onChange={() => {}}
             readOnly

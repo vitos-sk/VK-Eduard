@@ -198,7 +198,7 @@ export async function deleteReport(reportId: string): Promise<ReportActionState>
     .select("id");
 
   if (error) {
-    return { error: t.hours.deleteError };
+    return { error: t.reportDetail.deleteError };
   }
 
   if (!data || data.length === 0) {

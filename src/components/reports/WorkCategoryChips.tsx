@@ -5,8 +5,8 @@ import type { WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
 
 interface WorkCategoryChipsProps {
-  categories: WorkCategory[];
-  value: string[];
+  categories: readonly WorkCategory[];
+  value: readonly string[];
   onChange: (ids: string[]) => void;
   /** Тільки перегляд — на детальній сторінці поза режимом правки. */
   readOnly?: boolean;

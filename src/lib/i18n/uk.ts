@@ -132,7 +132,6 @@ export const uk = {
     detail: {
       kind: "Вид робіт",
       address: "Адреса",
-      totalWorked: "Відпрацьовано всього",
       myReports: "Мої звіти",
       categoryStatsEmpty: "Категорії з'являться, щойно ви вкажете вид робіт у звіті",
       emptyTitle: "Ви ще не працювали на цьому об'єкті",
@@ -301,7 +300,6 @@ export const uk = {
      */
     reportsSummaryCount: "{n} звітів",
     reportsSummaryDominant: "переважно: {label}",
-    ongoingSince: "з {time}",
     noDescriptionBadge: "Без опису",
     addDescription: "Дописати",
     emptyTitle: "Ще немає звітів",
@@ -316,7 +314,6 @@ export const uk = {
   reportDetail: {
     backTitle: "Звіт",
     edit: "Редагувати",
-    editTime: "Редагувати час",
     addDescriptionTitle: "Додати опис",
     addDescriptionPlaceholder: "Наприклад: Монтаж покрівельної мембрани",
     save: "Зберегти",

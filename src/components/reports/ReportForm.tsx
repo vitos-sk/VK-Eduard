@@ -86,7 +86,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
       <div className="pb-6">
         <BackHeader title={t.reportForm.title} href={`/reports/${createdReportId}`} />
 
-        <div className="space-y-4 px-4">
+        <div className="space-y-4 px-4 lg:mx-auto lg:max-w-[640px]">
           <div>
             <h2 className="text-[17px] font-bold">{t.reportForm.photosStepTitle}</h2>
             <p className="mt-1 text-[13px] font-medium text-text-muted">
@@ -125,7 +125,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
     <div className="pb-6">
       <BackHeader title={t.reportForm.title} onBack={() => router.back()} />
 
-      <div className="space-y-6 px-4">
+      <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
         {lastReport && (
           <button
             type="button"
@@ -211,7 +211,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
         {categories.length > 0 && (
           <Field label={t.reportForm.categoriesLabel}>
-            <WorkCategoryChips categories={[...categories]} value={categoryIds} onChange={setCategoryIds} />
+            <WorkCategoryChips categories={categories} value={categoryIds} onChange={setCategoryIds} />
           </Field>
         )}
 
