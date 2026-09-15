@@ -8,7 +8,7 @@ alter table work_entries
     foreign key (site_id) references sites(id) on delete set null;
 
 create policy sites_delete on sites for delete to authenticated
-  using (company_id = current_company_id() and is_boss());
+  using (company_id = private.current_company_id() and private.is_boss());
 
 alter table sites add column photo_path text;
 
@@ -26,20 +26,20 @@ create policy site_photos_read on storage.objects for select to authenticated
     and exists (
       select 1 from sites s
       where s.id::text = (storage.foldername(name))[2]
-        and s.company_id = current_company_id()
+        and s.company_id = private.current_company_id()
     )
   );
 
 create policy site_photos_write on storage.objects for insert to authenticated
   with check (
     bucket_id = 'site-photos'
-    and (storage.foldername(name))[1] = current_company_id()::text
-    and is_boss()
+    and (storage.foldername(name))[1] = private.current_company_id()::text
+    and private.is_boss()
   );
 
 create policy site_photos_remove on storage.objects for delete to authenticated
   using (
     bucket_id = 'site-photos'
-    and (storage.foldername(name))[1] = current_company_id()::text
-    and is_boss()
+    and (storage.foldername(name))[1] = private.current_company_id()::text
+    and private.is_boss()
   );
