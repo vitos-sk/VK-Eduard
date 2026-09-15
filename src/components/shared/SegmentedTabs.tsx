@@ -14,6 +14,8 @@ interface SegmentedTabsProps<T extends string> {
   /** Подпись группы для скринридера, например «Об'єкти». */
   label?: string;
   className?: string;
+  /** "sm" — компактные пилюли для тесных шапок. */
+  size?: "md" | "sm";
 }
 
 /**
@@ -26,6 +28,7 @@ export function SegmentedTabs<T extends string>({
   onChange,
   label,
   className,
+  size = "md",
 }: SegmentedTabsProps<T>) {
   return (
     <div
@@ -47,7 +50,8 @@ export function SegmentedTabs<T extends string>({
             aria-selected={isActive}
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-11 shrink-0 rounded-full px-4 text-[14px] font-semibold whitespace-nowrap",
+              "shrink-0 rounded-full font-semibold whitespace-nowrap",
+              size === "sm" ? "h-8 px-3 text-[13px]" : "h-11 px-4 text-[14px]",
               "transition-colors duration-150",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
               isActive

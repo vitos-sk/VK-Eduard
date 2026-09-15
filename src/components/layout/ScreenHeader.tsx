@@ -10,13 +10,15 @@ interface ScreenHeaderProps {
   /** Кнопка справа: «+», иконка календаря и т.п. */
   action?: ReactNode;
   className?: string;
+  /** Переопределение размера заголовка, например когда рядом много контента. */
+  titleClassName?: string;
 }
 
 /**
  * Шапка вкладки: крупный заголовок слева, необязательное действие справа.
  * Учитывает верхнюю безопасную зону.
  */
-export function ScreenHeader({ title, action, className }: ScreenHeaderProps) {
+export function ScreenHeader({ title, action, className, titleClassName }: ScreenHeaderProps) {
   return (
     <header
       className={cn(
@@ -24,8 +26,15 @@ export function ScreenHeader({ title, action, className }: ScreenHeaderProps) {
         className,
       )}
     >
-      <h1 className="text-[30px] font-extrabold tracking-tight">{title}</h1>
-      {action}
+      <h1
+        className={cn(
+          "shrink-0 text-[30px] font-extrabold tracking-tight",
+          titleClassName,
+        )}
+      >
+        {title}
+      </h1>
+      <div className="min-w-0">{action}</div>
     </header>
   );
 }

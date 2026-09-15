@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
-import { ChevronLeft, UserPlus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
-import { AddWorkerForm } from "@/components/reports/AddWorkerForm";
 import { ExportMenu } from "@/components/reports/ExportMenu";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -70,7 +69,6 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const [openReports, setOpenReports] = useState<readonly SiteReportWithPhotos[]>([]);
   const [openThumbUrls, setOpenThumbUrls] = useState<Readonly<Record<string, string>>>({});
   const [isOpenLoading, setIsOpenLoading] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const refreshWorkers = useCallback(() => {
     getCompanyWorkers(supabase, companyId)
@@ -184,34 +182,11 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
   return (
     <div className="px-4">
-      <div className="flex items-center gap-2">
-        <PeriodNavigator
-          className="flex-1"
-          title={monthTitle}
-          onPrev={() => setMonth((current) => addMonthsSafe(current, -1))}
-          onNext={() => setMonth((current) => addMonthsSafe(current, 1))}
-        />
-
-        <button
-          type="button"
-          onClick={() => setIsAddOpen((open) => !open)}
-          aria-label={t.reports.team.addWorker}
-          className={cn(
-            "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
-            "transition-transform duration-150 active:scale-95",
-          )}
-        >
-          <UserPlus className="size-5" strokeWidth={2.2} aria-hidden />
-        </button>
-      </div>
-
-      {isAddOpen && (
-        <AddWorkerForm
-          className="mt-3"
-          onClose={() => setIsAddOpen(false)}
-          onCreated={refreshWorkers}
-        />
-      )}
+      <PeriodNavigator
+        title={monthTitle}
+        onPrev={() => setMonth((current) => addMonthsSafe(current, -1))}
+        onNext={() => setMonth((current) => addMonthsSafe(current, 1))}
+      />
 
       <SegmentedTabs
         className="mt-3"

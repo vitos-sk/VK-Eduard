@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Copy, UserPlus, X } from "lucide-react";
+import { UserPlus, X } from "lucide-react";
 
 import {
   SegmentedTabs,
@@ -33,8 +33,8 @@ interface AddWorkerFormProps {
 
 /**
  * Форма «Додати співробітника» на вкладці «Команда» (тільки boss).
- * Два кроки в одному компоненті: спершу поля, потім — один раз показаний
- * тимчасовий пароль, який шеф передає людині сам (запрошень поштою нема).
+ * Пароль задає сам шеф (поле нижче) — запрошень поштою нема, тож саме
+ * він і передає ці дані людині.
  */
 export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -42,39 +42,27 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("worker");
 
-  const [result, setResult] = useState<{ email: string; tempPassword: string } | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  const [result, setResult] = useState<{ email: string } | null>(null);
 
-  const isValid = fullName.trim() !== "" && email.trim() !== "";
+  const isValid = fullName.trim() !== "" && email.trim() !== "" && password.length >= 6;
 
   const handleSubmit = () => {
     setError(null);
 
     startTransition(async () => {
-      const state = await createWorker({ fullName, email, role });
+      const state = await createWorker({ fullName, email, password, role });
 
       if (state.error !== null) {
         setError(state.error);
         return;
       }
 
-      setResult({ email: state.email, tempPassword: state.tempPassword });
+      setResult({ email: state.email });
       onCreated();
     });
-  };
-
-  const handleCopy = () => {
-    if (!result) return;
-
-    navigator.clipboard
-      .writeText(`${result.email} / ${result.tempPassword}`)
-      .then(() => {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      })
-      .catch(() => {});
   };
 
   if (result) {
@@ -89,36 +77,13 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
             </dt>
             <dd className="tabular text-[14px] font-bold">{result.email}</dd>
           </div>
-          <div className="flex items-baseline justify-between gap-4">
-            <dt className="text-[13px] font-medium text-text-muted">
-              {t.reports.team.form.tempPasswordLabel}
-            </dt>
-            <dd className="tabular text-[16px] font-bold">{result.tempPassword}</dd>
-          </div>
         </dl>
 
         <p className="mt-3 text-[13px] leading-[1.4] font-medium text-text-muted">
-          {t.reports.team.form.tempPasswordHint}
+          {t.reports.team.form.createdHint}
         </p>
 
         <div className="mt-4 flex gap-3">
-          <button
-            type="button"
-            onClick={handleCopy}
-            className={cn(
-              "flex h-12 flex-1 items-center justify-center gap-2 rounded-[14px]",
-              "border border-border text-[15px] font-bold text-text",
-              "transition-transform duration-150 active:scale-[0.98]",
-            )}
-          >
-            {isCopied ? (
-              <Check className="size-[18px]" strokeWidth={2} aria-hidden />
-            ) : (
-              <Copy className="size-[18px]" strokeWidth={2} aria-hidden />
-            )}
-            {isCopied ? t.reports.team.form.copied : t.reports.team.form.copy}
-          </button>
-
           <button
             type="button"
             onClick={onClose}
@@ -168,6 +133,16 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
           onChange={(event) => setEmail(event.target.value)}
           placeholder={t.reports.team.form.emailPlaceholder}
           aria-label={t.reports.team.form.emailLabel}
+          className={inputClassName}
+        />
+
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder={t.reports.team.form.passwordPlaceholder}
+          aria-label={t.reports.team.form.passwordLabel}
+          autoComplete="new-password"
           className={inputClassName}
         />
 

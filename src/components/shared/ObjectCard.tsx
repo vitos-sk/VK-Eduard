@@ -29,6 +29,9 @@ export function ObjectCard({
         "flex w-full items-stretch gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
         "transition-transform duration-150 active:scale-[0.98]",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+        "lg:flex-col lg:items-stretch lg:gap-0 lg:overflow-hidden lg:p-0",
+        "lg:transition-all lg:duration-150 lg:active:scale-100",
+        "lg:hover:-translate-y-0.5 lg:hover:border-text-dim/40 lg:hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]",
         object.archivedAt && "opacity-60",
         className,
       )}
@@ -38,10 +41,10 @@ export function ObjectCard({
         gradient={object.gradient}
         photoUrl={object.photoUrl}
         size="md"
-        className="h-auto w-28 self-stretch"
+        className="h-auto w-28 self-stretch lg:h-[150px] lg:w-full lg:self-auto lg:rounded-none"
       />
 
-      <div className="my-auto min-w-0 flex-1">
+      <div className="my-auto min-w-0 flex-1 lg:my-0 lg:p-4">
         <p className="truncate text-[17px] font-bold">{object.name}</p>
         <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">
           {object.address || t.common.dash}
@@ -76,7 +79,7 @@ export function ObjectCard({
 
       {showChevron && (
         <ChevronRight
-          className="my-auto size-5 shrink-0 text-text-dim"
+          className="my-auto size-5 shrink-0 text-text-dim lg:hidden"
           strokeWidth={2.4}
           aria-hidden
         />

@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 /**
  * Шапка главной: логотип «K group.» слева, колокольчик и аватар справа.
  *
+ * От `lg` логотип уходит — он уже есть в `DesktopSidebar`, дублировать его
+ * в шапке незачем; вместо него — название раздела, как в остальном приложении.
+ *
  * `initials` — первая буква имени из профиля. Счётчик непрочитанных убран
  * вместе с моком: экрана уведомлений нет, а рисовать выдуманное число
  * рядом с настоящим именем — врать пользователю.
@@ -29,7 +32,10 @@ export function HomeHeader({
         className,
       )}
     >
-      <Logo size={19} />
+      <Logo size={19} className="lg:hidden" />
+      <p className="hidden text-[15px] font-bold text-text-dim lg:block">
+        {t.nav.home}
+      </p>
 
       <div className="flex items-center gap-2">
         <button

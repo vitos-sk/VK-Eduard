@@ -96,14 +96,17 @@ export function DashboardScreen({
     <div className="pb-6">
       <ScreenHeader
         title={t.dashboard.title}
+        className="gap-2"
+        titleClassName="text-[22px]"
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <SegmentedTabs
               label={t.dashboard.title}
               options={PERIOD_OPTIONS}
               value={period}
               onChange={setPeriod}
-              className="mx-0 w-auto px-0"
+              size="sm"
+              className="mx-0 w-auto min-w-0 px-0"
             />
             <AvatarLink initials={initialsOf(profile)} />
           </div>

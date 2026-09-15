@@ -90,32 +90,31 @@ export default async function HomePage() {
         )}
       </div>
 
-      {/* Десктопна двоколонкова розкладка — видима тільки від lg */}
-      <div className="hidden lg:grid lg:mt-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-6">
-        <div>
-          <WorkTimeCard openEntry={openEntry} />
-        </div>
+      {/* Десктопна розкладка — видима тільки від lg. Таймер горизонтальною
+          смугою на всю ширину (замість вузької картки з порожнечею
+          справа), нижче — сітка об'єктів на всю ширину контейнера. */}
+      <div className="hidden lg:block lg:mt-6">
+        <WorkTimeCard openEntry={openEntry} />
 
-        <div>
-          <SectionHeader
-            title={t.home.myObjects}
-            action={{ label: t.home.viewAll, href: "/objects" }}
+        <SectionHeader
+          className="mt-8"
+          title={t.home.myObjects}
+          action={{ label: t.home.viewAll, href: "/objects" }}
+        />
+
+        {homeObjects.length > 0 ? (
+          <div className="mt-4 grid grid-cols-3 gap-4">
+            {homeObjects.map((object) => (
+              <ObjectCard key={object.id} object={object} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            className="mt-4"
+            title={t.objects.emptyTitle}
+            description={t.objects.emptyHint}
           />
-
-          {homeObjects.length > 0 ? (
-            <div className="mt-3 grid grid-cols-2 gap-4">
-              {homeObjects.map((object) => (
-                <ObjectCard key={object.id} object={object} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              className="mt-3"
-              title={t.objects.emptyTitle}
-              description={t.objects.emptyHint}
-            />
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

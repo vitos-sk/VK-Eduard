@@ -137,6 +137,7 @@ export async function startCurrentBreak(time: string): Promise<EntryActionState>
     .maybeSingle();
 
   if (findError) {
+    console.error("[startCurrentBreak] findError", findError);
     return { error: t.hours.genericError };
   }
 
@@ -154,6 +155,7 @@ export async function startCurrentBreak(time: string): Promise<EntryActionState>
     .eq("id", open.id);
 
   if (error) {
+    console.error("[startCurrentBreak] updateError", error);
     return { error: t.hours.genericError };
   }
 
@@ -179,6 +181,7 @@ export async function endCurrentBreak(time: string): Promise<EntryActionState> {
     .maybeSingle();
 
   if (findError) {
+    console.error("[endCurrentBreak] findError", findError);
     return { error: t.hours.genericError };
   }
 
@@ -200,6 +203,7 @@ export async function endCurrentBreak(time: string): Promise<EntryActionState> {
     .eq("id", open.id);
 
   if (error) {
+    console.error("[endCurrentBreak] updateError", error);
     return { error: t.hours.genericError };
   }
 

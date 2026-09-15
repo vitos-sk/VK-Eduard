@@ -10,24 +10,11 @@ import { getProfile } from "@/modules/auth/session";
 type UserRole = Database["public"]["Enums"]["user_role"];
 
 export type CreateWorkerState =
-  | { error: string; tempPassword?: undefined; email?: undefined }
-  | { error: null; tempPassword: string; email: string };
-
-const TEMP_PASSWORD_ALPHABET =
-  "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-
-/** Читаемый временный пароль без похожих символов (0/O, 1/l) — его диктуют вслух. */
-function generateTempPassword(length = 10): string {
-  let result = "";
-
-  for (let i = 0; i < length; i++) {
-    result += TEMP_PASSWORD_ALPHABET[Math.floor(Math.random() * TEMP_PASSWORD_ALPHABET.length)];
-  }
-
-  return result;
-}
+  | { error: string; email?: undefined }
+  | { error: null; email: string };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
 
 /**
  * Заводить співробітника — тільки boss. Адмінський клієнт (сервісний ключ)
@@ -35,13 +22,14 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * а не покладаємось на базу — на відміну від решти дій у проєкті.
  *
  * Запрошень/листів немає (ROADMAP.md, етап 2 і 6: «людей заводить шеф
- * руками»): пароль генерується одразу і повертається один раз, шеф
- * передає його співробітнику сам — так само, як зараз демо-акаунти
- * в `seed.sql`.
+ * руками»): пароль задає сам шеф у формі і передає його співробітнику —
+ * так само, як зараз демо-акаунти в `seed.sql`. Самостійна зміна пароля
+ * співробітником через email — окрема задача на майбутнє.
  */
 export async function createWorker(input: {
   fullName: string;
   email: string;
+  password: string;
   role: UserRole;
 }): Promise<CreateWorkerState> {
   const profile = await getProfile();
@@ -61,12 +49,15 @@ export async function createWorker(input: {
     return { error: t.reports.team.form.emailInvalid };
   }
 
+  if (input.password.length < MIN_PASSWORD_LENGTH) {
+    return { error: t.reports.team.form.passwordTooShort };
+  }
+
   const admin = createAdminClient();
-  const tempPassword = generateTempPassword();
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
-    password: tempPassword,
+    password: input.password,
     email_confirm: true,
     user_metadata: { full_name: fullName },
   });
@@ -98,7 +89,7 @@ export async function createWorker(input: {
 
   revalidatePath("/reports");
 
-  return { error: null, tempPassword, email };
+  return { error: null, email };
 }
 
 export type DeactivateWorkerState = { error: string | null };
