@@ -133,84 +133,83 @@ export function HoursScreen({
     <div className="pb-6">
       <ScreenHeader
         title={t.hours.title}
-        action={
-          <div className="flex items-center gap-2">
-          <div
+        action={<AvatarLink initials={initialsOf(profile)} />}
+      />
+
+      <div className="px-4 pb-4">
+        <div
+          className={cn(
+            "flex items-center gap-0.5 rounded-full border border-border",
+            "bg-surface-2 p-1",
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => shiftMonth(-1)}
+            aria-label={t.hours.prevPeriod}
             className={cn(
-              "flex shrink-0 items-center gap-0.5 rounded-full border border-border",
-              "bg-surface-2 p-1",
+              "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
+              "transition-colors duration-150 active:bg-surface",
+              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
             )}
           >
-            <button
-              type="button"
-              onClick={() => shiftMonth(-1)}
-              aria-label={t.hours.prevPeriod}
-              className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
-                "transition-colors duration-150 active:bg-surface",
-                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-              )}
-            >
-              <ChevronLeft className="size-4" strokeWidth={2.4} aria-hidden />
-            </button>
+            <ChevronLeft className="size-4" strokeWidth={2.4} aria-hidden />
+          </button>
 
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={t.hours.pickDate}
-                  className={cn(
-                    "flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3",
-                    "text-[13px] font-bold text-text",
-                    "transition-transform duration-150 active:scale-95",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                  )}
-                >
-                  <CalendarDays
-                    className="size-4 shrink-0 text-brand"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                  <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
-                </button>
-              </PopoverTrigger>
-
-              <PopoverContent
-                align="end"
-                className="w-auto border border-border bg-surface p-2"
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={t.hours.pickDate}
+                className={cn(
+                  "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-surface px-3",
+                  "text-[13px] font-bold text-text",
+                  "transition-transform duration-150 active:scale-95",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                )}
               >
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  defaultMonth={date}
-                  onSelect={(next) => {
-                    if (next) {
-                      setDate(next);
-                      setIsCalendarOpen(false);
-                    }
-                  }}
-                  locale={ukLocale}
+                <CalendarDays
+                  className="size-4 shrink-0 text-brand"
+                  strokeWidth={2}
+                  aria-hidden
                 />
-              </PopoverContent>
-            </Popover>
+                <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
+              </button>
+            </PopoverTrigger>
 
-            <button
-              type="button"
-              onClick={() => shiftMonth(1)}
-              aria-label={t.hours.nextPeriod}
-              className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
-                "transition-colors duration-150 active:bg-surface",
-                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-              )}
+            <PopoverContent
+              align="center"
+              className="w-auto border border-border bg-surface p-2"
             >
-              <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
-            </button>
-          </div>
-          <AvatarLink initials={initialsOf(profile)} />
-          </div>
-        }
-      />
+              <Calendar
+                mode="single"
+                selected={date}
+                defaultMonth={date}
+                onSelect={(next) => {
+                  if (next) {
+                    setDate(next);
+                    setIsCalendarOpen(false);
+                  }
+                }}
+                locale={ukLocale}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <button
+            type="button"
+            onClick={() => shiftMonth(1)}
+            aria-label={t.hours.nextPeriod}
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
+              "transition-colors duration-150 active:bg-surface",
+              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
+            )}
+          >
+            <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
+          </button>
+        </div>
+      </div>
 
       <div className="px-4 lg:hidden">
         {isToday && (

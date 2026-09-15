@@ -4,6 +4,7 @@ import { MapPin, Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
+import { ObjectDeleteButton } from "@/components/objects/ObjectDeleteButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -125,11 +126,10 @@ export default async function ObjectDetailPage({
         </section>
 
         {isBoss && (
-          <ObjectArchiveButton
-            className="mt-3"
-            siteId={site.id}
-            isArchived={site.archived_at !== null}
-          />
+          <div className="mt-3 flex flex-col gap-2">
+            <ObjectArchiveButton siteId={site.id} isArchived={site.archived_at !== null} />
+            <ObjectDeleteButton siteId={site.id} />
+          </div>
         )}
 
         <div className="mt-6 flex items-baseline justify-between gap-3">
@@ -245,11 +245,10 @@ export default async function ObjectDetailPage({
           </section>
 
           {isBoss && (
-            <ObjectArchiveButton
-              className="mt-3"
-              siteId={site.id}
-              isArchived={site.archived_at !== null}
-            />
+            <div className="mt-3 flex flex-col gap-2">
+              <ObjectArchiveButton siteId={site.id} isArchived={site.archived_at !== null} />
+              <ObjectDeleteButton siteId={site.id} />
+            </div>
           )}
 
           <div className="mt-6 flex items-baseline justify-between gap-3">
