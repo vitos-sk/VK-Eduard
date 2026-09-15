@@ -4,7 +4,6 @@ import { MapPin, Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
-import { ObjectDeleteButton } from "@/components/objects/ObjectDeleteButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -95,9 +94,9 @@ export default async function ObjectDetailPage({
                   href={getGoogleMapsDirectionsUrl(site.address)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-2 rounded-[14px] bg-danger px-4 py-3 text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98]"
+                  className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
                 >
-                  <MapPin className="size-[18px] shrink-0" strokeWidth={2} aria-hidden />
+                  <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
                   {site.address}
                 </a>
               ) : (
@@ -126,14 +125,11 @@ export default async function ObjectDetailPage({
         </section>
 
         {isBoss && (
-          <>
-            <ObjectArchiveButton
-              className="mt-3"
-              siteId={site.id}
-              isArchived={site.archived_at !== null}
-            />
-            <ObjectDeleteButton className="mt-3" siteId={site.id} />
-          </>
+          <ObjectArchiveButton
+            className="mt-3"
+            siteId={site.id}
+            isArchived={site.archived_at !== null}
+          />
         )}
 
         <div className="mt-6 flex items-baseline justify-between gap-3">
@@ -210,9 +206,9 @@ export default async function ObjectDetailPage({
               href={getGoogleMapsDirectionsUrl(site.address)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 self-start rounded-[14px] bg-danger px-4 py-3 text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
             >
-              <MapPin className="size-[18px] shrink-0" strokeWidth={2} aria-hidden />
+              <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
               {site.address}
             </a>
           )}
@@ -249,14 +245,11 @@ export default async function ObjectDetailPage({
           </section>
 
           {isBoss && (
-            <>
-              <ObjectArchiveButton
-                className="mt-3"
-                siteId={site.id}
-                isArchived={site.archived_at !== null}
-              />
-              <ObjectDeleteButton className="mt-3" siteId={site.id} />
-            </>
+            <ObjectArchiveButton
+              className="mt-3"
+              siteId={site.id}
+              isArchived={site.archived_at !== null}
+            />
           )}
 
           <div className="mt-6 flex items-baseline justify-between gap-3">
