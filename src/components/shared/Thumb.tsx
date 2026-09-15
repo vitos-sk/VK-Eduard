@@ -33,15 +33,29 @@ interface ThumbProps {
   name: string;
   /** Пара цветов градиента из мока объекта. */
   gradient: readonly [string, string];
+  /** Подписанная ссылка на фото объекта — рисуется вместо градиента, если есть. */
+  photoUrl?: string | null;
   size?: ThumbSize;
   className?: string;
 }
 
 /**
- * Плейсхолдер фотографии объекта: градиентный прямоугольник с инициалами.
- * Реальных изображений в UI-фазе нет.
+ * Миниатюра объекта: реальное фото (`photoUrl`), если оно загружено,
+ * иначе — плейсхолдер из градиента с инициалами.
  */
-export function Thumb({ name, gradient, size = "md", className }: ThumbProps) {
+export function Thumb({ name, gradient, photoUrl, size = "md", className }: ThumbProps) {
+  if (photoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
+      <img
+        src={photoUrl}
+        alt=""
+        aria-hidden
+        className={cn("shrink-0 object-cover", sizeStyles[size], className)}
+      />
+    );
+  }
+
   return (
     <div
       aria-hidden

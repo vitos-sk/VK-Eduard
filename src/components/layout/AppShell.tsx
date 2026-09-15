@@ -8,7 +8,7 @@ import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
 import { QuickActionSheet } from "@/components/quick/QuickActionSheet";
 import { Toaster } from "@/components/ui/sonner";
-import type { Profile } from "@/modules/auth/session";
+import type { Profile } from "@/modules/auth/profile";
 
 interface AppShellProps {
   profile: Profile;
@@ -61,7 +61,11 @@ export function AppShell({ profile, children }: AppShellProps) {
         </main>
       </div>
 
-      <QuickActionSheet open={isQuickOpen} onOpenChange={setIsQuickOpen} />
+      <QuickActionSheet
+        open={isQuickOpen}
+        onOpenChange={setIsQuickOpen}
+        isBoss={profile.role === "boss"}
+      />
 
       <Toaster position="top-center" />
     </>

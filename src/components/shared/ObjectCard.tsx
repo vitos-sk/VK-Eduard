@@ -26,16 +26,22 @@ export function ObjectCard({
     <Link
       href={`/objects/${object.id}`}
       className={cn(
-        "flex w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
+        "flex w-full items-stretch gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
         "transition-transform duration-150 active:scale-[0.98]",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
         object.archivedAt && "opacity-60",
         className,
       )}
     >
-      <Thumb name={object.name} gradient={object.gradient} size="md" />
+      <Thumb
+        name={object.name}
+        gradient={object.gradient}
+        photoUrl={object.photoUrl}
+        size="md"
+        className="h-auto w-28 self-stretch"
+      />
 
-      <div className="min-w-0 flex-1">
+      <div className="my-auto min-w-0 flex-1">
         <p className="truncate text-[17px] font-bold">{object.name}</p>
         <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">
           {object.address || t.common.dash}
@@ -70,7 +76,7 @@ export function ObjectCard({
 
       {showChevron && (
         <ChevronRight
-          className="size-5 shrink-0 text-text-dim"
+          className="my-auto size-5 shrink-0 text-text-dim"
           strokeWidth={2.4}
           aria-hidden
         />

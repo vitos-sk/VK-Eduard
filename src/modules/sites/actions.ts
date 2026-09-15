@@ -156,7 +156,6 @@ export async function deleteSite(siteId: string): Promise<SiteActionState> {
   }
 
   revalidatePath("/objects");
-  revalidatePath("/admin/objects");
 
   return OK;
 }

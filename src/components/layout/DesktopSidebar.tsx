@@ -8,7 +8,7 @@ import { Logo } from "@/components/brand/Logo";
 import { NAV_ITEMS } from "@/components/layout/BottomNav";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import type { Profile } from "@/modules/auth/session";
+import type { Profile } from "@/modules/auth/profile";
 import { signOut } from "@/modules/auth/actions";
 
 interface DesktopSidebarProps {
@@ -83,10 +83,19 @@ export function DesktopSidebar({ profile, onFabClick }: DesktopSidebarProps) {
       </nav>
 
       <div className="mt-4 border-t border-border pt-4">
-        <p className="truncate px-2 text-[14px] font-bold">{profile.full_name}</p>
-        <p className="px-2 text-[13px] font-medium text-text-muted">
-          {profile.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}
-        </p>
+        <Link
+          href="/more"
+          aria-current={pathname.startsWith("/more") ? "page" : undefined}
+          className={cn(
+            "block rounded-[10px] px-2 py-1.5 transition-colors duration-150 hover:bg-surface-2",
+            pathname.startsWith("/more") && "bg-surface-2",
+          )}
+        >
+          <p className="truncate text-[14px] font-bold">{profile.full_name}</p>
+          <p className="text-[13px] font-medium text-text-muted">
+            {profile.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}
+          </p>
+        </Link>
 
         <form action={signOut} className="mt-3">
           <button

@@ -8,12 +8,13 @@ import { HoursChart } from "@/components/dashboard/HoursChart";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { TodayCard } from "@/components/dashboard/TodayCard";
 import { TopList } from "@/components/dashboard/TopList";
+import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
 import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/modules/auth/session";
+import { initialsOf, type Profile } from "@/modules/auth/profile";
 import {
   buildOverview,
   buildTodayOverview,
@@ -96,13 +97,16 @@ export function DashboardScreen({
       <ScreenHeader
         title={t.dashboard.title}
         action={
-          <SegmentedTabs
-            label={t.dashboard.title}
-            options={PERIOD_OPTIONS}
-            value={period}
-            onChange={setPeriod}
-            className="mx-0 w-auto px-0"
-          />
+          <div className="flex items-center gap-2">
+            <SegmentedTabs
+              label={t.dashboard.title}
+              options={PERIOD_OPTIONS}
+              value={period}
+              onChange={setPeriod}
+              className="mx-0 w-auto px-0"
+            />
+            <AvatarLink initials={initialsOf(profile)} />
+          </div>
         }
       />
 

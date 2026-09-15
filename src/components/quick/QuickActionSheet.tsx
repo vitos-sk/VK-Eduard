@@ -4,7 +4,15 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { ChevronLeft, ChevronRight, Clock, FileText, Pause, Play } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  FileText,
+  LayoutDashboard,
+  Pause,
+  Play,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -26,11 +34,14 @@ const icons: Record<QuickActionId, LucideIcon> = {
   start_work: Play,
   start_break: Pause,
   create_report: FileText,
+  dashboard: LayoutDashboard,
 };
 
 interface QuickActionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Пункт «Дашборд» показуємо тільки шефу. */
+  isBoss: boolean;
 }
 
 /**
@@ -40,9 +51,13 @@ interface QuickActionSheetProps {
  * Закрывают свайп вниз, стрелка «назад», тап вне листа и повторный тап по FAB;
  * таб-бар остаётся видимым под листом.
  */
-export function QuickActionSheet({ open, onOpenChange }: QuickActionSheetProps) {
+export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionSheetProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+
+  const visibleActions = isBoss
+    ? quickActions
+    : quickActions.filter((action) => action.id !== "dashboard");
 
   const handleAction = (action: QuickAction) => {
     onOpenChange(false);
@@ -115,7 +130,7 @@ export function QuickActionSheet({ open, onOpenChange }: QuickActionSheetProps) 
           </div>
 
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-2 pb-4">
-            {quickActions.map((action) => (
+            {visibleActions.map((action) => (
               <QuickActionRow
                 key={action.id}
                 action={action}

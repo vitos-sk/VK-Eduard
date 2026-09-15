@@ -1,81 +1,136 @@
-import { LayoutDashboard, LogOut } from "lucide-react";
 import Link from "next/link";
+import {
+  Bell,
+  ChevronRight,
+  CircleHelp,
+  Database,
+  Info,
+  Languages,
+  LogOut,
+  Moon,
+  Users,
+} from "lucide-react";
 
-import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import { fmt } from "@/lib/format";
+import { BackHeader } from "@/components/layout/ScreenHeader";
+import { initialsOf } from "@/components/shared/Thumb";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/modules/auth/actions";
 import { requireProfile } from "@/modules/auth/session";
+import { cn } from "@/lib/utils";
+
+interface SettingsRow {
+  icon: typeof Bell;
+  label: string;
+  value?: string;
+  href: string;
+}
 
 /**
- * Профиль и выход. Заводить людей и объекты отсюда будет шеф — это этап 6,
- * сейчас экран отвечает ровно на два вопроса: под кем я вошёл и как выйти.
+ * Налаштування: профіль (ім'я, email, зміна імені), службові підрозділи
+ * та вихід. Компанію/норму, які раніше жили тут окремим блоком, прибрали —
+ * дублювали інформацію з `/dashboard` і в макет «Налаштувань» не лягали;
+ * лишились тільки речі, що стосуються самого акаунта.
  */
 export default async function MorePage() {
   const profile = await requireProfile();
-
   const supabase = await createClient();
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name")
-    .eq("id", profile.company_id)
-    .maybeSingle();
 
-  const rows = [
-    { label: t.profile.company, value: company?.name ?? t.common.dash },
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const rows: SettingsRow[] = [
+    ...(profile.role === "boss"
+      ? [{ icon: Users, label: t.profile.rows.team, href: "/more/team" }]
+      : []),
+    { icon: Bell, label: t.profile.rows.notifications, href: "/more/notifications" },
     {
-      label: t.profile.norm,
-      value: fmt(t.profile.normValue, {
-        hours: Math.round(profile.daily_norm_minutes / 60),
-      }),
+      icon: Languages,
+      label: t.profile.rows.language,
+      value: t.profile.rows.languageValue,
+      href: "/more/language",
     },
+    {
+      icon: Moon,
+      label: t.profile.rows.theme,
+      value: t.profile.rows.themeValue,
+      href: "/more/theme",
+    },
+    { icon: Database, label: t.profile.rows.data, href: "/more/data" },
+    { icon: CircleHelp, label: t.profile.rows.help, href: "/more/help" },
+    { icon: Info, label: t.profile.rows.about, href: "/more/about" },
   ];
 
   return (
     <div className="pb-6">
-      <ScreenHeader title={t.profile.title} />
+      <BackHeader title={t.profile.title} href="/" />
 
-      <div className="mx-4 lg:mx-auto lg:max-w-[480px]">
-        <div className="rounded-[18px] border border-border bg-surface-2 p-5">
-          <p className="text-[22px] font-extrabold tracking-tight">
-            {profile.full_name}
-          </p>
-          <p className="mt-1 text-[15px] font-semibold text-text-muted">
-            {profile.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}
-          </p>
+      <div className="flex flex-col gap-6 px-4 lg:mx-auto lg:max-w-[480px]">
+        <div className="flex items-center gap-3 rounded-[16px] border border-border bg-surface-2 p-4">
+          <div
+            aria-hidden
+            style={{ backgroundColor: `hsl(${profile.avatar_hue} 45% 26%)` }}
+            className="flex size-14 shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold text-white"
+          >
+            {initialsOf(profile.full_name)}
+          </div>
 
-          <dl className="mt-5 flex flex-col gap-3">
-            {rows.map((row) => (
-              <div key={row.label} className="flex items-baseline justify-between gap-4">
-                <dt className="text-[15px] font-medium text-text-muted">{row.label}</dt>
-                <dd className="text-[15px] font-bold">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[16px] font-bold">{profile.full_name}</p>
+            {user?.email && (
+              <p className="truncate text-[13px] font-medium text-text-muted">
+                {user.email}
+              </p>
+            )}
+          </div>
+
+          <Link
+            href="/more/profile"
+            className={cn(
+              "shrink-0 rounded-full border border-brand/40 px-3 py-1.5",
+              "text-[13px] font-bold text-brand",
+              "transition-transform duration-150 active:scale-[0.96]",
+            )}
+          >
+            {t.profile.change}
+          </Link>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3">
-          {profile.role === "boss" && (
+        <div className="flex flex-col gap-2">
+          {rows.map((row) => (
             <Link
-              href="/dashboard"
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-brand transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              key={row.href}
+              href={row.href}
+              className={cn(
+                "flex h-14 items-center gap-3 rounded-[14px] border border-border bg-surface-2 px-4",
+                "transition-transform duration-150 active:scale-[0.98]",
+              )}
             >
-              <LayoutDashboard className="size-5" strokeWidth={2} aria-hidden />
-              {t.nav.dashboard}
+              <row.icon className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
+              <span className="flex-1 text-[15px] font-bold">{row.label}</span>
+              {row.value && (
+                <span className="text-[14px] font-medium text-text-muted">{row.value}</span>
+              )}
+              <ChevronRight className="size-[18px] shrink-0 text-text-dim" strokeWidth={2.4} aria-hidden />
             </Link>
-          )}
-
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[17px] font-bold text-danger transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            >
-              <LogOut className="size-5" strokeWidth={2} aria-hidden />
-              {t.auth.signOut}
-            </button>
-          </form>
+          ))}
         </div>
+
+        <form action={signOut}>
+          <button
+            type="submit"
+            className={cn(
+              "flex h-14 w-full items-center justify-center gap-2 rounded-[14px]",
+              "border border-danger/40 text-[15px] font-bold text-danger",
+              "transition-transform duration-150 active:scale-[0.98]",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+            )}
+          >
+            <LogOut className="size-5" strokeWidth={2} aria-hidden />
+            {t.auth.signOut}
+          </button>
+        </form>
       </div>
     </div>
   );

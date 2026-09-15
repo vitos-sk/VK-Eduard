@@ -53,10 +53,13 @@ export function formatHoursShort(totalMin: number): string {
   return `${hours} ${t.units.hoursShort} ${minutes} ${t.units.minutesShort}`;
 }
 
-/** Число → `25 200 грн`. Калькулятор зарплати на екрані «Години». */
+/** Число → `25 200,50 €`. Калькулятор зарплати на екрані «Години». */
 export function formatCurrency(amount: number): string {
-  const rounded = Math.round(amount);
-  return `${rounded.toLocaleString("uk-UA")} ${t.units.currency}`;
+  const formatted = amount.toLocaleString("uk-UA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${formatted} ${t.units.currency}`;
 }
 
 /** `Середа, 30 липня` — заголовок даты под приветствием. */

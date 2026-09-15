@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
+import { SitePhotoUploader } from "@/components/objects/SitePhotoUploader";
 import {
   SegmentedTabs,
   type SegmentedOption,
@@ -32,10 +33,13 @@ const inputClassName = cn(
 interface ObjectFormProps {
   /** Не задан — форма створення, задан — редагування цього об'єкта. */
   site?: Site;
+  companyId: string;
+  /** Підписане посилання на поточне фото об'єкта (якщо є). */
+  photoUrl?: string | null;
 }
 
 /** Форма `/objects/new` і `/objects/[id]/edit` — доступна тільки boss (RLS). */
-export function ObjectForm({ site }: ObjectFormProps) {
+export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -68,6 +72,15 @@ export function ObjectForm({ site }: ObjectFormProps) {
       />
 
       <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[640px]">
+        {site && (
+          <SitePhotoUploader
+            companyId={companyId}
+            siteId={site.id}
+            photoPath={site.photo_path}
+            photoUrl={photoUrl}
+          />
+        )}
+
         <Field label={t.objects.form.nameLabel}>
           <input
             value={name}

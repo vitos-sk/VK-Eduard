@@ -21,8 +21,10 @@ export interface SiteObject {
   status: WorkStatus;
   photosCount: number;
   reportsCount: number;
-  /** Пара цветов для градиента в `Thumb`. */
+  /** Пара цветов для градиента в `Thumb` — используется, пока нет `photoUrl`. */
   gradient: readonly [string, string];
+  /** Подписанная ссылка на `sites.photo_path`, если фото объекта загружено. */
+  photoUrl: string | null;
   /** `sites.archived_at` — не `null`, если объект архивирован. */
   archivedAt: string | null;
 }
@@ -59,7 +61,8 @@ export type QuickActionId =
   | "manual_time"
   | "start_work"
   | "start_break"
-  | "create_report";
+  | "create_report"
+  | "dashboard";
 
 /** Пункт листа быстрых действий. */
 export interface QuickAction {

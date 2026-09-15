@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { Bell } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
+import { AvatarLink } from "@/components/layout/AvatarLink";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -44,18 +44,7 @@ export function HomeHeader({
           <Bell className="size-6" strokeWidth={2} aria-hidden />
         </button>
 
-        <Link
-          href="/more"
-          aria-label={t.common.profile}
-          className={cn(
-            "flex size-11 items-center justify-center rounded-full border border-border bg-surface-2",
-            "text-[15px] font-bold text-text",
-            "transition-transform duration-150 active:scale-95",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
-          {initials}
-        </Link>
+        <AvatarLink initials={initials} />
       </div>
     </header>
   );

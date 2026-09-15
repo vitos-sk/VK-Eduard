@@ -11,5 +11,5 @@ export default async function NewObjectPage() {
     redirect("/objects");
   }
 
-  return <ObjectForm />;
+  return <ObjectForm companyId={profile.company_id} />;
 }

@@ -110,6 +110,10 @@ function HorizontalScrollbar({
       role="scrollbar"
       aria-orientation="horizontal"
       aria-label={t.hours.monthTableScrollHint}
+      aria-controls="month-entries-scroll"
+      aria-valuenow={Math.round(thumb.leftPct)}
+      aria-valuemin={0}
+      aria-valuemax={Math.round(100 - thumb.widthPct)}
     >
       <div
         className="absolute inset-y-0 touch-none rounded-full bg-primary"
@@ -162,6 +166,7 @@ export function MonthEntriesTable({
       ) : (
         <div
           ref={scrollRef}
+          id="month-entries-scroll"
           className="no-scrollbar -mx-4 mt-3 overflow-x-auto px-4"
         >
           <table className="w-full min-w-[420px] border-collapse text-left text-[13px]">

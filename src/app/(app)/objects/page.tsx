@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getEntriesFeed } from "@/modules/entries/queries";
 import { aggregateSiteStats } from "@/modules/entries/siteStats";
+import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { toSiteObject } from "@/modules/sites/present";
 import { getAllSites } from "@/modules/sites/queries";
 
@@ -21,7 +22,17 @@ export default async function ObjectsPage() {
   ]);
 
   const stats = aggregateSiteStats(entries);
-  const objects = sites.map((site) => toSiteObject(site, stats.get(site.id)));
+  const photoPaths = sites
+    .map((site) => site.photo_path)
+    .filter((path): path is string => Boolean(path));
+  const photoUrls = await getSignedPhotoUrls(supabase, photoPaths, "site-photos");
+  const objects = sites.map((site) =>
+    toSiteObject(
+      site,
+      stats.get(site.id),
+      site.photo_path ? (photoUrls.get(site.photo_path) ?? null) : null,
+    ),
+  );
 
-  return <ObjectsScreen objects={objects} isBoss={profile.role === "boss"} />;
+  return <ObjectsScreen objects={objects} isBoss={profile.role === "boss"} profile={profile} />;
 }

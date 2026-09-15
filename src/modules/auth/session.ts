@@ -5,9 +5,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Tables } from "@/lib/supabase/types.gen";
+import { type Profile } from "@/modules/auth/profile";
 
-export type Profile = Tables<"profiles">;
+export type { Profile };
+export { initialsOf } from "@/modules/auth/profile";
 
 /**
  * Профиль вошедшего или `null`. Только для сервера.
@@ -41,6 +42,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     .from("profiles")
     .select("*")
     .eq("id", userId)
+    .eq("is_active", true)
     .maybeSingle();
 
   return data;
@@ -59,9 +61,4 @@ export async function requireProfile(): Promise<Profile> {
   }
 
   return profile;
-}
-
-/** Первая буква имени для кружка-аватара. */
-export function initialsOf(profile: Pick<Profile, "full_name">): string {
-  return profile.full_name.trim().charAt(0).toUpperCase();
 }

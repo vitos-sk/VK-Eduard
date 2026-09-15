@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { FiltersDrawer } from "@/components/shared/FiltersDrawer";
@@ -16,6 +17,7 @@ import {
 import { t } from "@/lib/i18n";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { initialsOf, type Profile } from "@/modules/auth/profile";
 
 /** «Всі» + три статуса объектов из справочника 3.4. */
 type ObjectFilter = "all" | "in_progress" | "not_started" | "completed";
@@ -31,6 +33,7 @@ interface ObjectsScreenProps {
   objects: readonly SiteObject[];
   /** Кнопка «+» ведёт на форму создания только у шефа — сама вставка тоже под RLS. */
   isBoss: boolean;
+  profile: Profile;
 }
 
 /**
@@ -39,7 +42,7 @@ interface ObjectsScreenProps {
  * Фильтр и поиск считаются на клиенте поверх готового списка: масштаб
  * компании (десятки объектов) этого не замечает.
  */
-export function ObjectsScreen({ objects, isBoss }: ObjectsScreenProps) {
+export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) {
   const [filter, setFilter] = useState<ObjectFilter>("all");
   const [query, setQuery] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -68,19 +71,22 @@ export function ObjectsScreen({ objects, isBoss }: ObjectsScreenProps) {
       <ScreenHeader
         title={t.objects.title}
         action={
-          isBoss && (
-            <Link
-              href="/objects/new"
-              aria-label={t.objects.addObject}
-              className={cn(
-                "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
-                "transition-transform duration-150 active:scale-95",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-              )}
-            >
-              <Plus className="size-6" strokeWidth={2.6} aria-hidden />
-            </Link>
-          )
+          <div className="flex items-center gap-2">
+            {isBoss && (
+              <Link
+                href="/objects/new"
+                aria-label={t.objects.addObject}
+                className={cn(
+                  "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
+                  "transition-transform duration-150 active:scale-95",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                )}
+              >
+                <Plus className="size-6" strokeWidth={2.6} aria-hidden />
+              </Link>
+            )}
+            <AvatarLink initials={initialsOf(profile)} />
+          </div>
         }
       />
 

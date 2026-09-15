@@ -100,3 +100,41 @@ export async function createWorker(input: {
 
   return { error: null, tempPassword, email };
 }
+
+export type DeactivateWorkerState = { error: string | null };
+
+/**
+ * Деактивує співробітника — не `DELETE`: `work_entries.author_id` не має
+ * `on delete`, тож видалення профілю з історією годин впало б по FK.
+ * `is_active = false` ховає його з `getCompanyWorkers` і (разом із фільтром
+ * у `getProfile()`) закриває вхід у застосунок, історія лишається як є.
+ */
+export async function setWorkerActive(
+  workerId: string,
+  active: boolean,
+): Promise<DeactivateWorkerState> {
+  const profile = await getProfile();
+
+  if (!profile || profile.role !== "boss") {
+    return { error: t.auth.noProfile };
+  }
+
+  if (workerId === profile.id) {
+    return { error: t.reports.team.deactivateError };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ is_active: active })
+    .eq("id", workerId)
+    .eq("company_id", profile.company_id);
+
+  if (error) {
+    return { error: t.reports.team.deactivateError };
+  }
+
+  revalidatePath("/reports");
+
+  return { error: null };
+}

@@ -9,6 +9,7 @@ import { DayActions } from "@/components/hours/DayActions";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { SalaryCalculator } from "@/components/hours/SalaryCalculator";
+import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -16,20 +17,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/modules/auth/session";
+import { initialsOf, type Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange, getOpenEntry } from "@/modules/entries/queries";
 import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
 import type { WorkEntry, WorkEntryWithNames } from "@/modules/entries/types";
-import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 
@@ -67,10 +60,6 @@ export function HoursScreen({
   const [openEntry, setOpenEntry] = useState<WorkEntry | null>(initialOpenEntry);
   const [refreshToken, setRefreshToken] = useState(0);
 
-  // Перемикач «чиї години показувати» — тільки шефу, рабочий завжди бачить себе.
-  const [workers, setWorkers] = useState<readonly Worker[]>([]);
-  const [selectedWorkerId, setSelectedWorkerId] = useState(profile.id);
-
   const todayKey = dateKeyOf(new Date());
   const isToday = dateKeyOf(date) === todayKey;
 
@@ -92,22 +81,6 @@ export function HoursScreen({
       cancelled = true;
     };
   }, [supabase, profile.id, refreshToken]);
-
-  useEffect(() => {
-    if (!isBoss) return;
-
-    let cancelled = false;
-
-    getCompanyWorkers(supabase, profile.company_id)
-      .then((data) => {
-        if (!cancelled) setWorkers(data);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase, isBoss, profile.company_id]);
 
   // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты.
   useEffect(() => {
@@ -134,20 +107,11 @@ export function HoursScreen({
     setDate((current) => addMonths(current, direction));
   };
 
-  // Норма обраного співробітника, а не завжди своя: шеф дивиться чужий
-  // місяць — і денна норма має бути того, чий це місяць.
-  const selectedNormMinutes =
-    selectedWorkerId === profile.id
-      ? profile.daily_norm_minutes
-      : (workers.find((worker) => worker.id === selectedWorkerId)?.daily_norm_minutes ??
-        profile.daily_norm_minutes);
-
-  const selectedWorkerEntries = useMemo(
-    () => monthEntries.filter((entry) => entry.author_id === selectedWorkerId),
-    [monthEntries, selectedWorkerId],
-  );
-
+  // Статистика норми/графіка показується тільки рабочому і завжди про
+  // нього самого — RLS вже віддає йому лише власні записи в monthEntries.
   const monthSummary = useMemo(() => {
+    if (isBoss) return null;
+
     const from = startOfMonth(date);
     const days = eachDayOfInterval({ start: from, end: endOfMonth(date) });
     const slots: DaySlot[] = days.map((day) => ({
@@ -159,17 +123,18 @@ export function HoursScreen({
 
     return buildPeriodSummary(
       getMonthTitle(date),
-      workDays * selectedNormMinutes,
+      workDays * profile.daily_norm_minutes,
       slots,
-      selectedWorkerEntries,
+      monthEntries,
     );
-  }, [date, selectedWorkerEntries, selectedNormMinutes]);
+  }, [date, isBoss, monthEntries, profile.daily_norm_minutes]);
 
   return (
     <div className="pb-6">
       <ScreenHeader
         title={t.hours.title}
         action={
+          <div className="flex items-center gap-2">
           <div
             className={cn(
               "flex shrink-0 items-center gap-0.5 rounded-full border border-border",
@@ -242,10 +207,12 @@ export function HoursScreen({
               <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
             </button>
           </div>
+          <AvatarLink initials={initialsOf(profile)} />
+          </div>
         }
       />
 
-      <div className="px-4">
+      <div className="px-4 lg:hidden">
         {isToday && (
           <DayActions
             openEntry={openEntry}
@@ -253,26 +220,9 @@ export function HoursScreen({
           />
         )}
 
-        {isBoss && (
-          <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
-            <SelectTrigger className="mt-3 h-11 w-full rounded-[12px] px-3">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={profile.id}>{t.hours.salaryCalcSelf}</SelectItem>
-              {workers
-                .filter((worker) => worker.id !== profile.id)
-                .map((worker) => (
-                  <SelectItem key={worker.id} value={worker.id}>
-                    {worker.full_name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        )}
-
+        {/* Тільки сума годин рабочего; норма/дні/графік — у дашборді шефа. */}
         {monthSummary && (
-          <PeriodView className="mt-3" summary={monthSummary} labelEvery={5} />
+          <PeriodView className="mt-3" summary={monthSummary} variant="totalOnly" />
         )}
 
         <SalaryCalculator
@@ -286,6 +236,35 @@ export function HoursScreen({
 
         <MonthEntriesTable
           className="mt-3"
+          entries={monthEntries}
+          showAuthor={isBoss}
+          onChanged={handleChanged}
+        />
+      </div>
+
+      {/* Десктоп: керування вузькою колонкою зліва (кнопки не розтягуються
+          на всю ширину), таблиця змін — ширшою колонкою справа. */}
+      <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-6">
+        <div className="flex flex-col gap-3">
+          {isToday && (
+            <DayActions
+              openEntry={openEntry}
+              onChanged={handleChanged}
+            />
+          )}
+
+          {monthSummary && <PeriodView summary={monthSummary} variant="totalOnly" />}
+
+          <SalaryCalculator
+            monthTitle={getMonthTitle(date)}
+            selfId={profile.id}
+            isBoss={isBoss}
+            companyId={profile.company_id}
+            monthEntries={monthEntries}
+          />
+        </div>
+
+        <MonthEntriesTable
           entries={monthEntries}
           showAuthor={isBoss}
           onChanged={handleChanged}

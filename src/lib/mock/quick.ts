@@ -40,4 +40,11 @@ export const quickActions: readonly QuickAction[] = [
     accent: "var(--text-muted)",
     href: "/reports/new",
   },
+  {
+    id: "dashboard",
+    title: t.quick.dashboard.title,
+    description: t.quick.dashboard.description,
+    accent: "var(--brand)",
+    href: "/dashboard",
+  },
 ];

@@ -95,84 +95,94 @@ export function SalaryCalculator({
   return (
     <section
       className={cn(
-        "rounded-[16px] border border-border bg-surface p-4",
+        "rounded-[16px] border border-border bg-surface p-3.5",
         className,
       )}
     >
-      <h2 className="text-[17px] font-bold">{t.hours.salaryCalcTitle}</h2>
+      <h2 className="text-[15px] font-bold">{t.hours.salaryCalcTitle}</h2>
 
-      <div className="mt-3 flex flex-col gap-3">
-        {isBoss && (
+      <div className="mt-2.5 flex flex-col gap-2.5">
+        <div className={cn("grid gap-2", isBoss ? "grid-cols-2" : "grid-cols-1")}>
+          {isBoss && (
+            <div>
+              <label className="text-[12px] font-medium text-text-muted">
+                {t.hours.salaryCalcWorkerLabel}
+              </label>
+              <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
+                <SelectTrigger
+                  className={cn(
+                    "mt-1 h-8 w-full rounded-[10px] border-border bg-surface-2 px-2.5",
+                    "text-[13px] font-bold text-text",
+                    "focus-visible:border-border focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={selfId}>{t.hours.salaryCalcSelf}</SelectItem>
+                  {workers
+                    .filter((worker) => worker.id !== selfId)
+                    .map((worker) => (
+                      <SelectItem key={worker.id} value={worker.id}>
+                        {worker.full_name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
-            <label className="text-[13px] font-medium text-text-muted">
-              {t.hours.salaryCalcWorkerLabel}
+            <label htmlFor="salary-rate" className="text-[12px] font-medium text-text-muted">
+              {t.hours.salaryCalcRateLabel}
             </label>
-            <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
-              <SelectTrigger className="mt-1.5 h-11 w-full rounded-[12px] px-3">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={selfId}>{t.hours.salaryCalcSelf}</SelectItem>
-                {workers
-                  .filter((worker) => worker.id !== selfId)
-                  .map((worker) => (
-                    <SelectItem key={worker.id} value={worker.id}>
-                      {worker.full_name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <input
+              id="salary-rate"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              placeholder={t.hours.salaryCalcRatePlaceholder}
+              value={rate}
+              onChange={(event) => setRate(event.target.value)}
+              className={cn(
+                "mt-1 h-8 w-full rounded-[10px] border border-border bg-surface-2 px-2.5",
+                "text-[13px] font-bold text-text placeholder:text-text-dim placeholder:font-medium",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+              )}
+            />
           </div>
-        )}
-
-        <div>
-          <label htmlFor="salary-rate" className="text-[13px] font-medium text-text-muted">
-            {t.hours.salaryCalcRateLabel}
-          </label>
-          <input
-            id="salary-rate"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.01"
-            placeholder={t.hours.salaryCalcRatePlaceholder}
-            value={rate}
-            onChange={(event) => setRate(event.target.value)}
-            className={cn(
-              "mt-1.5 h-11 w-full rounded-[12px] border border-border bg-surface-2 px-3",
-              "text-[15px] font-bold text-text placeholder:text-text-dim placeholder:font-medium",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          />
         </div>
 
-        <div className="flex items-baseline justify-between border-t border-border pt-3">
+        <div className="flex items-baseline justify-between border-t border-border pt-2.5">
           <span className="text-[13px] font-medium text-text-muted">
             {t.hours.salaryCalcAmount}
           </span>
-          <span className="tabular text-[20px] font-extrabold">
-            {formatCurrency(amount)}
-          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="tabular text-[18px] font-extrabold">
+              {formatCurrency(amount)}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!hasValidRate}
+              aria-label={isCopied ? t.hours.salaryCalcCopied : t.hours.salaryCalcCopy}
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-[10px]",
+                "border border-border text-text",
+                "transition-transform duration-150 active:scale-[0.94]",
+                "disabled:opacity-40",
+              )}
+            >
+              {isCopied ? (
+                <Check className="size-4" strokeWidth={2} aria-hidden />
+              ) : (
+                <Copy className="size-4" strokeWidth={2} aria-hidden />
+              )}
+            </button>
+          </div>
         </div>
-
-        <button
-          type="button"
-          onClick={handleCopy}
-          disabled={!hasValidRate}
-          className={cn(
-            "flex h-12 items-center justify-center gap-2 rounded-[14px]",
-            "border border-border text-[15px] font-bold text-text",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "disabled:opacity-40",
-          )}
-        >
-          {isCopied ? (
-            <Check className="size-[18px]" strokeWidth={2} aria-hidden />
-          ) : (
-            <Copy className="size-[18px]" strokeWidth={2} aria-hidden />
-          )}
-          {isCopied ? t.hours.salaryCalcCopied : t.hours.salaryCalcCopy}
-        </button>
       </div>
     </section>
   );

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { TeamTab } from "@/components/reports/TeamTab";
@@ -12,7 +13,7 @@ import {
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
 import { t } from "@/lib/i18n";
-import type { Profile } from "@/modules/auth/session";
+import { initialsOf, type Profile } from "@/modules/auth/profile";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
@@ -47,17 +48,20 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
       <ScreenHeader
         title={t.reports.title}
         action={
-          <Link
-            href="/reports/new"
-            aria-label={t.reports.createReport}
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
-              "transition-transform duration-150 active:scale-95",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
-            <Plus className="size-6" strokeWidth={2.6} aria-hidden />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/reports/new"
+              aria-label={t.reports.createReport}
+              className={cn(
+                "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
+                "transition-transform duration-150 active:scale-95",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+              )}
+            >
+              <Plus className="size-6" strokeWidth={2.6} aria-hidden />
+            </Link>
+            <AvatarLink initials={initialsOf(profile)} />
+          </div>
         }
       />
 

@@ -11,6 +11,12 @@ interface PeriodViewProps {
   /** Показывать подпись под каждым n-м столбцом — для месяца их 31. */
   labelEvery?: number;
   className?: string;
+  /**
+   * `full` — итог + норма/дні/середнє + графік по днях (для шефа це живе
+   * тільки в дашборді). `totalOnly` — лише загальна сума годин за період,
+   * без статистики та графіка.
+   */
+  variant?: "full" | "totalOnly";
 }
 
 /** Вкладки «Тиждень» и «Місяць»: сводка за период и столбчатая диаграмма по дням. */
@@ -18,8 +24,22 @@ export function PeriodView({
   summary,
   labelEvery = 1,
   className,
+  variant = "full",
 }: PeriodViewProps) {
   const maxMin = Math.max(...summary.bars.map((bar) => bar.workedMin), 1);
+
+  if (variant === "totalOnly") {
+    return (
+      <section className={cn("rounded-[16px] border border-border bg-surface p-4", className)}>
+        <p className="tabular text-[28px] leading-none font-extrabold">
+          {formatHoursShort(summary.totalMin)}
+        </p>
+        <p className="mt-1.5 text-[13px] font-medium text-text-muted">
+          {t.hours.workedPeriod}
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className={cn("space-y-3", className)}>

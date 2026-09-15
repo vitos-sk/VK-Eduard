@@ -4,7 +4,11 @@ import type { SiteStats } from "@/modules/entries/siteStats";
 import type { Site } from "./queries";
 
 /** Приводит объект из базы к форме, которую рисуют `ObjectCard`/`Thumb`. */
-export function toSiteObject(site: Site, stats: SiteStats | undefined): SiteObject {
+export function toSiteObject(
+  site: Site,
+  stats: SiteStats | undefined,
+  photoUrl: string | null = null,
+): SiteObject {
   return {
     id: site.id,
     name: site.name,
@@ -14,5 +18,6 @@ export function toSiteObject(site: Site, stats: SiteStats | undefined): SiteObje
     reportsCount: stats?.reportsCount ?? 0,
     gradient: gradientForId(site.id),
     archivedAt: site.archived_at,
+    photoUrl,
   };
 }

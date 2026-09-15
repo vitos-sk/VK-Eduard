@@ -127,7 +127,7 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
         onBack={() => router.back()}
       />
 
-      <div className="space-y-6 px-4">
+      <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
         {!entry && (
           <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
             <Info className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />

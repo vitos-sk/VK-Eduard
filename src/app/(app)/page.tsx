@@ -1,6 +1,3 @@
-import { endOfMonth, startOfMonth } from "date-fns";
-
-import { CompanyDashboard } from "@/components/home/CompanyDashboard";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { WorkTimeCard } from "@/components/home/WorkTimeCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -10,12 +7,11 @@ import { fmt, formatDateLong } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { initialsOf, requireProfile } from "@/modules/auth/session";
-import { getCompanyEntriesInRange, getEntriesFeed, getOpenEntry } from "@/modules/entries/queries";
+import { getEntriesFeed, getOpenEntry } from "@/modules/entries/queries";
 import { aggregateSiteStats } from "@/modules/entries/siteStats";
+import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { toSiteObject } from "@/modules/sites/present";
 import { getActiveSites } from "@/modules/sites/queries";
-import { getCompanyWorkers } from "@/modules/team/queries";
-import { dateKeyOf } from "@/modules/time/calc";
 
 /** Сколько объектов показывать в блоке «Мої об'єкти» на главной. */
 const HOME_OBJECTS_LIMIT = 3;
@@ -23,22 +19,11 @@ const HOME_OBJECTS_LIMIT = 3;
 export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const isBoss = profile.role === "boss";
-  const now = new Date();
 
-  const [openEntry, entries, sites, companyMonthEntries, workers] = await Promise.all([
+  const [openEntry, entries, sites] = await Promise.all([
     getOpenEntry(supabase, profile.id),
     getEntriesFeed(supabase, profile.id),
     getActiveSites(supabase),
-    isBoss
-      ? getCompanyEntriesInRange(
-          supabase,
-          profile.company_id,
-          dateKeyOf(startOfMonth(now)),
-          dateKeyOf(endOfMonth(now)),
-        )
-      : Promise.resolve([]),
-    isBoss ? getCompanyWorkers(supabase, profile.company_id) : Promise.resolve([]),
   ]);
 
   const stats = aggregateSiteStats(entries);
@@ -55,7 +40,17 @@ export default async function HomePage() {
     ...sites.filter((site) => !recentSiteIds.includes(site.id)),
   ].slice(0, HOME_OBJECTS_LIMIT) as typeof sites;
 
-  const homeObjects = orderedSites.map((site) => toSiteObject(site, stats.get(site.id)));
+  const homePhotoPaths = orderedSites
+    .map((site) => site.photo_path)
+    .filter((path): path is string => Boolean(path));
+  const homePhotoUrls = await getSignedPhotoUrls(supabase, homePhotoPaths, "site-photos");
+  const homeObjects = orderedSites.map((site) =>
+    toSiteObject(
+      site,
+      stats.get(site.id),
+      site.photo_path ? (homePhotoUrls.get(site.photo_path) ?? null) : null,
+    ),
+  );
 
   return (
     <div className="px-4 pb-6 lg:px-0">
@@ -69,16 +64,6 @@ export default async function HomePage() {
           {formatDateLong(new Date())}
         </p>
       </div>
-
-      {isBoss && (
-        <CompanyDashboard
-          className="mt-6"
-          month={now}
-          entries={companyMonthEntries}
-          workersCount={workers.length}
-          activeObjectsCount={sites.length}
-        />
-      )}
 
       {/* Мобільна колонка — без змін, прихована від lg */}
       <div className="lg:hidden">
