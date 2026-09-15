@@ -4,6 +4,7 @@ import { MapPin, Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
+import { ObjectDeleteButton } from "@/components/objects/ObjectDeleteButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -14,7 +15,7 @@ import { getGoogleMapsDirectionsUrl } from "@/lib/utils";
 import { requireProfile } from "@/modules/auth/session";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
-import { getReportsFeed, getWorkCategories } from "@/modules/reports/queries";
+import { getReportsFeed, getSiteReportsFeed, getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
 
 /**
@@ -31,10 +32,11 @@ export default async function ObjectDetailPage({
   const { id } = await params;
   const profile = await requireProfile();
   const supabase = await createClient();
+  const isBoss = profile.role === "boss";
 
   const [site, allReports, categories] = await Promise.all([
     getSiteById(supabase, id),
-    getReportsFeed(supabase, profile.id),
+    isBoss ? getSiteReportsFeed(supabase, id) : getReportsFeed(supabase, profile.id),
     getWorkCategories(supabase, profile.company_id),
   ]);
 
@@ -42,7 +44,7 @@ export default async function ObjectDetailPage({
     notFound();
   }
 
-  const reports = allReports.filter((report) => report.site_id === id);
+  const reports = isBoss ? allReports : allReports.filter((report) => report.site_id === id);
   const categoryStats = aggregateCategoryStats(reports, categories);
 
   const firstPhotoPaths = reports
@@ -55,8 +57,6 @@ export default async function ObjectDetailPage({
       : Promise.resolve(new Map<string, string>()),
   ]);
   const coverPhotoUrl = site.photo_path ? coverPhotoUrls.get(site.photo_path) : null;
-
-  const isBoss = profile.role === "boss";
 
   return (
     <div className="pb-6">
@@ -95,9 +95,9 @@ export default async function ObjectDetailPage({
                   href={getGoogleMapsDirectionsUrl(site.address)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
+                  className="mt-2 inline-flex items-center gap-2 rounded-[14px] bg-danger px-4 py-3 text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98]"
                 >
-                  <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
+                  <MapPin className="size-[18px] shrink-0" strokeWidth={2} aria-hidden />
                   {site.address}
                 </a>
               ) : (
@@ -126,21 +126,26 @@ export default async function ObjectDetailPage({
         </section>
 
         {isBoss && (
-          <ObjectArchiveButton
-            className="mt-3"
-            siteId={site.id}
-            isArchived={site.archived_at !== null}
-          />
+          <>
+            <ObjectArchiveButton
+              className="mt-3"
+              siteId={site.id}
+              isArchived={site.archived_at !== null}
+            />
+            <ObjectDeleteButton className="mt-3" siteId={site.id} />
+          </>
         )}
 
         <div className="mt-6 flex items-baseline justify-between gap-3">
-          <h2 className="text-[20px] font-bold">{t.objects.detail.myReports}</h2>
+          <h2 className="text-[20px] font-bold">
+            {isBoss ? t.objects.detail.reportsTitle : t.objects.detail.myReports}
+          </h2>
           <span className="shrink-0 text-[13px] font-medium text-text-muted">
             {fmt(t.objects.reportsCount, { n: reports.length })}
           </span>
         </div>
 
-        {categoryStats.length > 0 && (
+        {categoryStats.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {categoryStats.map((stat) => (
               <span
@@ -151,6 +156,10 @@ export default async function ObjectDetailPage({
               </span>
             ))}
           </div>
+        ) : (
+          <p className="mt-3 text-[13px] font-medium text-text-dim">
+            {t.objects.detail.categoryStatsEmpty}
+          </p>
         )}
 
         {reports.length > 0 ? (
@@ -172,8 +181,8 @@ export default async function ObjectDetailPage({
         ) : (
           <EmptyState
             className="mt-4"
-            title={t.objects.detail.emptyTitle}
-            description={t.objects.detail.emptyHint}
+            title={isBoss ? t.objects.detail.emptyTitleAll : t.objects.detail.emptyTitle}
+            description={isBoss ? undefined : t.objects.detail.emptyHint}
           />
         )}
       </div>
@@ -201,9 +210,9 @@ export default async function ObjectDetailPage({
               href={getGoogleMapsDirectionsUrl(site.address)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
+              className="inline-flex items-center gap-2 self-start rounded-[14px] bg-danger px-4 py-3 text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98]"
             >
-              <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
+              <MapPin className="size-[18px] shrink-0" strokeWidth={2} aria-hidden />
               {site.address}
             </a>
           )}
@@ -240,21 +249,26 @@ export default async function ObjectDetailPage({
           </section>
 
           {isBoss && (
-            <ObjectArchiveButton
-              className="mt-3"
-              siteId={site.id}
-              isArchived={site.archived_at !== null}
-            />
+            <>
+              <ObjectArchiveButton
+                className="mt-3"
+                siteId={site.id}
+                isArchived={site.archived_at !== null}
+              />
+              <ObjectDeleteButton className="mt-3" siteId={site.id} />
+            </>
           )}
 
           <div className="mt-6 flex items-baseline justify-between gap-3">
-            <h2 className="text-[20px] font-bold">{t.objects.detail.myReports}</h2>
+            <h2 className="text-[20px] font-bold">
+              {isBoss ? t.objects.detail.reportsTitle : t.objects.detail.myReports}
+            </h2>
             <span className="shrink-0 text-[13px] font-medium text-text-muted">
               {fmt(t.objects.reportsCount, { n: reports.length })}
             </span>
           </div>
 
-          {categoryStats.length > 0 && (
+          {categoryStats.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {categoryStats.map((stat) => (
                 <span
@@ -265,6 +279,10 @@ export default async function ObjectDetailPage({
                 </span>
               ))}
             </div>
+          ) : (
+            <p className="mt-3 text-[13px] font-medium text-text-dim">
+              {t.objects.detail.categoryStatsEmpty}
+            </p>
           )}
 
           {reports.length > 0 ? (
@@ -286,8 +304,8 @@ export default async function ObjectDetailPage({
           ) : (
             <EmptyState
               className="mt-4"
-              title={t.objects.detail.emptyTitle}
-              description={t.objects.detail.emptyHint}
+              title={isBoss ? t.objects.detail.emptyTitleAll : t.objects.detail.emptyTitle}
+              description={isBoss ? undefined : t.objects.detail.emptyHint}
             />
           )}
         </div>

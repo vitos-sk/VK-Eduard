@@ -133,9 +133,11 @@ export const uk = {
       kind: "Вид робіт",
       address: "Адреса",
       myReports: "Мої звіти",
+      reportsTitle: "Звіти",
       categoryStatsEmpty: "Категорії з'являться, щойно ви вкажете вид робіт у звіті",
       emptyTitle: "Ви ще не працювали на цьому об'єкті",
       emptyHint: "Звіти з'являться тут, щойно ви відмітите час на цьому об'єкті",
+      emptyTitleAll: "Ще немає звітів по цьому об'єкту",
       edit: "Редагувати",
       archive: "Архівувати об'єкт",
       restore: "Розархівувати об'єкт",
@@ -232,7 +234,7 @@ export const uk = {
     salaryCalcTitle: "Калькулятор зарплати",
     salaryCalcWorkerLabel: "Співробітник",
     salaryCalcSelf: "Я",
-    salaryCalcRateLabel: "Ставка, грн/год",
+    salaryCalcRateLabel: "Ставка, €/год",
     salaryCalcRatePlaceholder: "Наприклад: 150",
     salaryCalcAmount: "Заробіток за місяць",
     salaryCalcCopy: "Скопіювати",
@@ -478,7 +480,7 @@ export const uk = {
   units: {
     hoursShort: "год",
     minutesShort: "хв",
-    currency: "грн",
+    currency: "€",
   },
 
   /** Дни недели. `long` — для дат, `short` — для подписей диаграммы. */

@@ -56,6 +56,22 @@ export async function getReportsFeed(
   return ((data ?? []) as ReportRow[]).map(withCategoryIds);
 }
 
+/** Усі звіти по об'єкту (всі автори) — для шефа на сторінці об'єкта. RLS сама обмежує компанією. */
+export async function getSiteReportsFeed(
+  supabase: Client,
+  siteId: string,
+): Promise<SiteReportWithPhotos[]> {
+  const { data, error } = await supabase
+    .from("site_reports")
+    .select("*, report_photos(*), report_categories(category_id)")
+    .eq("site_id", siteId)
+    .order("work_date", { ascending: false });
+
+  if (error) throw error;
+
+  return ((data ?? []) as ReportRow[]).map(withCategoryIds);
+}
+
 /** Один звіт з фото, категоріями і ім'ям автора — для `/reports/[id]`. */
 export async function getReportWithPhotos(
   supabase: Client,
