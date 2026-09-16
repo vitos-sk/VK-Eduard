@@ -1,47 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { ChevronDown, Download } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { buildExportUrl, HOURS_FORMATS, REPORTS_FORMATS, type ExportKind } from "@/modules/export/formats";
 
 interface ExportMenuProps {
   /** `YYYY-MM-DD` — диапазон уже посчитан вызывающим экраном (месяц/период). */
   from: string;
   to: string;
   /** «Години» (за замовчуванням) чи «Звіти» — інший набір колонок і форматів. */
-  kind?: "hours" | "reports";
+  kind?: ExportKind;
   /** Экспорт по одному робітнику — для детальної сторінки в «Команді». */
   workerId?: string;
+  /** Мультивибір з чекбоксів в адмінці (`/more/admin`) — пріоритетний над `workerId`. */
+  workerIds?: readonly string[];
   className?: string;
 }
-
-const HOURS_FORMATS = [
-  { format: "csv", label: t.admin.export.csv, icon: Download },
-  { format: "xlsx", label: t.admin.export.xlsx, icon: FileSpreadsheet },
-  { format: "pdf", label: t.admin.export.pdf, icon: FileText },
-] as const;
-
-/** Звіти поки експортуються тільки в CSV — xlsx/pdf під звіти не робили. */
-const REPORTS_FORMATS = [{ format: "csv", label: t.admin.export.csv, icon: Download }] as const;
 
 /**
  * Кнопка «Експорт» з випадаючим списком форматів. `kind="hours"` (за замовч.) —
  * той самий CSV/Excel/PDF-табель, що й раніше; `kind="reports"` — новий CSV
  * звітів (дата/робітник/об'єкт/категорії/опис/фото, без часу).
  */
-export function ExportMenu({ from, to, kind = "hours", workerId, className }: ExportMenuProps) {
+export function ExportMenu({ from, to, kind = "hours", workerId, workerIds, className }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const formats = kind === "reports" ? REPORTS_FORMATS : HOURS_FORMATS;
   const label = kind === "reports" ? t.admin.export.labelReports : t.admin.export.label;
-
-  const hrefFor = (format: string) => {
-    const params = new URLSearchParams({ from, to, format, kind });
-    if (workerId) params.set("workerId", workerId);
-    return `/api/export?${params.toString()}`;
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -65,7 +53,7 @@ export function ExportMenu({ from, to, kind = "hours", workerId, className }: Ex
         {formats.map(({ format, label: formatLabel, icon: Icon }) => (
           <a
             key={format}
-            href={hrefFor(format)}
+            href={buildExportUrl({ from, to, format, kind, workerId, workerIds })}
             onClick={() => setOpen(false)}
             className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-[14px] font-semibold hover:bg-surface-2"
           >
