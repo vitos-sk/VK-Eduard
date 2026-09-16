@@ -483,6 +483,25 @@ export const uk = {
       /** Назва аркуша Excel-файлу (`modules/export/xlsx.ts`). */
       sheetTitle: "Звіти",
     },
+    /** Сторінка `/more/admin` (`AdminScreen`, `AdminWorkerList`, `ShareWhatsAppButton`). */
+    panel: {
+      title: "Адмінка",
+      searchPlaceholder: "Пошук співробітника",
+      selectAll: "Усі",
+      deselectAll: "Зняти всі",
+      kpiHours: "Годин за місяць",
+      kpiActive: "Активних співробітників",
+      kpiAvg: "Ø на співробітника",
+      empty: "У компанії ще немає активних працівників",
+      selected: "Обрано: {n}",
+      selectedAll: "Обрано: усі",
+      whatsapp: "WhatsApp",
+      whatsappFallbackText: "Файл завантажено — прикріпіть його вручну в чаті",
+      whatsappError: "Не вдалося підготувати файл",
+      defaultViewLabel: "Відкривати після входу",
+      defaultViewApp: "Застосунок",
+      defaultViewAdmin: "Адмінка",
+    },
   },
 
   /**
