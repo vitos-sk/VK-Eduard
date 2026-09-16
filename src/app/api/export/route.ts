@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     const siteNameById = new Map(sites.map((site) => [site.id, site.name] as const));
 
     const rows: ReportExportRow[] = reports
-      .filter((report) => !workerIdSet || (report.author_id && workerIdSet.has(report.author_id)))
+      .filter((report) => !workerIdSet || workerIdSet.has(report.author_id))
       .map((report) => ({
         date: formatWorkDateShort(report.work_date),
         worker: report.author_full_name,
@@ -117,7 +117,7 @@ export async function GET(request: Request) {
 
   const rows: ExportRow[] = entryHours
     .filter((row) => row.work_date && row.started_at)
-    .filter((row) => !workerIdSet || (row.author_id && workerIdSet.has(row.author_id)))
+    .filter((row) => !workerIdSet || workerIdSet.has(row.author_id!))
     .map((row) => ({
       date: formatWorkDateShort(row.work_date!),
       worker: row.full_name ?? "",
