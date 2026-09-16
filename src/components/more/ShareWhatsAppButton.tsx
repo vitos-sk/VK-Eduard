@@ -31,6 +31,29 @@ function extractFileName(disposition: string | null, fallback: string): string {
 }
 
 /**
+ * Скачує файл і намагається відкрити `wa.me` в новій вкладці.
+ *
+ * Використовується як фолбек, коли Web Share API (файли) недоступний, і
+ * як «страховка» при провалі `navigator.share()` (наприклад, транзитна
+ * user-activation вже згасла після мережевого запиту — на Safari/Firefox
+ * це проявляється як `NotAllowedError`). У будь-якому разі файл на диску
+ * гарантований, навіть якщо `window.open` заблокує попап-блокер — цю
+ * платформну проблему з асинхронного колбека повністю усунути не можна.
+ */
+function downloadAndOpenWhatsApp(blob: Blob, fileName: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(t.admin.panel.whatsappFallbackText)}`, "_blank");
+}
+
+/**
  * Кнопка «Поділитися в WhatsApp» — качає той самий файл, що й «Експорт»,
  * і намагається віддати системне меню «Поділитися» (Web Share API рівня 2,
  * з файлами — Android Chrome, iOS Safari 15+). Десктоп і браузери без
@@ -65,18 +88,20 @@ export function ShareWhatsAppButton({
       const file = new File([blob], fileName, { type: blob.type });
 
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (shareError) {
+          if (shareError instanceof DOMException && shareError.name === "AbortError") return;
+          // Транзитна user-activation могла згаснути (мережевий round-trip
+          // перед цим) — файл уже завантажено в пам'ять, тож фолбечимось на
+          // скачування + wa.me замість того, щоб просто показати помилку.
+          downloadAndOpenWhatsApp(blob, fileName);
+          return;
+        }
       }
 
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(objectUrl);
-
-      window.open(`https://wa.me/?text=${encodeURIComponent(t.admin.panel.whatsappFallbackText)}`, "_blank");
+      downloadAndOpenWhatsApp(blob, fileName);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       toast(t.admin.panel.whatsappError);

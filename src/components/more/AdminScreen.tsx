@@ -106,7 +106,13 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
     });
   }, [allVisibleSelected, visibleWorkerHours]);
 
-  const exportWorkerIds = selectedIds.size > 0 ? [...selectedIds] : undefined;
+  const hasActiveSearch = search.trim().length > 0;
+  const exportWorkerIds =
+    selectedIds.size > 0
+      ? [...selectedIds]
+      : hasActiveSearch
+        ? visibleWorkerHours.map((item) => item.id)
+        : undefined;
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-24 lg:mx-auto lg:max-w-[720px]">
@@ -120,7 +126,7 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatTile icon={Clock} label={t.admin.panel.kpiHours} value={formatHoursShort(totalMinutes)} />
-        <StatTile icon={Users} label={t.admin.panel.kpiActive} value={String(workers.length)} />
+        <StatTile icon={Users} label={t.admin.panel.kpiActive} value={String(effectiveWorkerHours.length)} />
         <StatTile icon={Clock} label={t.admin.panel.kpiAvg} value={formatHoursShort(avgMinutes)} />
       </div>
 
