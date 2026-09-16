@@ -46,7 +46,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="uk" className={`dark ${manrope.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
