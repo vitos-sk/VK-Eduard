@@ -91,6 +91,7 @@ export type Database = {
           company_id: string
           created_at: string
           daily_norm_minutes: number
+          default_view: string
           full_name: string
           id: string
           is_active: boolean
@@ -101,6 +102,7 @@ export type Database = {
           company_id: string
           created_at?: string
           daily_norm_minutes?: number
+          default_view?: string
           full_name: string
           id: string
           is_active?: boolean
@@ -111,6 +113,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           daily_norm_minutes?: number
+          default_view?: string
           full_name?: string
           id?: string
           is_active?: boolean
