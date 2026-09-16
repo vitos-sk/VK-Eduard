@@ -90,6 +90,7 @@ export const uk = {
     save: "Зберегти",
     rows: {
       team: "Команда",
+      admin: "Адмінка",
       notifications: "Сповіщення",
       language: "Мова",
       languageValue: "Українська",

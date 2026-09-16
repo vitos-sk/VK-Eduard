@@ -8,6 +8,7 @@ import {
   Languages,
   LogOut,
   Moon,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -42,7 +43,10 @@ export default async function MorePage() {
 
   const rows: SettingsRow[] = [
     ...(profile.role === "boss"
-      ? [{ icon: Users, label: t.profile.rows.team, href: "/more/team" }]
+      ? [
+          { icon: Users, label: t.profile.rows.team, href: "/more/team" },
+          { icon: ShieldCheck, label: t.profile.rows.admin, href: "/more/admin" },
+        ]
       : []),
     { icon: Bell, label: t.profile.rows.notifications, href: "/more/notifications" },
     {
