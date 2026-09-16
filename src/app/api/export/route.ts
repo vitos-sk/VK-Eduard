@@ -36,7 +36,9 @@ function isExportFormat(value: string): value is ExportFormat {
  * (дата/робітник/об'єкт/категорії/опис/фото, без часу).
  * Формат — `?format=`, дефолт `csv` для сумісності зі старими посиланнями.
  * `?workerId=` звужує вибірку до одного робітника (експорт з картки
- * робітника в адмінці) — фільтр застосовується вже після RLS-вибірки.
+ * робітника в «Команді»); `?workerIds=id1,id2` — до списку (мультивибір
+ * чекбоксами в адмінці, `/more/admin`) — обидва фільтри застосовуються
+ * вже після RLS-вибірки, `workerIds` має пріоритет, якщо задані обидва.
  *
  * RLS на `entry_hours`/`site_reports` сама вирішує обсяг: рядовому
  * робітнику віддасть тільки його дані, шефу (`is_boss()`) — усі по
@@ -50,6 +52,12 @@ export async function GET(request: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const workerId = searchParams.get("workerId");
+  const workerIdsParam = searchParams.get("workerIds");
+  const workerIdSet = workerIdsParam
+    ? new Set(workerIdsParam.split(",").filter(Boolean))
+    : workerId
+      ? new Set([workerId])
+      : null;
   const formatParam = searchParams.get("format") ?? "csv";
   const kind = searchParams.get("kind") === "reports" ? "reports" : "hours";
 
@@ -79,7 +87,7 @@ export async function GET(request: Request) {
     const siteNameById = new Map(sites.map((site) => [site.id, site.name] as const));
 
     const rows: ReportExportRow[] = reports
-      .filter((report) => !workerId || report.author_id === workerId)
+      .filter((report) => !workerIdSet || (report.author_id && workerIdSet.has(report.author_id)))
       .map((report) => ({
         date: formatWorkDateShort(report.work_date),
         worker: report.author_full_name,
@@ -109,7 +117,7 @@ export async function GET(request: Request) {
 
   const rows: ExportRow[] = entryHours
     .filter((row) => row.work_date && row.started_at)
-    .filter((row) => !workerId || row.author_id === workerId)
+    .filter((row) => !workerIdSet || (row.author_id && workerIdSet.has(row.author_id)))
     .map((row) => ({
       date: formatWorkDateShort(row.work_date!),
       worker: row.full_name ?? "",
