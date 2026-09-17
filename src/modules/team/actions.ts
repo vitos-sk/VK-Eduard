@@ -129,3 +129,51 @@ export async function setWorkerActive(
 
   return { error: null };
 }
+
+export type UpdateDailyNormState = { error: string | null };
+
+const MIN_DAILY_NORM_MINUTES = 60;
+const MAX_DAILY_NORM_MINUTES = 1440;
+
+/**
+ * Змінює денну норму годин співробітника (`profiles.daily_norm_minutes`) —
+ * тільки boss, розділ «Команда» адмінки (`/more/admin/team`). Той самий
+ * патерн, що й `setWorkerActive`: адмінський клієнт обходить RLS повністю,
+ * тож роль перевіряємо самі, тут-таки.
+ */
+export async function updateWorkerDailyNorm(
+  workerId: string,
+  minutes: number,
+): Promise<UpdateDailyNormState> {
+  const profile = await getProfile();
+
+  if (!profile || profile.role !== "boss") {
+    return { error: t.auth.noProfile };
+  }
+
+  if (
+    !Number.isFinite(minutes) ||
+    minutes < MIN_DAILY_NORM_MINUTES ||
+    minutes > MAX_DAILY_NORM_MINUTES
+  ) {
+    return { error: t.admin.team.dailyNormInvalid };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ daily_norm_minutes: Math.round(minutes) })
+    .eq("id", workerId)
+    .eq("company_id", profile.company_id);
+
+  if (error) {
+    return { error: t.admin.team.dailyNormError };
+  }
+
+  revalidatePath("/more/admin/team");
+  // Змінена норма — не тільки адмінський список: сам працівник бачить своє
+  // `profile.daily_norm_minutes` на «Годинах» (розрахунок місячної норми).
+  revalidatePath("/hours");
+
+  return { error: null };
+}

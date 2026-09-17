@@ -94,10 +94,6 @@ export const uk = {
       notifications: "Сповіщення",
       language: "Мова",
       languageValue: "Українська",
-      theme: "Тема",
-      themeValue: "Темна",
-      data: "Керування даними",
-      help: "Допомога",
       about: "Про додаток",
     },
     teamPage: {
@@ -111,19 +107,6 @@ export const uk = {
     languagePage: {
       title: "Мова",
       body: "Зараз інтерфейс доступний тільки українською. Інші мови додамо пізніше.",
-    },
-    themePage: {
-      title: "Тема",
-      body: "Застосунок працює в темній темі. Світла тема поки не зроблена.",
-    },
-    dataPage: {
-      title: "Керування даними",
-      body: "Завантажте власні відпрацьовані години за весь час у зручному форматі.",
-      exportLabel: "Експорт годин",
-    },
-    helpPage: {
-      title: "Допомога",
-      body: "Якщо щось не працює або є питання — зверніться до свого шефа чи адміністратора компанії.",
     },
     aboutPage: {
       title: "Про додаток",
@@ -282,6 +265,7 @@ export const uk = {
     salaryCalcTitle: "Калькулятор зарплати",
     salaryCalcWorkerLabel: "Співробітник",
     salaryCalcSelf: "Я",
+    salaryCalcAll: "Усі",
     salaryCalcRateLabel: "Ставка, €/год",
     salaryCalcRatePlaceholder: "Наприклад: 150",
     salaryCalcAmount: "Заробіток за місяць",
@@ -474,6 +458,158 @@ export const uk = {
   admin: {
     dashboard: {
       monthHours: "Годин за місяць",
+    },
+    /** Суб-навігація розділу `/more/admin/*` (`AdminNav`) — спільна для мобільної і десктопної гілок. */
+    nav: {
+      overview: "Огляд",
+      team: "Команда",
+      sites: "Об'єкти",
+      entries: "Записи часу",
+      reports: "Звіти",
+      salary: "Зарплата",
+      settings: "Налаштування",
+    },
+    /** Розділ `/more/admin/team` — список команди, заведення, деактивація і денна норма (`AdminTeamScreen`). */
+    team: {
+      searchPlaceholder: "Пошук співробітника",
+      addWorker: "Додати співробітника",
+      hoursThisMonth: "год за місяць",
+      dailyNorm: "Норма",
+      dailyNormUnit: "год/день",
+      dailyNormSave: "Зберегти",
+      dailyNormSaved: "Норму збережено",
+      dailyNormError: "Не вдалося зберегти норму. Спробуйте ще раз",
+      dailyNormInvalid: "Норма має бути від 1 до 24 год",
+      empty: "У компанії ще немає активних працівників",
+      emptyHint: "Додайте першого співробітника кнопкою вище",
+      emptySearchTitle: "Нічого не знайдено",
+      emptySearchHint: "Спробуйте інше ім'я",
+    },
+    /** Розділ `/more/admin/sites` — адміністративний список об'єктів (`AdminSitesScreen`). */
+    sites: {
+      addObject: "Новий об'єкт",
+      searchPlaceholder: "Пошук за назвою чи адресою",
+      tabs: {
+        all: "Всі",
+        active: "Активні",
+        archived: "Архів",
+      },
+      table: {
+        object: "Об'єкт",
+        status: "Статус",
+        hours: "Години",
+        workers: "Людей",
+        actions: "Дії",
+      },
+      workersCount: "{n} людей",
+      noAddress: "Адресу не вказано",
+      archivedBadge: "Архів",
+      archive: "Архівувати",
+      restore: "Розархівувати",
+      delete: "Видалити",
+      deleteConfirmTitle: "Видалити об'єкт?",
+      deleteConfirmBody:
+        "Об'єкт «{name}» зникне назавжди. Записи часу, де його вказано, залишаться, але втратять прив'язку до нього.",
+      deleteConfirmAction: "Видалити",
+      emptyTitle: "Об'єктів ще немає",
+      emptyHint: "Додайте перший об'єкт, щоб бачити по ньому години й команду",
+      emptySearchTitle: "Нічого не знайдено",
+      emptySearchHint: "Спробуйте змінити пошуковий запит або вкладку",
+    },
+    /**
+     * Розділ `/more/admin/entries` (`AdminEntriesScreen`) — усі записи часу
+     * компанії за обраний місяць, з фільтрами і редагуванням/видаленням.
+     * Категорії у `work_entries` немає (вона тільки у звітів), тож окремих
+     * ключів для фільтра категорій тут нема.
+     */
+    entries: {
+      filterWorkerLabel: "Співробітник",
+      filterWorkerAll: "Усі співробітники",
+      filterSiteLabel: "Об'єкт",
+      filterSiteAll: "Усі об'єкти",
+      columnDate: "Дата",
+      columnWorker: "Співробітник",
+      columnSite: "Об'єкт",
+      columnTime: "Час",
+      columnBreak: "Перерва",
+      columnHours: "Годин",
+      columnSource: "Джерело",
+      columnDescription: "Опис",
+      sourceTimer: "Таймер",
+      sourceManual: "Вручну",
+      noSite: "Без об'єкта",
+      noDescription: "Без опису",
+      emptyTitle: "За цей період записів немає",
+      emptyFilteredTitle: "Записів за цими фільтрами не знайдено",
+      emptyFilteredHint: "Спробуйте скинути фільтри або обрати інший місяць",
+      loadMore: "Показати ще",
+      shownCount: "Показано {shown} із {total}",
+      editTitle: "Редагувати запис",
+      editSiteLabel: "Об'єкт",
+      editSitePlaceholder: "Без об'єкта",
+      editDateLabel: "Дата",
+      editStartLabel: "Початок",
+      editEndLabel: "Завершення",
+      editBreakLabel: "Перерва",
+      editDescriptionLabel: "Опис",
+    },
+    /** Розділ `/more/admin/reports` (`AdminReportsScreen`) — стрічка звітів усієї компанії за період. */
+    reports: {
+      kpiReports: "Звітів за період",
+      kpiPhotos: "Фото за період",
+      filterSiteLabel: "Об'єкт",
+      filterSiteAll: "Усі об'єкти",
+      filterWorkerLabel: "Співробітник",
+      filterWorkerAll: "Усі співробітники",
+      filterCategoryLabel: "Категорія",
+      filterCategoryAll: "Усі категорії",
+      noSite: "Без об'єкта",
+      photosCount: "{n} фото",
+      emptyTitle: "За цей період звітів немає",
+      emptyFilteredTitle: "Звітів за цими фільтрами не знайдено",
+      emptyFilteredHint: "Спробуйте скинути фільтри або обрати інший місяць",
+      deleteReport: "Видалити звіт",
+      deleteConfirmTitle: "Видалити звіт?",
+      deleteConfirmBody: "Звіт разом з усіма фото зникне назавжди — відновити його не вийде.",
+      deleteConfirmAction: "Видалити",
+      deleteSuccess: "Звіт видалено",
+      loadError: "Не вдалося оновити список звітів",
+    },
+    /** Розділ `/more/admin/salary` (`AdminSalaryScreen`) — калькулятор зарплати по компанії. */
+    salary: {
+      subtitle: "Оберіть співробітника і ставку за годину, щоб порахувати суму за обраний місяць",
+      exportHint: "Експорт табеля за цей місяць",
+    },
+    /**
+     * Розділ `/more/admin/settings` — денна норма годин компанії за
+     * замовчуванням (`companies.daily_norm_minutes`) і керування категоріями
+     * робіт (`work_categories`): створення, архівація, відновлення.
+     */
+    settings: {
+      dailyNormTitle: "Денна норма годин",
+      dailyNormDescription:
+        "Стартове значення для нових співробітників. Кожному можна задати власну норму в розділі «Команда».",
+      dailyNormLabel: "Норма",
+      dailyNormUnit: "год/день",
+      dailyNormSave: "Зберегти",
+      dailyNormSaved: "Норму компанії збережено",
+      dailyNormInvalid: "Норма має бути від 1 до 24 год",
+      dailyNormSaveError: "Не вдалося зберегти норму. Спробуйте ще раз",
+
+      categoriesTitle: "Категорії робіт",
+      categoriesDescription: "Використовуються у звітах по об'єктах для позначення виду роботи.",
+      categoriesAddPlaceholder: "Назва нової категорії",
+      categoriesAdd: "Додати",
+      categoriesNameRequired: "Введіть назву категорії",
+      categoriesSaveError: "Не вдалося зберегти зміни. Спробуйте ще раз",
+      categoriesEmpty: "Категорій ще немає",
+      categoriesArchivedBadge: "Архів",
+      categoriesArchive: "Архівувати",
+      categoriesRestore: "Розархівувати",
+      categoriesArchiveConfirmTitle: "Архівувати категорію?",
+      categoriesArchiveConfirmBody:
+        "Категорія «{name}» зникне зі списку вибору в нових звітах. Старі звіти з нею залишаться без змін, відновити категорію можна будь-коли.",
+      categoriesArchiveConfirmAction: "Архівувати",
     },
     export: {
       label: "Експорт",

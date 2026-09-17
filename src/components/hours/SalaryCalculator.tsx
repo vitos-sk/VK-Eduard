@@ -18,6 +18,8 @@ import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { sumTotalMinutes } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 
+const ALL_WORKERS_ID = "all";
+
 interface SalaryCalculatorProps {
   /** Заголовок обраного місяця — той самий текст, що в навігаторі періоду. */
   monthTitle: string;
@@ -71,7 +73,9 @@ export function SalaryCalculator({
   const targetMinutes = useMemo(
     () =>
       sumTotalMinutes(
-        monthEntries.filter((entry) => entry.author_id === selectedWorkerId),
+        selectedWorkerId === ALL_WORKERS_ID
+          ? monthEntries
+          : monthEntries.filter((entry) => entry.author_id === selectedWorkerId),
       ),
     [monthEntries, selectedWorkerId],
   );
@@ -119,6 +123,7 @@ export function SalaryCalculator({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={ALL_WORKERS_ID}>{t.hours.salaryCalcAll}</SelectItem>
                   <SelectItem value={selfId}>{t.hours.salaryCalcSelf}</SelectItem>
                   {workers
                     .filter((worker) => worker.id !== selfId)

@@ -2,12 +2,9 @@ import Link from "next/link";
 import {
   Bell,
   ChevronRight,
-  CircleHelp,
-  Database,
   Info,
   Languages,
   LogOut,
-  Moon,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -55,14 +52,6 @@ export default async function MorePage() {
       value: t.profile.rows.languageValue,
       href: "/more/language",
     },
-    {
-      icon: Moon,
-      label: t.profile.rows.theme,
-      value: t.profile.rows.themeValue,
-      href: "/more/theme",
-    },
-    { icon: Database, label: t.profile.rows.data, href: "/more/data" },
-    { icon: CircleHelp, label: t.profile.rows.help, href: "/more/help" },
     { icon: Info, label: t.profile.rows.about, href: "/more/about" },
   ];
 

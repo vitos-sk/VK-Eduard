@@ -39,6 +39,29 @@ export async function getWorkCategories(
   return data ?? [];
 }
 
+/**
+ * Усі категорії компанії — активні й архівовані, для розділу «Налаштування»
+ * адмінки (`/more/admin/settings`), де boss бачить і керує повним списком.
+ * Активні спершу (`archived_at` null раніше в сортуванні), далі за
+ * `sort_order` — так само, як `getWorkCategories`, для передбачуваного
+ * порядку в UI.
+ */
+export async function getAllWorkCategoriesForAdmin(
+  supabase: Client,
+  companyId: string,
+): Promise<WorkCategory[]> {
+  const { data, error } = await supabase
+    .from("work_categories")
+    .select("*")
+    .eq("company_id", companyId)
+    .order("archived_at", { ascending: true, nullsFirst: true })
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+
+  return data ?? [];
+}
+
 /** Лента звітів автора з фото і категоріями, від нових до старих. */
 export async function getReportsFeed(
   supabase: Client,

@@ -1,19 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { endOfMonth, startOfMonth } from "date-fns";
-import { Clock, Search, Users } from "lucide-react";
+import { Clock, Gauge, Search, Users } from "lucide-react";
 
 import { AdminWorkerList } from "@/components/more/AdminWorkerList";
 import { DefaultViewToggle } from "@/components/more/DefaultViewToggle";
 import { ShareWhatsAppButton } from "@/components/more/ShareWhatsAppButton";
-import { StatTile } from "@/components/dashboard/StatTile";
+import { AdminKpiStrip } from "@/components/more/admin/AdminKpiStrip";
 import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
 import { ExportMenu } from "@/components/reports/ExportMenu";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import type { Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
@@ -43,19 +44,21 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
   const [entries, setEntries] = useState<readonly WorkEntryWithNames[]>(initialEntries);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  const [isLoading, startLoadTransition] = useTransition();
 
   useEffect(() => {
     let cancelled = false;
     const from = dateKeyOf(startOfMonth(month));
     const to = dateKeyOf(endOfMonth(month));
 
-    getCompanyEntriesInRange(supabase, profile.company_id, from, to)
-      .then((data) => {
+    startLoadTransition(async () => {
+      try {
+        const data = await getCompanyEntriesInRange(supabase, profile.company_id, from, to);
         if (!cancelled) setEntries(data);
-      })
-      .catch(() => {
+      } catch {
         // Мережа моргнула — лишаємо попередні дані на екрані.
-      });
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -115,7 +118,7 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
         : undefined;
 
   return (
-    <div className="flex flex-col gap-4 px-4 pb-24 lg:mx-auto lg:max-w-[720px]">
+    <div className="flex flex-col gap-4 px-4 pb-24 lg:px-0 lg:pb-0">
       <DefaultViewToggle profile={profile} />
 
       <PeriodNavigator
@@ -124,11 +127,28 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
         onNext={() => setMonth((current) => addMonthsSafe(current, 1))}
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <StatTile icon={Clock} label={t.admin.panel.kpiHours} value={formatHoursShort(totalMinutes)} />
-        <StatTile icon={Users} label={t.admin.panel.kpiActive} value={String(effectiveWorkerHours.length)} />
-        <StatTile icon={Clock} label={t.admin.panel.kpiAvg} value={formatHoursShort(avgMinutes)} />
-      </div>
+      <AdminKpiStrip
+        cells={[
+          {
+            icon: Clock,
+            label: t.admin.panel.kpiHours,
+            value: formatHoursShort(totalMinutes),
+            muted: totalMinutes === 0,
+          },
+          {
+            icon: Users,
+            label: t.admin.panel.kpiActive,
+            value: String(effectiveWorkerHours.length),
+            muted: effectiveWorkerHours.length === 0,
+          },
+          {
+            icon: Gauge,
+            label: t.admin.panel.kpiAvg,
+            value: formatHoursShort(avgMinutes),
+            muted: avgMinutes === 0,
+          },
+        ]}
+      />
 
       <div className="flex items-center gap-2">
         <div className="flex h-11 flex-1 items-center gap-2 rounded-[12px] border border-border bg-surface-2 px-3">
@@ -137,6 +157,7 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t.admin.panel.searchPlaceholder}
+            aria-label={t.admin.panel.searchPlaceholder}
             className="w-full bg-transparent text-[14px] font-medium outline-none placeholder:text-text-dim"
           />
         </div>
@@ -153,7 +174,14 @@ export function AdminScreen({ profile, workers, initialEntries }: AdminScreenPro
       {visibleWorkerHours.length === 0 ? (
         <EmptyState title={t.admin.panel.empty} />
       ) : (
-        <AdminWorkerList items={visibleWorkerHours} selectedIds={selectedIds} onToggle={toggleWorker} />
+        <div
+          className={cn(
+            "transition-opacity",
+            isLoading && "pointer-events-none opacity-60",
+          )}
+        >
+          <AdminWorkerList items={visibleWorkerHours} selectedIds={selectedIds} onToggle={toggleWorker} />
+        </div>
       )}
 
       <div className="sticky bottom-4 mt-2 flex items-center gap-2 rounded-[16px] border border-border bg-surface p-3 shadow-lg">

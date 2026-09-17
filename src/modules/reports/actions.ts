@@ -209,3 +209,128 @@ export async function deleteReport(reportId: string): Promise<ReportActionState>
 
   return OK;
 }
+
+export type WorkCategoryActionState = { error: string | null };
+
+const CATEGORIES_ADMIN_PATH = "/more/admin/settings";
+
+/**
+ * Категорії робіт показуються не лише в адмінці: список для вибору при
+ * створенні/правці звіту («Налаштування» задають, чим саме він наповнений)
+ * і в фільтрах/детальних сторінках, що читають `getWorkCategories`. Тож
+ * створення/архівація/відновлення категорії мусить скидати кеш усіх цих
+ * шляхів одразу, інакше десь лишиться застаріла категорія (чи не з'явиться
+ * нова) до ручного рефрешу.
+ */
+function revalidateWorkCategoryPaths(): void {
+  revalidatePath(CATEGORIES_ADMIN_PATH);
+  revalidatePath("/more/admin/reports");
+  revalidatePath("/reports");
+  revalidatePath("/reports/new");
+  revalidatePath("/reports/[id]", "page");
+  revalidatePath("/objects/[id]", "page");
+}
+
+/**
+ * Створює категорію робіт — тільки boss, розділ «Налаштування» адмінки.
+ * RLS (`work_categories_insert`) уже пускає лише `is_boss()` своєї компанії,
+ * але роль перевіряємо і тут-таки, до запиту — той самий подвійний бар'єр,
+ * що й у `updateCompanyDailyNorm`.
+ *
+ * Сортування без drag&drop (задача так і просила): нова категорія йде в
+ * кінець списку, `sort_order` — максимальний серед активних і архівованих
+ * плюс один.
+ */
+export async function createWorkCategory(
+  name: string,
+): Promise<WorkCategoryActionState & { id?: string }> {
+  const profile = await getProfile();
+
+  if (!profile || profile.role !== "boss") {
+    return { error: t.auth.noProfile };
+  }
+
+  const label = name.trim();
+
+  if (label === "") {
+    return { error: t.admin.settings.categoriesNameRequired };
+  }
+
+  const supabase = await createClient();
+
+  const { data: lastRow, error: lastError } = await supabase
+    .from("work_categories")
+    .select("sort_order")
+    .eq("company_id", profile.company_id)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastError) {
+    return { error: t.admin.settings.categoriesSaveError };
+  }
+
+  const nextSortOrder = (lastRow?.sort_order ?? -1) + 1;
+
+  const { data, error } = await supabase
+    .from("work_categories")
+    .insert({ company_id: profile.company_id, label, sort_order: nextSortOrder })
+    .select("id")
+    .single();
+
+  if (error) {
+    return { error: t.admin.settings.categoriesSaveError };
+  }
+
+  revalidateWorkCategoryPaths();
+
+  return { error: null, id: data.id };
+}
+
+/** Архівує категорію — не видалення: старі звіти з нею лишаються без змін. */
+export async function archiveWorkCategory(categoryId: string): Promise<WorkCategoryActionState> {
+  const profile = await getProfile();
+
+  if (!profile || profile.role !== "boss") {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("work_categories")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", categoryId)
+    .eq("company_id", profile.company_id);
+
+  if (error) {
+    return { error: t.admin.settings.categoriesSaveError };
+  }
+
+  revalidateWorkCategoryPaths();
+
+  return OK;
+}
+
+/** Повертає архівовану категорію в активний список вибору для нових звітів. */
+export async function restoreWorkCategory(categoryId: string): Promise<WorkCategoryActionState> {
+  const profile = await getProfile();
+
+  if (!profile || profile.role !== "boss") {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("work_categories")
+    .update({ archived_at: null })
+    .eq("id", categoryId)
+    .eq("company_id", profile.company_id);
+
+  if (error) {
+    return { error: t.admin.settings.categoriesSaveError };
+  }
+
+  revalidateWorkCategoryPaths();
+
+  return OK;
+}
