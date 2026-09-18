@@ -42,7 +42,7 @@ export default async function ReportDetailPage({
       // `getReportWithPhotos` уже прогнала запись через `reports_select`:
       // якщо вона тут — це або своя, або ми шеф, а обидва варианты
       // `reports_update`/`reports_delete` дозволяють без обмежень.
-      editable
+      canEdit
       photoUrls={Object.fromEntries(photoUrls)}
     />
   );

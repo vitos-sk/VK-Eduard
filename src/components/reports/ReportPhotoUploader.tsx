@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { PhotoLightbox } from "@/components/shared/PhotoLightbox";
 import { fmt } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
@@ -40,6 +41,7 @@ export function ReportPhotoUploader({
   const supabase = useMemo(() => createClient(), []);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [viewedUrl, setViewedUrl] = useState<string | null>(null);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -99,8 +101,15 @@ export function ReportPhotoUploader({
             className="relative size-20 shrink-0 overflow-hidden rounded-[12px] bg-surface-2"
           >
             {urls[photo.storage_path] && (
-              // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
-              <img src={urls[photo.storage_path]} alt="" className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setViewedUrl(urls[photo.storage_path])}
+                aria-label={t.reportDetail.viewPhoto}
+                className="block size-full"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage */}
+                <img src={urls[photo.storage_path]} alt="" className="size-full object-cover" />
+              </button>
             )}
 
             {editable && (
@@ -155,6 +164,8 @@ export function ReportPhotoUploader({
           event.target.value = "";
         }}
       />
+
+      <PhotoLightbox url={viewedUrl} onOpenChange={(open) => !open && setViewedUrl(null)} title={t.reportDetail.photosTitle} />
     </div>
   );
 }

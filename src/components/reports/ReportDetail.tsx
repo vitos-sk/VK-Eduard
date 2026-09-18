@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { MoreVertical, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { DeleteReportButton } from "@/components/reports/DeleteReportButton";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fmt, formatDateFull, formatDateShort, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { updateReportCategories, updateReportDescription } from "@/modules/reports/actions";
@@ -21,26 +22,36 @@ interface ReportDetailProps {
   companyId: string;
   authorName: string;
   categories: readonly WorkCategory[];
-  editable: boolean;
+  /** RLS-право редагувати цей звіт — своя запис або шеф. UI-режим (перегляд/редагування) керується локальним станом нижче, а не цим прапорцем напряму. */
+  canEdit: boolean;
   photoUrls: Readonly<Record<string, string>>;
 }
 
-/** Детальная страница `/reports/[id]` — REPORTS.md, раздел 5 (без блоку часу). */
+/**
+ * Детальная страница `/reports/[id]` — REPORTS.md, раздел 5 (без блоку часу).
+ * Відкривається завжди в режимі перегляду: усе редагування (опис,
+ * категорії, фото, видалення) ховається за «⋮» в шапці — окремий пункт
+ * «Редагувати» вмикає його. Створення звіту вже має власний крок з фото
+ * (`ReportForm`), тож сюди потрапляють вже готовим.
+ */
 export function ReportDetail({
   report,
   siteName,
   companyId,
   authorName,
   categories,
-  editable,
+  canEdit,
   photoUrls,
 }: ReportDetailProps) {
   const router = useRouter();
   const [isDescPending, startDescTransition] = useTransition();
   const [isCatPending, startCatTransition] = useTransition();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const editable = canEdit && isEditing;
 
   const [description, setDescription] = useState(report.description);
-  const [isEditingDescription, setIsEditingDescription] = useState(description === "");
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [draft, setDraft] = useState(description);
 
   const [categoryIds, setCategoryIds] = useState<string[]>(report.category_ids);
@@ -221,22 +232,52 @@ export function ReportDetail({
       <p className="px-1 text-[13px] font-medium text-text-dim">
         {fmt(t.reportDetail.createdBy, { name: authorName })} · {formatDateShort(new Date(report.created_at))}
       </p>
+    </>
+  );
 
-      {editable && (
+  const menu = canEdit && (
+    <Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={t.reportDetail.openMenu}
+          className="flex size-11 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2"
+        >
+          <MoreVertical className="size-5" strokeWidth={2} aria-hidden />
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
+        {!isEditing && (
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditing(true);
+              if (description === "") setIsEditingDescription(true);
+              setIsMenuOpen(false);
+            }}
+            className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-semibold hover:bg-surface-2"
+          >
+            <Pencil className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+            {t.reportDetail.edit}
+          </button>
+        )}
+
         <DeleteReportButton
           reportId={report.id}
           onDeleted={() => {
             router.push("/reports");
             router.refresh();
           }}
+          className="!h-10 !w-full !justify-start !gap-2 !rounded-[8px] !border-0 !px-2 !text-[14px] hover:bg-danger/10"
         />
-      )}
-    </>
+      </PopoverContent>
+    </Popover>
   );
 
   return (
     <div className="pb-6">
-      <BackHeader title={t.reportDetail.backTitle} href="/reports" />
+      <BackHeader title={t.reportDetail.backTitle} href="/reports" action={menu} />
 
       <div className="space-y-4 px-4 lg:hidden">{content}</div>
 

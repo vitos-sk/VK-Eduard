@@ -370,6 +370,7 @@ export const uk = {
   /** Детальна сторінка `/reports/[id]`. */
   reportDetail: {
     backTitle: "Звіт",
+    openMenu: "Дії зі звітом",
     edit: "Редагувати",
     addDescriptionTitle: "Додати опис",
     addDescriptionPlaceholder: "Наприклад: Монтаж покрівельної мембрани",
@@ -380,6 +381,7 @@ export const uk = {
     worked: "Відпрацьовано",
     overtime: "Додатково",
     photosTitle: "Фото",
+    viewPhoto: "Переглянути фото",
     addPhoto: "Додати фото",
     removePhoto: "Видалити фото",
     uploading: "Завантаження...",
