@@ -1,42 +1,68 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import type { ComponentType } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pause, Play, Square } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  CalendarDays,
+  ChevronRight,
+  Clock,
+  FileText,
+  Gauge,
+  MapPin,
+  Pause,
+  Play,
+  Square,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
+import { PostShiftSiteDialog } from "@/components/home/PostShiftSiteDialog";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { formatDuration } from "@/lib/format";
+import { formatDateShort, formatDuration, formatHoursShort, fromDateKey, fmt } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { getGoogleMapsDirectionsUrl } from "@/lib/utils";
 import {
   endCurrentBreak,
+  setEntrySite,
   startCurrentBreak,
   startShift,
   stopCurrentShift,
 } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
+import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf, elapsedSecondsNow, hhmmOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
+
+/** Мінімум із записів, потрібний для «Сьогодні» — не тягнемо фото. */
+export type EntryForStats = Pick<WorkEntry, "site_id" | "work_date" | "ended_at" | "total_minutes">;
 
 interface WorkTimeCardProps {
   /** Открытая смена автора или `null` — источник правды на сервере. */
   openEntry: WorkEntry | null;
+  sites: readonly Site[];
+  entries: readonly EntryForStats[];
   className?: string;
 }
 
 /**
- * Карточка «Робочий час»: статус, тикающий таймер, время начала
- * и кнопка старта/стопа смены.
- *
- * Секунды не хранятся в состоянии — каждую секунду они заново считаются
- * из `openEntry` (реального начала смены в базе) и текущего момента.
- * Иначе после `router.refresh()` пришлось бы вручную ресинхронизировать
- * локальный счётчик с посвежевшим пропом.
+ * Карточка «Робочий день»: об'єкт/локація/дата/початок зліва, стислий
+ * знімок дня справа, старт/стоп і перехід до звіту знизу. Об'єкт можна
+ * обрати як до старту зміни, так і задним числом, поки вона йде —
+ * `setEntrySite` дописує вже відкритий запис. Якщо зміну завершили без
+ * об'єкта, `PostShiftSiteDialog` пропонує дописати його чи опис одразу
+ * після «Завершити роботу», а не мовчки лишає запис висіти без контексту.
  */
-export function WorkTimeCard({ openEntry, className }: WorkTimeCardProps) {
+export function WorkTimeCard({ openEntry, sites, entries, className }: WorkTimeCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState(() => new Date());
+  const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
+  const [pendingSiteId, setPendingSiteId] = useState<string | null>(null);
+  const [postShiftEntryId, setPostShiftEntryId] = useState<string | null>(null);
 
   const isRunning = openEntry !== null;
   const isOnBreak = openEntry !== null && openEntry.break_start !== null && openEntry.break_end === null;
@@ -60,24 +86,88 @@ export function WorkTimeCard({ openEntry, className }: WorkTimeCardProps) {
       )
     : 0;
 
+  const currentSiteId = isRunning ? (openEntry?.site_id ?? null) : pendingSiteId;
+  const selectedSite = currentSiteId ? (sites.find((site) => site.id === currentSiteId) ?? null) : null;
+
+  const todayKey = dateKeyOf(now);
+  const todayCompletedCount = useMemo(() => {
+    const siteIds = new Set(
+      entries
+        .filter((entry) => entry.work_date === todayKey && entry.ended_at !== null && entry.site_id !== null)
+        .map((entry) => entry.site_id as string),
+    );
+    return siteIds.size;
+  }, [entries, todayKey]);
+
+  const totalMinutesOnSite = useMemo(() => {
+    if (!currentSiteId) return 0;
+    return entries
+      .filter((entry) => entry.site_id === currentSiteId)
+      .reduce((sum, entry) => sum + (entry.total_minutes ?? 0), 0);
+  }, [entries, currentSiteId]);
+
+  const handleSiteSelect = (siteId: string) => {
+    if (isRunning && openEntry) {
+      startTransition(async () => {
+        const result = await setEntrySite(openEntry.id, siteId);
+
+        if (result.error) {
+          toast(result.error);
+          return;
+        }
+
+        router.refresh();
+      });
+      return;
+    }
+
+    setPendingSiteId(siteId);
+  };
+
   const handleToggle = () => {
     startTransition(async () => {
       const clickTime = new Date();
 
-      const result = isRunning
-        ? await stopCurrentShift(hhmmOf(clickTime))
-        : await startShift(null, dateKeyOf(clickTime), hhmmOf(clickTime));
+      if (isRunning && openEntry) {
+        const entryId = openEntry.id;
+        const hadSite = openEntry.site_id !== null;
+
+        const result = await stopCurrentShift(hhmmOf(clickTime));
+
+        if (result.error) {
+          toast(result.error);
+          return;
+        }
+
+        if (!hadSite) {
+          setPostShiftEntryId(entryId);
+        }
+
+        router.refresh();
+        return;
+      }
+
+      const result = await startShift(pendingSiteId, dateKeyOf(clickTime), hhmmOf(clickTime));
 
       if (result.error) {
         toast(result.error);
         return;
       }
 
+      setPendingSiteId(null);
       router.refresh();
     });
   };
 
   const handleTogglePause = () => {
+    // Перерва в записі одна — друге натискання «Пауза» без пояснення
+    // виглядало як зависла кнопка. Тепер вона завжди реагує, просто каже,
+    // чому вдруге не можна, а не мовчки блокується `disabled`.
+    if (!isOnBreak && breakUsed) {
+      toast(t.hours.breakAlreadyTaken);
+      return;
+    }
+
     startTransition(async () => {
       const clickTime = new Date();
 
@@ -97,33 +187,76 @@ export function WorkTimeCard({ openEntry, className }: WorkTimeCardProps) {
   const ActionIcon = isRunning ? Square : Play;
   const PauseIcon = isOnBreak ? Play : Pause;
 
+  const dateValue = formatDateShort(openEntry ? fromDateKey(openEntry.work_date) : now);
+  const startedValue = openEntry?.started_at?.slice(0, 5) ?? t.common.dash;
+
   return (
-    <section
-      className={cn(
-        "rounded-[16px] border border-border bg-surface p-4",
-        "lg:flex lg:items-center lg:justify-between lg:gap-8 lg:p-5",
-        className,
-      )}
-    >
-      <div className="lg:flex lg:flex-1 lg:items-center lg:gap-8">
-        <div className="flex items-center justify-between gap-3 lg:justify-start lg:gap-3">
+    <section className={cn("rounded-[16px] border border-border bg-surface p-4 lg:p-5", className)}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              isRunning && !isOnBreak ? "bg-success" : isOnBreak ? "bg-warning" : "bg-text-dim",
+            )}
+          />
           <h2 className="text-[17px] font-bold">{t.home.workTime}</h2>
-          <StatusBadge status={isOnBreak ? "paused" : isRunning ? "in_progress" : "completed"} />
         </div>
 
-        <p className="tabular mt-3 text-[56px] leading-none font-extrabold tracking-[-0.02em] lg:mt-0 lg:text-[40px]">
-          {formatDuration(workedSec)}
-        </p>
-
-        <p className="mt-3 text-[13px] font-medium text-text-muted lg:mt-0">
-          {t.home.startedAt}{" "}
-          <span className="tabular font-bold text-text">
-            {openEntry?.started_at ?? t.common.dash}
-          </span>
-        </p>
+        <StatusBadge status={isOnBreak ? "paused" : isRunning ? "in_progress" : "completed"} />
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 lg:mt-0 lg:flex-row lg:items-center">
+      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] gap-x-4 lg:grid-cols-[1.2fr_auto_1fr]">
+        <div className="flex flex-col divide-y divide-border">
+          <InfoRow
+            icon={Building2}
+            label={t.home.objectLabel}
+            value={selectedSite?.name ?? t.home.objectPlaceholder}
+            onClick={() => setIsObjectPickerOpen(true)}
+          />
+          {selectedSite?.address && (
+            <InfoRow
+              icon={MapPin}
+              label={t.home.locationLabel}
+              value={selectedSite.address}
+              onClick={() => window.open(getGoogleMapsDirectionsUrl(selectedSite.address as string), "_blank")}
+            />
+          )}
+          <InfoRow icon={CalendarDays} label={t.home.dateLabel} value={dateValue} />
+          <InfoRow icon={Clock} label={t.home.startedAt} value={startedValue} />
+        </div>
+
+        <div aria-hidden className="w-px bg-border" />
+
+        <div className="flex flex-col">
+          <p className="pt-1 pb-2 text-[11px] font-bold tracking-[0.04em] text-text-dim uppercase">
+            {t.home.todayLabel}
+          </p>
+
+          <div className="flex flex-col divide-y divide-border">
+            <InfoRow
+              icon={Briefcase}
+              label={t.home.todayCompleted}
+              value={fmt(t.home.todayCompletedCount, { n: todayCompletedCount })}
+            />
+            <InfoRow
+              icon={Gauge}
+              label={t.home.totalOnSite}
+              value={formatHoursShort(totalMinutesOnSite)}
+              href={currentSiteId ? `/objects/${currentSiteId}` : undefined}
+            />
+          </div>
+        </div>
+      </div>
+
+      {isRunning && (
+        <p className="tabular mt-4 text-center text-[40px] leading-none font-extrabold tracking-[-0.02em] lg:text-[32px]">
+          {formatDuration(workedSec)}
+        </p>
+      )}
+
+      <div className="mt-4 flex flex-col gap-2">
         <button
           type="button"
           onClick={handleToggle}
@@ -134,40 +267,113 @@ export function WorkTimeCard({ openEntry, className }: WorkTimeCardProps) {
             "transition-transform duration-150 active:scale-[0.98]",
             "disabled:pointer-events-none disabled:opacity-60",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            "lg:h-12 lg:w-auto lg:min-w-[220px] lg:px-6 lg:transition-colors lg:hover:brightness-95 lg:active:scale-100",
           )}
         >
-          <ActionIcon
-            className="size-[18px] fill-current"
-            strokeWidth={2}
-            aria-hidden
-          />
+          <ActionIcon className="size-[18px] fill-current" strokeWidth={2} aria-hidden />
           {isRunning ? t.home.finishWork : t.home.startWork}
         </button>
 
-        {isRunning ? (
+        {isRunning && (
           <button
             type="button"
             onClick={handleTogglePause}
-            disabled={isPending || (breakUsed && !isOnBreak)}
+            disabled={isPending}
             className={cn(
-              "flex h-[56px] w-full items-center justify-center gap-2 rounded-[14px]",
+              "flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px]",
               "border border-border bg-surface-2 text-[15px] font-bold text-text",
               "transition-transform duration-150 active:scale-[0.98]",
               "disabled:pointer-events-none disabled:opacity-40",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-              "lg:h-12 lg:w-auto lg:min-w-[160px] lg:px-6 lg:transition-colors lg:hover:brightness-95 lg:active:scale-100",
             )}
           >
-            <PauseIcon
-              className="size-[18px] fill-current"
-              strokeWidth={2}
-              aria-hidden
-            />
+            <PauseIcon className="size-[18px] fill-current" strokeWidth={2} aria-hidden />
             {isOnBreak ? t.hours.resume : t.hours.pause}
           </button>
-        ) : null}
+        )}
+
+        <Link
+          href="/reports"
+          className={cn(
+            "flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px]",
+            "border border-border text-[15px] font-bold text-text",
+            "transition-transform duration-150 active:scale-[0.98]",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+          )}
+        >
+          <FileText className="size-[18px]" strokeWidth={2} aria-hidden />
+          {t.home.viewReport}
+        </Link>
       </div>
+
+      <ObjectPickerDrawer
+        open={isObjectPickerOpen}
+        onOpenChange={setIsObjectPickerOpen}
+        sites={sites}
+        value={currentSiteId}
+        onSelect={handleSiteSelect}
+      />
+
+      {postShiftEntryId && (
+        <PostShiftSiteDialog
+          open={postShiftEntryId !== null}
+          onOpenChange={(open) => !open && setPostShiftEntryId(null)}
+          entryId={postShiftEntryId}
+          sites={sites}
+        />
+      )}
     </section>
   );
+}
+
+interface InfoRowProps {
+  icon: ComponentType<{ className?: string; strokeWidth?: number; "aria-hidden"?: boolean }>;
+  label: string;
+  value: string;
+  onClick?: () => void;
+  href?: string;
+}
+
+/** Рядок «іконка → підпис/значення → шеврон» — той самий патерн полів, що й у `ManualTimeScreen`. */
+function InfoRow({ icon: Icon, label, value, onClick, href }: InfoRowProps) {
+  const isInteractive = Boolean(onClick || href);
+
+  const content = (
+    <div className="flex items-center gap-3 py-3">
+      <Icon className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12px] font-medium text-text-muted">{label}</p>
+        <p className="truncate text-[15px] font-bold">{value}</p>
+      </div>
+
+      {isInteractive && (
+        <ChevronRight className="size-4 shrink-0 text-text-dim" strokeWidth={2.4} aria-hidden />
+      )}
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="rounded-[8px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return content;
 }

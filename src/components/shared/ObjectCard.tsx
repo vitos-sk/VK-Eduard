@@ -41,19 +41,21 @@ export function ObjectCard({
         gradient={object.gradient}
         photoUrl={object.photoUrl}
         size="md"
-        className="h-auto w-28 self-stretch lg:h-[150px] lg:w-full lg:self-auto lg:rounded-none"
+        className="h-auto w-32 self-stretch lg:h-[150px] lg:w-full lg:self-auto lg:rounded-none"
       />
 
-      <div className="my-auto min-w-0 flex-1 lg:my-0 lg:p-4">
-        <p className="truncate text-[17px] font-bold">{object.name}</p>
-        <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">
-          {object.address || t.common.dash}
-        </p>
+      <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5 lg:block lg:p-4">
+        <div>
+          <p className="truncate text-[17px] font-bold">{object.name}</p>
+          <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">
+            {object.address || t.common.dash}
+          </p>
+        </div>
 
         {/* Статус — в нижней строке: рядом с названием бейдж не оставляет
             ему читаемой ширины на 390px. Если не влезает и здесь —
             переносится на свою строку, ничего не обрезая. */}
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+        <div className="mt-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 lg:mt-2">
           <MetaRow
             className="shrink-0"
             items={[

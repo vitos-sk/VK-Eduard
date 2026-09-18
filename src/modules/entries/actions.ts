@@ -8,6 +8,7 @@ import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 import {
+  breakMinutes,
   isBreakPairValid,
   isDurationValid,
   minutesBetweenWrapped,
@@ -80,7 +81,7 @@ export async function stopCurrentShift(time: string): Promise<EntryActionState> 
   const supabase = await createClient();
   const { data: open, error: findError } = await supabase
     .from("work_entries")
-    .select("id, break_start, break_end")
+    .select("id, started_at, break_start, break_end")
     .eq("author_id", profile.id)
     .is("ended_at", null)
     .maybeSingle();
@@ -97,6 +98,17 @@ export async function stopCurrentShift(time: string): Promise<EntryActionState> 
   // що й зміну. Інакше хвіст перерви залишиться незакритим і порахується
   // як відпрацьований час, а не як перерва.
   const stillOnBreak = open.break_start !== null && open.break_end === null;
+  const effectiveBreakEnd = stillOnBreak ? time : open.break_end;
+
+  // Перевіряємо `duration_sane` (1..1080 хв) до запиту в базу: інакше
+  // «Завершити роботу» одразу після «Почати» падає з незрозумілою помилкою
+  // замість понятного «зміна ще не тривала і хвилини».
+  const worked =
+    minutesBetweenWrapped(open.started_at, time) - breakMinutes(open.break_start, effectiveBreakEnd);
+
+  if (!isDurationValid(worked)) {
+    return { error: t.hours.shiftTooShort };
+  }
 
   const { error } = await supabase
     .from("work_entries")
@@ -107,7 +119,7 @@ export async function stopCurrentShift(time: string): Promise<EntryActionState> 
 
   if (error) {
     // duration_sane: смена длиннее 18 годин — типичная причина, если
-    // «Почати роботу» нажали и забыли про неё на несколько дней.
+    // «Почати роботу» нажали і забыли про неї на кілька днів.
     return { error: t.hours.genericError };
   }
 
@@ -286,6 +298,38 @@ export async function createManualEntry(
   revalidatePath("/", "layout");
 
   return { error: null, entryId: data.id };
+}
+
+/**
+ * Прив'язує запис до об'єкта заднім числом — модалка після «Завершити
+ * роботу», коли зміну почали без вибору об'єкта. Той самий патерн, що й
+ * у `updateEntryDescription`: RLS сам вирішує, чи можна.
+ */
+export async function setEntrySite(entryId: string, siteId: string): Promise<EntryActionState> {
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("work_entries")
+    .update({ site_id: siteId })
+    .eq("id", entryId)
+    .select("id");
+
+  if (error) {
+    return { error: t.reportDetail.saveError };
+  }
+
+  if (!data || data.length === 0) {
+    return { error: t.reportDetail.saveRejected };
+  }
+
+  revalidatePath("/", "layout");
+
+  return OK;
 }
 
 /**

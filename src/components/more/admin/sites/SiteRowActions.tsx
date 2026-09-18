@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { SiteWithStats } from "@/components/more/admin/sites/AdminSitesScreen";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -24,20 +26,23 @@ interface SiteRowActionsProps {
 }
 
 /**
- * Швидкі дії в рядку таблиці/картці: архів/розархівація одразу по кліку
- * (оборотна дія), видалення — тільки через модалку підтвердження, бо
- * `window.confirm` у проєкті заборонений. Після успіху — `router.refresh()`:
- * серверна `AdminSitesPage` перезапитує `getAllSites`, список оновлюється
- * сам через пропси (`AdminSitesScreen` їх не копіює в локальний стан).
+ * Дії з об'єктом сховані за кнопкою «⋮» — рядок/картка веде на перегляд
+ * (`/objects/[id]`, звіти й фото), а редагування/архів/видалення живуть
+ * тут, щоб не плутати «подивитись» і «змінити» в одному кліку. Видалення —
+ * тільки через модалку підтвердження (`window.confirm` в проєкті заборонений).
+ * Після успіху — `router.refresh()`: серверна `AdminSitesPage` перезапитує
+ * `getAllSites`, список оновлюється сам через пропси.
  */
 export function SiteRowActions({ site }: SiteRowActionsProps) {
   const router = useRouter();
   const [isArchivePending, startArchiveTransition] = useTransition();
   const [isDeletePending, startDeleteTransition] = useTransition();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const isArchived = site.archived_at !== null;
 
   const handleArchiveToggle = () => {
+    setMenuOpen(false);
     startArchiveTransition(async () => {
       const result = await setSiteArchived(site.id, !isArchived);
 
@@ -65,40 +70,60 @@ export function SiteRowActions({ site }: SiteRowActionsProps) {
   };
 
   return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={handleArchiveToggle}
-        disabled={isArchivePending}
-        aria-label={isArchived ? t.admin.sites.restore : t.admin.sites.archive}
-        title={isArchived ? t.admin.sites.restore : t.admin.sites.archive}
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted",
-          "transition-colors duration-150 hover:bg-surface-2 hover:text-text active:bg-surface-2",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          "disabled:pointer-events-none disabled:opacity-50",
-        )}
-      >
-        {isArchived ? (
-          <ArchiveRestore className="size-[17px]" strokeWidth={2} aria-hidden />
-        ) : (
-          <Archive className="size-[17px]" strokeWidth={2} aria-hidden />
-        )}
-      </button>
+    <>
+      <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={t.admin.sites.openMenu}
+            disabled={isArchivePending}
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted",
+              "transition-colors duration-150 hover:bg-surface-2 hover:text-text active:bg-surface-2",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+              "disabled:pointer-events-none disabled:opacity-50",
+            )}
+          >
+            <MoreVertical className="size-[18px]" strokeWidth={2} aria-hidden />
+          </button>
+        </PopoverTrigger>
 
-      <button
-        type="button"
-        onClick={() => setDeleteOpen(true)}
-        aria-label={t.admin.sites.delete}
-        title={t.admin.sites.delete}
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full text-danger",
-          "transition-colors duration-150 hover:bg-danger/10 active:bg-danger/10",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-        )}
-      >
-        <Trash2 className="size-[17px]" strokeWidth={2} aria-hidden />
-      </button>
+        <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
+          <Link
+            href={`/objects/${site.id}/edit`}
+            onClick={() => setMenuOpen(false)}
+            className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-[14px] font-semibold hover:bg-surface-2"
+          >
+            <Pencil className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+            {t.admin.sites.edit}
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleArchiveToggle}
+            className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-semibold hover:bg-surface-2"
+          >
+            {isArchived ? (
+              <ArchiveRestore className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+            ) : (
+              <Archive className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+            )}
+            {isArchived ? t.admin.sites.restore : t.admin.sites.archive}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              setDeleteOpen(true);
+            }}
+            className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-semibold text-danger hover:bg-danger/10"
+          >
+            <Trash2 className="size-[16px]" strokeWidth={2} aria-hidden />
+            {t.admin.sites.delete}
+          </button>
+        </PopoverContent>
+      </Popover>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
@@ -128,6 +153,6 @@ export function SiteRowActions({ site }: SiteRowActionsProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

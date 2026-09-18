@@ -47,22 +47,69 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
   const [kind, setKind] = useState(site?.kind ?? "");
   const [address, setAddress] = useState(site?.address ?? "");
   const [status, setStatus] = useState<WorkStatus>(site?.status ?? "not_started");
+  // Щойно створений об'єкт (тільки в режимі створення) — форма підмінюється
+  // кроком «додайте фото», бо `SitePhotoUploader` вимагає реальний `siteId`,
+  // якого до збереження ще нема.
+  const [createdSiteId, setCreatedSiteId] = useState<string | null>(null);
 
   const isValid = name.trim() !== "";
 
   const handleSave = () => {
     startTransition(async () => {
       const input = { name, kind, address, status };
-      const result = site ? await updateSite(site.id, input) : await createSite(input);
+
+      if (site) {
+        const result = await updateSite(site.id, input);
+
+        if (result.error) {
+          toast(result.error);
+          return;
+        }
+
+        router.push(`/objects/${site.id}`);
+        return;
+      }
+
+      const result = await createSite(input);
 
       if (result.error) {
         toast(result.error);
         return;
       }
 
-      router.push(site ? `/objects/${site.id}` : `/objects/${"id" in result ? result.id : ""}`);
+      setCreatedSiteId(result.id ?? null);
     });
   };
+
+  if (createdSiteId) {
+    return (
+      <div className="pb-6">
+        <BackHeader title={t.objects.form.createTitle} onBack={() => router.push(`/objects/${createdSiteId}`)} />
+
+        <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[640px]">
+          <div>
+            <p className="text-[17px] font-bold">{t.objects.form.createdTitle}</p>
+            <p className="mt-1 text-[14px] font-medium text-text-muted">{t.objects.form.createdHint}</p>
+          </div>
+
+          <SitePhotoUploader companyId={companyId} siteId={createdSiteId} photoPath={null} photoUrl={null} />
+
+          <button
+            type="button"
+            onClick={() => router.push(`/objects/${createdSiteId}`)}
+            className={cn(
+              "mt-2 flex h-[56px] w-full items-center justify-center rounded-[14px]",
+              "bg-brand text-[15px] font-bold text-brand-ink",
+              "transition-transform duration-150 active:scale-[0.98]",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+            )}
+          >
+            {t.objects.form.done}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-6">

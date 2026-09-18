@@ -67,7 +67,7 @@ export default async function HomePage() {
 
       {/* Мобільна колонка — без змін, прихована від lg */}
       <div className="lg:hidden">
-        <WorkTimeCard className="mt-5" openEntry={openEntry} />
+        <WorkTimeCard className="mt-5" openEntry={openEntry} sites={sites} entries={entries} />
 
         <SectionHeader
           className="mt-6"
@@ -94,7 +94,7 @@ export default async function HomePage() {
           смугою на всю ширину (замість вузької картки з порожнечею
           справа), нижче — сітка об'єктів на всю ширину контейнера. */}
       <div className="hidden lg:block lg:mt-6">
-        <WorkTimeCard openEntry={openEntry} />
+        <WorkTimeCard openEntry={openEntry} sites={sites} entries={entries} />
 
         <SectionHeader
           className="mt-8"
