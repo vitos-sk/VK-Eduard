@@ -1,11 +1,14 @@
+import { endOfMonth, startOfMonth } from "date-fns";
+
 import { ObjectsScreen } from "@/components/objects/ObjectsScreen";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { getEntriesFeed } from "@/modules/entries/queries";
+import { getCompanyEntriesInRange, getEntriesFeed } from "@/modules/entries/queries";
 import { aggregateSiteStats } from "@/modules/entries/siteStats";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { toSiteObject } from "@/modules/sites/present";
 import { getAllSites } from "@/modules/sites/queries";
+import { dateKeyOf } from "@/modules/time/calc";
 
 /**
  * Список объектов компании. Фото/звіти в карточке — не из отдельных
@@ -16,9 +19,21 @@ export default async function ObjectsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [sites, entries] = await Promise.all([
+  const isBoss = profile.role === "boss";
+  const now = new Date();
+
+  const [sites, entries, monthEntries] = await Promise.all([
     getAllSites(supabase),
     getEntriesFeed(supabase, profile.id),
+    // Години/люди по об'єктах за поточний місяць — тільки boss (RLS дає всі записи).
+    isBoss
+      ? getCompanyEntriesInRange(
+          supabase,
+          profile.company_id,
+          dateKeyOf(startOfMonth(now)),
+          dateKeyOf(endOfMonth(now)),
+        )
+      : Promise.resolve(undefined),
   ]);
 
   const stats = aggregateSiteStats(entries);
@@ -34,5 +49,12 @@ export default async function ObjectsPage() {
     ),
   );
 
-  return <ObjectsScreen objects={objects} isBoss={profile.role === "boss"} profile={profile} />;
+  return (
+    <ObjectsScreen
+      objects={objects}
+      isBoss={isBoss}
+      profile={profile}
+      initialEntries={monthEntries}
+    />
+  );
 }

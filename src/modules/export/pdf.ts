@@ -77,7 +77,7 @@ export async function buildPdf(
     .font("PTSans-Bold")
     .fontSize(10)
     .text(
-      `${t.admin.dashboard.monthHours}: ${formatHoursShort(totalWorkedMinutes)}`,
+      `${t.export.monthHours}: ${formatHoursShort(totalWorkedMinutes)}`,
       PAGE_MARGIN,
       y + 10,
     );

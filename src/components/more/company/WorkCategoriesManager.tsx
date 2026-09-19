@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { fmt } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { companyStrings as s } from "@/lib/i18n/parts/company";
 import {
   archiveWorkCategory,
   createWorkCategory,
@@ -63,7 +64,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
     const label = name.trim();
 
     if (label === "") {
-      setAddError(t.admin.settings.categoriesNameRequired);
+      setAddError(s.settings.categoriesNameRequired);
       return;
     }
 
@@ -139,9 +140,9 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
 
   return (
     <div className="rounded-[16px] border border-border bg-surface p-4">
-      <p className="text-[16px] font-bold text-text">{t.admin.settings.categoriesTitle}</p>
+      <p className="text-[16px] font-bold text-text">{s.settings.categoriesTitle}</p>
       <p className="mt-1 text-[13px] font-medium text-text-muted">
-        {t.admin.settings.categoriesDescription}
+        {s.settings.categoriesDescription}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
@@ -154,7 +155,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
           onKeyDown={(event) => {
             if (event.key === "Enter") handleAdd();
           }}
-          placeholder={t.admin.settings.categoriesAddPlaceholder}
+          placeholder={s.settings.categoriesAddPlaceholder}
           disabled={isAdding}
           aria-invalid={addError !== null}
           className={cn(inputClassName, addError && "border-danger")}
@@ -172,7 +173,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
           )}
         >
           <Plus className="size-4" strokeWidth={2.5} aria-hidden />
-          {t.admin.settings.categoriesAdd}
+          {s.settings.categoriesAdd}
         </button>
       </div>
 
@@ -180,7 +181,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
 
       {categories.length === 0 ? (
         <p className="mt-4 text-[13px] font-medium text-text-muted">
-          {t.admin.settings.categoriesEmpty}
+          {s.settings.categoriesEmpty}
         </p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
@@ -199,7 +200,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
                   </span>
                   {isArchived && (
                     <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-text-dim">
-                      {t.admin.settings.categoriesArchivedBadge}
+                      {s.settings.categoriesArchivedBadge}
                     </span>
                   )}
                 </div>
@@ -223,8 +224,8 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
                     <Archive className="size-4" strokeWidth={2} aria-hidden />
                   )}
                   {isArchived
-                    ? t.admin.settings.categoriesRestore
-                    : t.admin.settings.categoriesArchive}
+                    ? s.settings.categoriesRestore
+                    : s.settings.categoriesArchive}
                 </button>
               </li>
             );
@@ -235,10 +236,10 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
       <Dialog open={confirmTarget !== null} onOpenChange={(open) => !open && setConfirmTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.admin.settings.categoriesArchiveConfirmTitle}</DialogTitle>
+            <DialogTitle>{s.settings.categoriesArchiveConfirmTitle}</DialogTitle>
             <DialogDescription>
               {confirmTarget
-                ? fmt(t.admin.settings.categoriesArchiveConfirmBody, { name: confirmTarget.label })
+                ? fmt(s.settings.categoriesArchiveConfirmBody, { name: confirmTarget.label })
                 : ""}
             </DialogDescription>
           </DialogHeader>
@@ -257,7 +258,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
               disabled={isArchiving}
               className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
             >
-              {t.admin.settings.categoriesArchiveConfirmAction}
+              {s.settings.categoriesArchiveConfirmAction}
             </button>
           </DialogFooter>
         </DialogContent>

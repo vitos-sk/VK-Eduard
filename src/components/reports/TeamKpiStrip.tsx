@@ -26,7 +26,7 @@ function KpiCell({ icon: Icon, label, value, muted }: KpiCellProps) {
   );
 }
 
-interface AdminKpiStripProps {
+interface TeamKpiStripProps {
   cells: readonly KpiCellProps[];
 }
 
@@ -35,7 +35,7 @@ interface AdminKpiStripProps {
  * трьох однакових плиток-«крапок» — так нульове значення («0 хв») не займає
  * стільки ж місця, скільки й змістовне («1 активний»).
  */
-export function AdminKpiStrip({ cells }: AdminKpiStripProps) {
+export function TeamKpiStrip({ cells }: TeamKpiStripProps) {
   return (
     <div
       className="grid rounded-[16px] border border-border bg-surface"

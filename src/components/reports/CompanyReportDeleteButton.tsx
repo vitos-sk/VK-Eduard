@@ -12,11 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { reportsStrings as s } from "@/lib/i18n/parts/reports";
 import { t } from "@/lib/i18n";
 import { deleteReport } from "@/modules/reports/actions";
 import { cn } from "@/lib/utils";
 
-interface AdminDeleteReportButtonProps {
+interface CompanyReportDeleteButtonProps {
   reportId: string;
   /** Викликається після успішного видалення — прибрати рядок зі списку. */
   onDeleted: (reportId: string) => void;
@@ -28,7 +29,7 @@ interface AdminDeleteReportButtonProps {
  * через `Dialog` (не `window.confirm`). Клік по ній не має спливати на
  * `Link`-обгортку картки, тому `stopPropagation` на самій кнопці.
  */
-export function AdminDeleteReportButton({ reportId, onDeleted, className }: AdminDeleteReportButtonProps) {
+export function CompanyReportDeleteButton({ reportId, onDeleted, className }: CompanyReportDeleteButtonProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -42,7 +43,7 @@ export function AdminDeleteReportButton({ reportId, onDeleted, className }: Admi
       }
 
       setOpen(false);
-      toast(t.admin.reports.deleteSuccess);
+      toast(s.feed.deleteSuccess);
       onDeleted(reportId);
     });
   };
@@ -56,7 +57,7 @@ export function AdminDeleteReportButton({ reportId, onDeleted, className }: Admi
           event.stopPropagation();
           setOpen(true);
         }}
-        aria-label={t.admin.reports.deleteReport}
+        aria-label={s.feed.deleteReport}
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full text-danger",
           "transition-colors duration-150 hover:bg-surface active:bg-surface",
@@ -70,8 +71,8 @@ export function AdminDeleteReportButton({ reportId, onDeleted, className }: Admi
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent onClick={(event) => event.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle>{t.admin.reports.deleteConfirmTitle}</DialogTitle>
-            <DialogDescription>{t.admin.reports.deleteConfirmBody}</DialogDescription>
+            <DialogTitle>{s.feed.deleteConfirmTitle}</DialogTitle>
+            <DialogDescription>{s.feed.deleteConfirmBody}</DialogDescription>
           </DialogHeader>
 
           <DialogFooter>
@@ -88,7 +89,7 @@ export function AdminDeleteReportButton({ reportId, onDeleted, className }: Admi
               disabled={isPending}
               className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
             >
-              {t.admin.reports.deleteConfirmAction}
+              {s.feed.deleteConfirmAction}
             </button>
           </DialogFooter>
         </DialogContent>

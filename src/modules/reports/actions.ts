@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { t } from "@/lib/i18n";
+import { companyStrings } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 
@@ -212,10 +213,10 @@ export async function deleteReport(reportId: string): Promise<ReportActionState>
 
 export type WorkCategoryActionState = { error: string | null };
 
-const CATEGORIES_ADMIN_PATH = "/more/admin/settings";
+const CATEGORIES_SETTINGS_PATH = "/more/company";
 
 /**
- * Категорії робіт показуються не лише в адмінці: список для вибору при
+ * Категорії робіт показуються не лише в налаштуваннях компанії: список для вибору при
  * створенні/правці звіту («Налаштування» задають, чим саме він наповнений)
  * і в фільтрах/детальних сторінках, що читають `getWorkCategories`. Тож
  * створення/архівація/відновлення категорії мусить скидати кеш усіх цих
@@ -223,8 +224,7 @@ const CATEGORIES_ADMIN_PATH = "/more/admin/settings";
  * нова) до ручного рефрешу.
  */
 function revalidateWorkCategoryPaths(): void {
-  revalidatePath(CATEGORIES_ADMIN_PATH);
-  revalidatePath("/more/admin/reports");
+  revalidatePath(CATEGORIES_SETTINGS_PATH);
   revalidatePath("/reports");
   revalidatePath("/reports/new");
   revalidatePath("/reports/[id]", "page");
@@ -253,7 +253,7 @@ export async function createWorkCategory(
   const label = name.trim();
 
   if (label === "") {
-    return { error: t.admin.settings.categoriesNameRequired };
+    return { error: companyStrings.settings.categoriesNameRequired };
   }
 
   const supabase = await createClient();
@@ -267,7 +267,7 @@ export async function createWorkCategory(
     .maybeSingle();
 
   if (lastError) {
-    return { error: t.admin.settings.categoriesSaveError };
+    return { error: companyStrings.settings.categoriesSaveError };
   }
 
   const nextSortOrder = (lastRow?.sort_order ?? -1) + 1;
@@ -279,7 +279,7 @@ export async function createWorkCategory(
     .single();
 
   if (error) {
-    return { error: t.admin.settings.categoriesSaveError };
+    return { error: companyStrings.settings.categoriesSaveError };
   }
 
   revalidateWorkCategoryPaths();
@@ -303,7 +303,7 @@ export async function archiveWorkCategory(categoryId: string): Promise<WorkCateg
     .eq("company_id", profile.company_id);
 
   if (error) {
-    return { error: t.admin.settings.categoriesSaveError };
+    return { error: companyStrings.settings.categoriesSaveError };
   }
 
   revalidateWorkCategoryPaths();
@@ -327,7 +327,7 @@ export async function restoreWorkCategory(categoryId: string): Promise<WorkCateg
     .eq("company_id", profile.company_id);
 
   if (error) {
-    return { error: t.admin.settings.categoriesSaveError };
+    return { error: companyStrings.settings.categoriesSaveError };
   }
 
   revalidateWorkCategoryPaths();

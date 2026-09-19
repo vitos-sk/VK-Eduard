@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { Camera, User } from "lucide-react";
 
-import { AdminDeleteReportButton } from "@/components/more/admin/reports/AdminDeleteReportButton";
+import { CompanyReportDeleteButton } from "@/components/reports/CompanyReportDeleteButton";
 import { MetaRow } from "@/components/shared/MetaRow";
 import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
+import { reportsStrings as s } from "@/lib/i18n/parts/reports";
 import { t } from "@/lib/i18n";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithNames } from "@/modules/reports/types";
@@ -13,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const MAX_VISIBLE_CATEGORIES = 2;
 
-interface AdminReportCardProps {
+interface CompanyReportCardProps {
   report: SiteReportWithNames;
   /** Викликається після успішного видалення — прибрати картку зі списку. */
   onDeleted: (reportId: string) => void;
@@ -25,10 +26,10 @@ interface AdminReportCardProps {
  * видалення — окрема кнопка поза посиланням, щоб не вкладати інтерактивні
  * елементи один в одного.
  */
-export function AdminReportCard({ report, onDeleted }: AdminReportCardProps) {
+export function CompanyReportCard({ report, onDeleted }: CompanyReportCardProps) {
   const state = reportState(report, report.photo_count);
   const dateLabel = formatDayMonth(fromDateKey(report.work_date));
-  const siteName = report.site_name ?? t.admin.reports.noSite;
+  const siteName = report.site_name ?? s.feed.noSite;
   const visibleLabels = report.category_labels.slice(0, MAX_VISIBLE_CATEGORIES);
   const extraCount = report.category_labels.length - visibleLabels.length;
 
@@ -54,7 +55,7 @@ export function AdminReportCard({ report, onDeleted }: AdminReportCardProps) {
           items={[
             { icon: User, label: report.author_full_name },
             ...(report.photo_count > 0
-              ? [{ icon: Camera, label: fmt(t.admin.reports.photosCount, { n: report.photo_count }) }]
+              ? [{ icon: Camera, label: fmt(s.feed.photosCount, { n: report.photo_count }) }]
               : []),
           ]}
         />
@@ -90,7 +91,7 @@ export function AdminReportCard({ report, onDeleted }: AdminReportCardProps) {
         )}
       </Link>
 
-      <AdminDeleteReportButton
+      <CompanyReportDeleteButton
         reportId={report.id}
         onDeleted={onDeleted}
         className="absolute top-3 right-3"

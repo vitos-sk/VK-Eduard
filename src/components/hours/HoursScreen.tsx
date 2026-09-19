@@ -9,8 +9,11 @@ import { DayActions } from "@/components/hours/DayActions";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { SalaryCalculator } from "@/components/hours/SalaryCalculator";
+import { ALL_FILTER, HoursFilters } from "@/components/hours/HoursFilters";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
+import { ExportMenu } from "@/components/reports/ExportMenu";
+import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -18,7 +21,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { t } from "@/lib/i18n";
+import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import { createClient } from "@/lib/supabase/client";
+import { getAllSites, type Site } from "@/modules/sites/queries";
+import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange, getOpenEntry } from "@/modules/entries/queries";
 import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
@@ -60,6 +66,34 @@ export function HoursScreen({
   const [openEntry, setOpenEntry] = useState<WorkEntry | null>(initialOpenEntry);
   const [refreshToken, setRefreshToken] = useState(0);
 
+  // Шеф: «Я / Команда» + фільтри по співробітнику й об'єкту.
+  const [scope, setScope] = useState<"self" | "team">("team");
+  const [workerFilter, setWorkerFilter] = useState(ALL_FILTER);
+  const [siteFilter, setSiteFilter] = useState(ALL_FILTER);
+  const [workers, setWorkers] = useState<readonly Worker[]>([]);
+  const [sites, setSites] = useState<readonly Site[]>([]);
+  const isTeamView = isBoss && scope === "team";
+
+  useEffect(() => {
+    if (!isBoss) return;
+    let cancelled = false;
+
+    getCompanyWorkers(supabase, profile.company_id)
+      .then((data) => {
+        if (!cancelled) setWorkers(data);
+      })
+      .catch(() => {});
+    getAllSites(supabase)
+      .then((data) => {
+        if (!cancelled) setSites(data);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isBoss, supabase, profile.company_id]);
+
   const todayKey = dateKeyOf(new Date());
   const isToday = dateKeyOf(date) === todayKey;
 
@@ -98,6 +132,18 @@ export function HoursScreen({
       cancelled = true;
     };
   }, [supabase, profile.company_id, date, refreshToken]);
+
+  const visibleEntries = useMemo(() => {
+    if (!isBoss) return monthEntries;
+    if (scope === "self") return monthEntries.filter((entry) => entry.author_id === profile.id);
+
+    return monthEntries.filter((entry) => {
+      if (workerFilter !== ALL_FILTER && entry.author_id !== workerFilter) return false;
+      if (siteFilter !== ALL_FILTER && entry.site_id !== siteFilter) return false;
+      return true;
+    });
+  }, [isBoss, scope, monthEntries, workerFilter, siteFilter, profile.id]);
+  const isFiltered = isTeamView && (workerFilter !== ALL_FILTER || siteFilter !== ALL_FILTER);
 
   const handleChanged = useCallback(() => {
     setRefreshToken((token) => token + 1);
@@ -211,6 +257,41 @@ export function HoursScreen({
         </div>
       </div>
 
+      {isBoss && (
+        <div className="flex flex-col gap-3 px-4 pb-4 lg:flex-row lg:items-end lg:gap-4">
+          <SegmentedTabs
+            label={s.scopeLabel}
+            value={scope}
+            onChange={setScope}
+            options={[
+              { value: "team", label: s.scopeTeam },
+              { value: "self", label: s.scopeSelf },
+            ]}
+            className="lg:mx-0 lg:overflow-visible lg:px-0"
+          />
+
+          {isTeamView && (
+            <>
+              <HoursFilters
+                className="lg:w-[460px]"
+                workers={workers.map((w) => ({ id: w.id, name: w.full_name }))}
+                sites={sites.map((site) => ({ id: site.id, name: site.name }))}
+                workerId={workerFilter}
+                siteId={siteFilter}
+                onWorkerChange={setWorkerFilter}
+                onSiteChange={setSiteFilter}
+              />
+              <ExportMenu
+                from={dateKeyOf(startOfMonth(date))}
+                to={dateKeyOf(endOfMonth(date))}
+                workerIds={workerFilter !== ALL_FILTER ? [workerFilter] : undefined}
+                className="lg:mb-0 lg:ml-auto"
+              />
+            </>
+          )}
+        </div>
+      )}
+
       <div className="px-4 lg:hidden">
         {isToday && (
           <DayActions
@@ -225,18 +306,20 @@ export function HoursScreen({
         )}
 
         <SalaryCalculator
+          key={String(isTeamView)}
           className="mt-3"
           monthTitle={getMonthTitle(date)}
           selfId={profile.id}
-          isBoss={isBoss}
+          isBoss={isTeamView}
           companyId={profile.company_id}
-          monthEntries={monthEntries}
+          monthEntries={visibleEntries}
         />
 
         <MonthEntriesTable
           className="mt-3"
-          entries={monthEntries}
-          showAuthor={isBoss}
+          entries={visibleEntries}
+          showAuthor={isTeamView}
+          isFiltered={isFiltered}
           onChanged={handleChanged}
         />
       </div>
@@ -255,17 +338,19 @@ export function HoursScreen({
           {monthSummary && <PeriodView summary={monthSummary} variant="totalOnly" />}
 
           <SalaryCalculator
+          key={String(isTeamView)}
             monthTitle={getMonthTitle(date)}
             selfId={profile.id}
-            isBoss={isBoss}
+            isBoss={isTeamView}
             companyId={profile.company_id}
-            monthEntries={monthEntries}
+            monthEntries={visibleEntries}
           />
         </div>
 
         <MonthEntriesTable
-          entries={monthEntries}
-          showAuthor={isBoss}
+          entries={visibleEntries}
+          showAuthor={isTeamView}
+          isFiltered={isFiltered}
           onChanged={handleChanged}
         />
       </div>

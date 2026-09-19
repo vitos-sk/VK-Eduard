@@ -33,15 +33,6 @@ export async function signIn(
     return { error: t.auth.failed };
   }
 
-  const profile = await getProfile();
-
-  // redirect бросает исключение — он должен быть вне try/catch. Редирект
-  // на адмінку — тільки одразу після входу; подальші заходи на "/" шефа
-  // туди більше не відкидають, він може вільно ходити застосунком.
-  if (profile?.role === "boss" && profile.default_view === "admin") {
-    redirect("/more/admin");
-  }
-
   redirect("/");
 }
 
@@ -82,35 +73,4 @@ export async function updateFullName(
 
   revalidatePath("/more");
   redirect("/more");
-}
-
-export type UpdateDefaultViewState = { error: string | null };
-
-type DefaultView = "app" | "admin";
-
-/**
- * Перемикає, що відкривати одразу після входу — тільки для `boss`
- * (сегмент-контрол на `/more/admin`). Для `worker` поле існує в базі, але
- * ніде не читається — `signIn` перевіряє його тільки для `role === "boss"`.
- */
-export async function updateDefaultView(view: DefaultView): Promise<UpdateDefaultViewState> {
-  const profile = await getProfile();
-
-  if (!profile || profile.role !== "boss") {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ default_view: view })
-    .eq("id", profile.id);
-
-  if (error) {
-    return { error: t.profile.saveError };
-  }
-
-  revalidatePath("/more/admin");
-
-  return { error: null };
 }

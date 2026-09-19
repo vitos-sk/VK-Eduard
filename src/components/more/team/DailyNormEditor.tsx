@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { t } from "@/lib/i18n";
+import { companyStrings as s } from "@/lib/i18n/parts/company";
 import { updateWorkerDailyNorm } from "@/modules/team/actions";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
     const parsed = Number(hours.replace(",", "."));
 
     if (!Number.isFinite(parsed) || parsed < MIN_HOURS || parsed > MAX_HOURS) {
-      setError(t.admin.team.dailyNormInvalid);
+      setError(s.team.dailyNormInvalid);
       return;
     }
 
@@ -58,7 +58,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
       const normalized = minutesToHoursValue(minutes);
       setHours(normalized);
       setSaved(normalized);
-      toast(t.admin.team.dailyNormSaved);
+      toast(s.team.dailyNormSaved);
     });
   };
 
@@ -69,7 +69,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
           className="text-[13px] font-medium text-text-muted"
           htmlFor={`daily-norm-${workerId}`}
         >
-          {t.admin.team.dailyNorm}
+          {s.team.dailyNorm}
         </label>
 
         <input
@@ -92,7 +92,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
             error && "border-danger text-danger",
           )}
         />
-        <span className="text-[13px] font-medium text-text-dim">{t.admin.team.dailyNormUnit}</span>
+        <span className="text-[13px] font-medium text-text-dim">{s.team.dailyNormUnit}</span>
 
         {isDirty && (
           <button
@@ -105,7 +105,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
               "disabled:pointer-events-none disabled:opacity-60",
             )}
           >
-            {t.admin.team.dailyNormSave}
+            {s.team.dailyNormSave}
           </button>
         )}
       </div>

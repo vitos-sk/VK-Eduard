@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { t } from "@/lib/i18n";
+import { companyStrings } from "@/lib/i18n/parts/company";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types.gen";
 import { getProfile } from "@/modules/auth/session";
@@ -137,7 +138,7 @@ const MAX_DAILY_NORM_MINUTES = 1440;
 
 /**
  * Змінює денну норму годин співробітника (`profiles.daily_norm_minutes`) —
- * тільки boss, розділ «Команда» адмінки (`/more/admin/team`). Той самий
+ * тільки boss, розділ «Команда» адмінки (`/more/team`). Той самий
  * патерн, що й `setWorkerActive`: адмінський клієнт обходить RLS повністю,
  * тож роль перевіряємо самі, тут-таки.
  */
@@ -156,7 +157,7 @@ export async function updateWorkerDailyNorm(
     minutes < MIN_DAILY_NORM_MINUTES ||
     minutes > MAX_DAILY_NORM_MINUTES
   ) {
-    return { error: t.admin.team.dailyNormInvalid };
+    return { error: companyStrings.team.dailyNormInvalid };
   }
 
   const admin = createAdminClient();
@@ -167,10 +168,10 @@ export async function updateWorkerDailyNorm(
     .eq("company_id", profile.company_id);
 
   if (error) {
-    return { error: t.admin.team.dailyNormError };
+    return { error: companyStrings.team.dailyNormError };
   }
 
-  revalidatePath("/more/admin/team");
+  revalidatePath("/more/team");
   // Змінена норма — не тільки адмінський список: сам працівник бачить своє
   // `profile.daily_norm_minutes` на «Годинах» (розрахунок місячної норми).
   revalidatePath("/hours");

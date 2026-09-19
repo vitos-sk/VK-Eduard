@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Camera, ChevronRight, FileText } from "lucide-react";
+import { Camera, ChevronRight, Clock, FileText, Users } from "lucide-react";
 
 import { MetaRow } from "@/components/shared/MetaRow";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Thumb } from "@/components/shared/Thumb";
-import { fmt } from "@/lib/format";
+import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { objectsStrings } from "@/lib/i18n/parts/objects";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,8 @@ interface ObjectCardProps {
   object: SiteObject;
   /** Стрелка «›» справа — для списка на экране «Об'єкти». */
   showChevron?: boolean;
+  /** Години й людей за період — boss (метрики з адмінки). */
+  stats?: { minutes: number; workerCount: number };
   className?: string;
 }
 
@@ -20,6 +23,7 @@ interface ObjectCardProps {
 export function ObjectCard({
   object,
   showChevron = false,
+  stats,
   className,
 }: ObjectCardProps) {
   return (
@@ -57,7 +61,7 @@ export function ObjectCard({
             переносится на свою строку, ничего не обрезая. */}
         <div className="mt-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 lg:mt-2">
           <MetaRow
-            className="shrink-0"
+            className={stats ? "flex-wrap gap-y-0.5" : "shrink-0"}
             items={[
               {
                 icon: Camera,
@@ -67,6 +71,15 @@ export function ObjectCard({
                 icon: FileText,
                 label: fmt(t.objects.reportsCount, { n: object.reportsCount }),
               },
+              ...(stats
+                ? [
+                    { icon: Clock, label: formatHoursShort(stats.minutes) },
+                    {
+                      icon: Users,
+                      label: fmt(objectsStrings.workersCount, { n: stats.workerCount }),
+                    },
+                  ]
+                : []),
             ]}
           />
           {object.archivedAt ? (

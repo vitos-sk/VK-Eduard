@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { t } from "@/lib/i18n";
+import { companyStrings as s } from "@/lib/i18n/parts/company";
 import { updateCompanyDailyNorm } from "@/modules/company/actions";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,7 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
     const parsed = Number(hours.replace(",", "."));
 
     if (!Number.isFinite(parsed) || parsed < MIN_HOURS || parsed > MAX_HOURS) {
-      setError(t.admin.settings.dailyNormInvalid);
+      setError(s.settings.dailyNormInvalid);
       return;
     }
 
@@ -57,20 +57,20 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
       const normalized = minutesToHoursValue(minutes);
       setHours(normalized);
       setSaved(normalized);
-      toast(t.admin.settings.dailyNormSaved);
+      toast(s.settings.dailyNormSaved);
     });
   };
 
   return (
     <div className="rounded-[16px] border border-border bg-surface p-4">
-      <p className="text-[16px] font-bold text-text">{t.admin.settings.dailyNormTitle}</p>
+      <p className="text-[16px] font-bold text-text">{s.settings.dailyNormTitle}</p>
       <p className="mt-1 text-[13px] font-medium text-text-muted">
-        {t.admin.settings.dailyNormDescription}
+        {s.settings.dailyNormDescription}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
         <label className="text-[13px] font-medium text-text-muted" htmlFor="company-daily-norm">
-          {t.admin.settings.dailyNormLabel}
+          {s.settings.dailyNormLabel}
         </label>
 
         <input
@@ -101,7 +101,7 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
           )}
         />
         <span className="text-[13px] font-medium text-text-dim">
-          {t.admin.settings.dailyNormUnit}
+          {s.settings.dailyNormUnit}
         </span>
 
         {isDirty && (
@@ -115,7 +115,7 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
               "disabled:pointer-events-none disabled:opacity-60",
             )}
           >
-            {t.admin.settings.dailyNormSave}
+            {s.settings.dailyNormSave}
           </button>
         )}
       </div>

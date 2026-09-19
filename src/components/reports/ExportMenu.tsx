@@ -16,7 +16,7 @@ interface ExportMenuProps {
   kind?: ExportKind;
   /** Экспорт по одному робітнику — для детальної сторінки в «Команді». */
   workerId?: string;
-  /** Мультивибір з чекбоксів в адмінці (`/more/admin`) — пріоритетний над `workerId`. */
+  /** Мультивибір з чекбоксів в адмінці (`/more/team`) — пріоритетний над `workerId`. */
   workerIds?: readonly string[];
   className?: string;
 }
@@ -29,7 +29,7 @@ interface ExportMenuProps {
 export function ExportMenu({ from, to, kind = "hours", workerId, workerIds, className }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const formats = kind === "reports" ? REPORTS_FORMATS : HOURS_FORMATS;
-  const label = kind === "reports" ? t.admin.export.labelReports : t.admin.export.label;
+  const label = kind === "reports" ? t.export.labelReports : t.export.label;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

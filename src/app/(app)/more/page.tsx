@@ -5,13 +5,14 @@ import {
   Info,
   Languages,
   LogOut,
-  ShieldCheck,
+  Building2,
   Users,
 } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { initialsOf } from "@/components/shared/Thumb";
 import { t } from "@/lib/i18n";
+import { companyStrings } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/modules/auth/actions";
 import { requireProfile } from "@/modules/auth/session";
@@ -42,7 +43,7 @@ export default async function MorePage() {
     ...(profile.role === "boss"
       ? [
           { icon: Users, label: t.profile.rows.team, href: "/more/team" },
-          { icon: ShieldCheck, label: t.profile.rows.admin, href: "/more/admin" },
+          { icon: Building2, label: companyStrings.title, href: "/more/company" },
         ]
       : []),
     { icon: Bell, label: t.profile.rows.notifications, href: "/more/notifications" },

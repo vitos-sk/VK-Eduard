@@ -41,7 +41,7 @@ export async function getWorkCategories(
 
 /**
  * Усі категорії компанії — активні й архівовані, для розділу «Налаштування»
- * адмінки (`/more/admin/settings`), де boss бачить і керує повним списком.
+ * сторінки `/more/company`, де boss бачить і керує повним списком.
  * Активні спершу (`archived_at` null раніше в сортуванні), далі за
  * `sort_order` — так само, як `getWorkCategories`, для передбачуваного
  * порядку в UI.

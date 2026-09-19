@@ -4,9 +4,12 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const PAGE_SIZE = 50;
+
 import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
-import { formatHoursShort, formatTimeShort, formatWorkDateShort } from "@/lib/format";
+import { fmt, formatHoursShort, formatTimeShort, formatWorkDateShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { breakMinutes } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
@@ -132,6 +135,8 @@ interface MonthEntriesTableProps {
   showAuthor: boolean;
   /** Вызывается после успешного удаления — родитель перезапрашивает данные. */
   onChanged: () => void;
+  /** Записи відфільтровано — інший текст порожнього стану. */
+  isFiltered?: boolean;
   className?: string;
 }
 
@@ -147,9 +152,20 @@ export function MonthEntriesTable({
   entries,
   showAuthor,
   onChanged,
+  isFiltered = false,
   className,
 }: MonthEntriesTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Новий набір записів (інший місяць/фільтр) — знову з першої сторінки.
+  const [prevEntries, setPrevEntries] = useState(entries);
+  if (prevEntries !== entries && prevEntries.length !== entries.length) {
+    setPrevEntries(entries);
+    setVisibleCount(PAGE_SIZE);
+  } else if (prevEntries !== entries) {
+    setPrevEntries(entries);
+  }
+  const visibleEntries = entries.slice(0, visibleCount);
   return (
     <section
       className={cn(
@@ -161,7 +177,7 @@ export function MonthEntriesTable({
 
       {entries.length === 0 ? (
         <p className="mt-2 text-[14px] font-medium text-text-muted">
-          {t.hours.monthTableEmpty}
+          {isFiltered ? s.emptyFilteredTitle : t.hours.monthTableEmpty}
         </p>
       ) : (
         <div
@@ -186,15 +202,28 @@ export function MonthEntriesTable({
                 <th className="pb-2 pr-3 font-medium">
                   {t.hours.break}
                 </th>
-                <th className="pb-2 font-medium">
+                <th className="pb-2 pr-3 font-medium">
                   {t.hours.monthTableObjectColumn}
                 </th>
+                {showAuthor && (
+                  <>
+                    <th className="pb-2 pr-3 text-right font-medium">
+                      {s.monthTableHoursColumn}
+                    </th>
+                    <th className="hidden pb-2 pr-3 font-medium lg:table-cell">
+                      {s.monthTableSourceColumn}
+                    </th>
+                    <th className="hidden pb-2 font-medium lg:table-cell">
+                      {s.monthTableDescriptionColumn}
+                    </th>
+                  </>
+                )}
                 <th className="pb-2 pl-2" aria-hidden />
               </tr>
             </thead>
 
             <tbody>
-              {entries.map((entry) => {
+              {visibleEntries.map((entry) => {
                 const pauseMinutes = breakMinutes(entry.break_start, entry.break_end);
 
                 return (
@@ -216,9 +245,24 @@ export function MonthEntriesTable({
                     <td className="tabular py-2 pr-3 text-text-muted">
                       {pauseMinutes > 0 ? formatHoursShort(pauseMinutes) : t.common.dash}
                     </td>
-                    <td className="max-w-[140px] truncate py-2">
+                    <td className="max-w-[140px] truncate py-2 pr-3">
                       {entry.site_name ?? t.hours.noObject}
                     </td>
+                    {showAuthor && (
+                      <>
+                        <td className="tabular py-2 pr-3 text-right font-bold">
+                          {entry.total_minutes !== null
+                            ? formatHoursShort(entry.total_minutes)
+                            : t.common.dash}
+                        </td>
+                        <td className="hidden py-2 pr-3 text-text-muted lg:table-cell">
+                          {entry.source === "timer" ? s.sourceTimer : s.sourceManual}
+                        </td>
+                        <td className="hidden max-w-[220px] truncate py-2 text-text-muted lg:table-cell">
+                          {entry.description || s.noDescription}
+                        </td>
+                      </>
+                    )}
                     <td className="py-2 pl-2">
                       {entry.ended_at && (
                         <div className="flex items-center justify-end gap-0.5">
@@ -247,6 +291,27 @@ export function MonthEntriesTable({
       )}
 
       {entries.length > 0 && <HorizontalScrollbar scrollRef={scrollRef} />}
+
+      {entries.length > PAGE_SIZE && (
+        <div className="flex flex-col items-center gap-2 pt-3">
+          <p className="text-[12px] font-medium text-text-muted">
+            {fmt(s.shownCount, { shown: visibleEntries.length, total: entries.length })}
+          </p>
+          {entries.length > visibleEntries.length && (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+              className={cn(
+                "h-10 rounded-full border border-border px-4 text-[13px] font-bold text-text",
+                "transition-colors duration-150 hover:bg-surface-2",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+              )}
+            >
+              {s.loadMore}
+            </button>
+          )}
+        </div>
+      )}
     </section>
   );
 }

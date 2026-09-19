@@ -13,14 +13,14 @@ interface ExportFormatOption {
 
 /** Список форматів для «Годин» — спільний для `ExportMenu` і `ShareWhatsAppButton`. */
 export const HOURS_FORMATS: readonly ExportFormatOption[] = [
-  { format: "csv", label: t.admin.export.csv, icon: Download },
-  { format: "xlsx", label: t.admin.export.xlsx, icon: FileSpreadsheet },
-  { format: "pdf", label: t.admin.export.pdf, icon: FileText },
+  { format: "csv", label: t.export.csv, icon: Download },
+  { format: "xlsx", label: t.export.xlsx, icon: FileSpreadsheet },
+  { format: "pdf", label: t.export.pdf, icon: FileText },
 ];
 
 /** Звіти поки експортуються тільки в CSV — xlsx/pdf під звіти не робили. */
 export const REPORTS_FORMATS: readonly ExportFormatOption[] = [
-  { format: "csv", label: t.admin.export.csv, icon: Download },
+  { format: "csv", label: t.export.csv, icon: Download },
 ];
 
 interface BuildExportUrlParams {

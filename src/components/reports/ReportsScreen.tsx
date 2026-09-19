@@ -21,8 +21,8 @@ import { cn } from "@/lib/utils";
 type ScreenTab = "mine" | "team";
 
 const SCREEN_TAB_OPTIONS: readonly SegmentedOption<ScreenTab>[] = [
-  { value: "mine", label: t.reports.screenTabs.mine },
   { value: "team", label: t.reports.screenTabs.team },
+  { value: "mine", label: t.reports.screenTabs.mine },
 ];
 
 interface ReportsScreenProps {
@@ -40,7 +40,7 @@ interface ReportsScreenProps {
  * вкладок нема, він завжди бачить тільки свою стрічку.
  */
 export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }: ReportsScreenProps) {
-  const [tab, setTab] = useState<ScreenTab>("mine");
+  const [tab, setTab] = useState<ScreenTab>("team");
   const isBoss = profile.role === "boss";
 
   return (

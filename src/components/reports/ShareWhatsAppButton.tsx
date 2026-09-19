@@ -5,7 +5,7 @@ import { ChevronDown, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { t } from "@/lib/i18n";
+import { reportsStrings as s } from "@/lib/i18n/parts/reports";
 import { cn } from "@/lib/utils";
 import {
   buildExportUrl,
@@ -50,7 +50,7 @@ function downloadAndOpenWhatsApp(blob: Blob, fileName: string): void {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 
-  window.open(`https://wa.me/?text=${encodeURIComponent(t.admin.panel.whatsappFallbackText)}`, "_blank");
+  window.open(`https://wa.me/?text=${encodeURIComponent(s.whatsapp.fallbackText)}`, "_blank");
 }
 
 /**
@@ -104,7 +104,7 @@ export function ShareWhatsAppButton({
       downloadAndOpenWhatsApp(blob, fileName);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      toast(t.admin.panel.whatsappError);
+      toast(s.whatsapp.error);
     } finally {
       setIsSharing(false);
     }
@@ -124,7 +124,7 @@ export function ShareWhatsAppButton({
           )}
         >
           <MessageCircle className="size-[16px]" strokeWidth={2} aria-hidden />
-          {t.admin.panel.whatsapp}
+          {s.whatsapp.label}
           <ChevronDown className="size-[14px]" strokeWidth={2} aria-hidden />
         </button>
       </PopoverTrigger>
