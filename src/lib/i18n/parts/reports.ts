@@ -1,6 +1,6 @@
 /**
  * Рядки потоку «Звіти → Команда» (мультивибір, KPI, стрічка звітів компанії,
- * WhatsApp-шеринг). Замінюють `t.admin.panel.*` / `t.admin.reports.*`.
+ * WhatsApp-шеринг). Рядки, що замінили колишні блоки адмінки.
  */
 export const reportsStrings = {
   team: {
@@ -15,7 +15,34 @@ export const reportsStrings = {
     openWorker: "Звіти співробітника",
     workersTitle: "Співробітники",
     reportsTitle: "Звіти компанії",
+    viewPeople: "Люди",
+    viewReports: "Звіти",
+    select: "Вибрати",
+    selectDone: "Готово",
+    summary: "{hours} · {people} · Ø {avg}",
+    peopleCount: "{n} спів.",
+    reportsSummary: "Звітів: {reports} · Фото: {photos}",
+    weekLine: "Цей тиждень: {hours}",
   },
+  export: {
+    open: "Поділитися та експорт",
+    title: "Експорт і надсилання",
+    whatLabel: "Що вивантажити",
+    hours: "Години",
+    reports: "Звіти",
+    whoLabel: "Кого включити",
+    scopeAll: "Усі співробітники",
+    scopeSome: "Обрано: {n}",
+    searchPlaceholder: "Пошук співробітника",
+    formatLabel: "Формат",
+    reportsCsvOnly: "Звіти вивантажуються лише в CSV",
+    summary: "{what} · {period}",
+    download: "Завантажити",
+    downloaded: "Файл завантажено",
+    sendWhatsapp: "Надіслати в WhatsApp",
+    error: "Не вдалося підготувати файл",
+  },
+
   whatsapp: {
     label: "WhatsApp",
     fallbackText: "Файл завантажено — прикріпіть його вручну в чаті",

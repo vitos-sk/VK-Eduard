@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useOpenShift } from "@/components/layout/ShiftContext";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { PostShiftSiteDialog } from "@/components/home/PostShiftSiteDialog";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -41,8 +42,6 @@ import { cn } from "@/lib/utils";
 export type EntryForStats = Pick<WorkEntry, "site_id" | "work_date" | "ended_at" | "total_minutes">;
 
 interface WorkTimeCardProps {
-  /** Открытая смена автора или `null` — источник правды на сервере. */
-  openEntry: WorkEntry | null;
   sites: readonly Site[];
   entries: readonly EntryForStats[];
   className?: string;
@@ -56,7 +55,8 @@ interface WorkTimeCardProps {
  * об'єкта, `PostShiftSiteDialog` пропонує дописати його чи опис одразу
  * після «Завершити роботу», а не мовчки лишає запис висіти без контексту.
  */
-export function WorkTimeCard({ openEntry, sites, entries, className }: WorkTimeCardProps) {
+export function WorkTimeCard({ sites, entries, className }: WorkTimeCardProps) {
+  const openEntry = useOpenShift();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState(() => new Date());

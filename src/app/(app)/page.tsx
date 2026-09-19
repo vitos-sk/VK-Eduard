@@ -7,7 +7,7 @@ import { fmt, formatDateLong } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { initialsOf, requireProfile } from "@/modules/auth/session";
-import { getEntriesFeed, getOpenEntry } from "@/modules/entries/queries";
+import { getEntriesFeed } from "@/modules/entries/queries";
 import { aggregateSiteStats } from "@/modules/entries/siteStats";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { toSiteObject } from "@/modules/sites/present";
@@ -20,8 +20,7 @@ export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [openEntry, entries, sites] = await Promise.all([
-    getOpenEntry(supabase, profile.id),
+  const [entries, sites] = await Promise.all([
     getEntriesFeed(supabase, profile.id),
     getActiveSites(supabase),
   ]);
@@ -67,7 +66,7 @@ export default async function HomePage() {
 
       {/* Мобільна колонка — без змін, прихована від lg */}
       <div className="lg:hidden">
-        <WorkTimeCard className="mt-5" openEntry={openEntry} sites={sites} entries={entries} />
+        <WorkTimeCard className="mt-5" sites={sites} entries={entries} />
 
         <SectionHeader
           className="mt-6"
@@ -94,7 +93,7 @@ export default async function HomePage() {
           смугою на всю ширину (замість вузької картки з порожнечею
           справа), нижче — сітка об'єктів на всю ширину контейнера. */}
       <div className="hidden lg:block lg:mt-6">
-        <WorkTimeCard openEntry={openEntry} sites={sites} entries={entries} />
+        <WorkTimeCard sites={sites} entries={entries} />
 
         <SectionHeader
           className="mt-8"

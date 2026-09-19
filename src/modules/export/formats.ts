@@ -11,7 +11,7 @@ interface ExportFormatOption {
   icon: LucideIcon;
 }
 
-/** Список форматів для «Годин» — спільний для `ExportMenu` і `ShareWhatsAppButton`. */
+/** Список форматів для «Годин» — спільний для `TeamExportSheet`. */
 export const HOURS_FORMATS: readonly ExportFormatOption[] = [
   { format: "csv", label: t.export.csv, icon: Download },
   { format: "xlsx", label: t.export.xlsx, icon: FileSpreadsheet },
@@ -35,8 +35,8 @@ interface BuildExportUrlParams {
 }
 
 /**
- * Єдина точка збірки URL `/api/export` — щоб `ExportMenu` і
- * `ShareWhatsAppButton` не розходились у форматі параметрів.
+ * Єдина точка збірки URL `/api/export` — щоб лист експорту і шеринг
+ * (`shareExport`) не розходились у форматі параметрів.
  */
 export function buildExportUrl({
   from,

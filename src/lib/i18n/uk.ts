@@ -474,7 +474,7 @@ export const uk = {
   },
 
   /**
-   * Підписи експорту (`ExportMenu`, `modules/export/*`): кнопка, формати,
+   * Підписи експорту (`TeamExportSheet`, `modules/export/*`): кнопка, формати,
    * назва аркуша Excel і рядок підсумку в PDF-табелі.
    */
   export: {

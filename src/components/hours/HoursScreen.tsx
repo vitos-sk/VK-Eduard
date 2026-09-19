@@ -3,16 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { addMonths, eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarDays, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 
 import { DayActions } from "@/components/hours/DayActions";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { SalaryCalculator } from "@/components/hours/SalaryCalculator";
 import { ALL_FILTER, HoursFilters } from "@/components/hours/HoursFilters";
+import { useOpenShift } from "@/components/layout/ShiftContext";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import { ExportMenu } from "@/components/reports/ExportMenu";
+import { TeamExportSheet } from "@/components/reports/TeamExportSheet";
+import type { ExportKind } from "@/modules/export/formats";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -26,9 +29,9 @@ import { createClient } from "@/lib/supabase/client";
 import { getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
-import { getCompanyEntriesInRange, getOpenEntry } from "@/modules/entries/queries";
+import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
-import type { WorkEntry, WorkEntryWithNames } from "@/modules/entries/types";
+import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +44,6 @@ interface HoursScreenProps {
   profile: Profile;
   /** Сегодняшняя дата — с сервера, чтобы первый экран не мигал пустотой. */
   initialDate: string;
-  initialOpenEntry: WorkEntry | null;
 }
 
 /**
@@ -53,9 +55,11 @@ interface HoursScreenProps {
 export function HoursScreen({
   profile,
   initialDate,
-  initialOpenEntry,
 }: HoursScreenProps) {
   const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
+  // Та сама відкрита зміна, що й на «Головній» і в листі «+» — з `ShiftProvider`.
+  const openEntry = useOpenShift();
 
   const isBoss = profile.role === "boss";
 
@@ -63,12 +67,14 @@ export function HoursScreen({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
-  const [openEntry, setOpenEntry] = useState<WorkEntry | null>(initialOpenEntry);
   const [refreshToken, setRefreshToken] = useState(0);
 
   // Шеф: «Я / Команда» + фільтри по співробітнику й об'єкту.
   const [scope, setScope] = useState<"self" | "team">("team");
   const [workerFilter, setWorkerFilter] = useState(ALL_FILTER);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportKind, setExportKind] = useState<ExportKind>("hours");
+  const [exportIds, setExportIds] = useState<string[]>([]);
   const [siteFilter, setSiteFilter] = useState(ALL_FILTER);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [sites, setSites] = useState<readonly Site[]>([]);
@@ -97,25 +103,6 @@ export function HoursScreen({
   const todayKey = dateKeyOf(new Date());
   const isToday = dateKeyOf(date) === todayKey;
 
-  // Открытую смену держим отдельно от «дня»: она может быть заведена под
-  // вчерашней датой (ночная смена, ещё не завершена) и не попасть в список
-  // записей за сегодня, но кнопки на этом экране всё равно должны её видеть.
-  useEffect(() => {
-    let cancelled = false;
-
-    getOpenEntry(supabase, profile.id)
-      .then((entry) => {
-        if (!cancelled) setOpenEntry(entry);
-      })
-      .catch(() => {
-        // Сеть моргнула — старое значение openEntry остаётся на экране.
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase, profile.id, refreshToken]);
-
   // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты.
   useEffect(() => {
     let cancelled = false;
@@ -131,7 +118,7 @@ export function HoursScreen({
     return () => {
       cancelled = true;
     };
-  }, [supabase, profile.company_id, date, refreshToken]);
+  }, [supabase, profile.company_id, date, refreshToken, openEntry?.id]);
 
   const visibleEntries = useMemo(() => {
     if (!isBoss) return monthEntries;
@@ -147,7 +134,8 @@ export function HoursScreen({
 
   const handleChanged = useCallback(() => {
     setRefreshToken((token) => token + 1);
-  }, []);
+    router.refresh();
+  }, [router]);
 
   const shiftMonth = (direction: 1 | -1) => {
     setDate((current) => addMonths(current, direction));
@@ -281,15 +269,39 @@ export function HoursScreen({
                 onWorkerChange={setWorkerFilter}
                 onSiteChange={setSiteFilter}
               />
-              <ExportMenu
-                from={dateKeyOf(startOfMonth(date))}
-                to={dateKeyOf(endOfMonth(date))}
-                workerIds={workerFilter !== ALL_FILTER ? [workerFilter] : undefined}
-                className="lg:mb-0 lg:ml-auto"
-              />
+              <button
+                type="button"
+                onClick={() => {
+                  setExportIds(workerFilter !== ALL_FILTER ? [workerFilter] : []);
+                  setIsExportOpen(true);
+                }}
+                className={cn(
+                  "flex h-10 items-center justify-center gap-2 rounded-[12px] border border-border px-4",
+                  "text-[14px] font-bold text-text transition-transform duration-150 active:scale-[0.98]",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:ml-auto",
+                )}
+              >
+                <Share2 className="size-4" strokeWidth={2.2} aria-hidden />
+                {t.export.label}
+              </button>
             </>
           )}
         </div>
+      )}
+
+      {isBoss && (
+        <TeamExportSheet
+          open={isExportOpen}
+          onOpenChange={setIsExportOpen}
+          from={dateKeyOf(startOfMonth(date))}
+          to={dateKeyOf(endOfMonth(date))}
+          periodLabel={getMonthTitle(date)}
+          workers={workers.map((worker) => ({ id: worker.id, name: worker.full_name }))}
+          workerIds={exportIds}
+          onWorkerIdsChange={setExportIds}
+          kind={exportKind}
+          onKindChange={setExportKind}
+        />
       )}
 
       <div className="px-4 lg:hidden">
