@@ -129,7 +129,11 @@ export function TeamExportSheet({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent
         aria-describedby={undefined}
-        className="mx-auto max-w-[430px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]"
+        className={cn(
+          "mx-auto max-w-[430px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]",
+          // Таб-бар (z-60) лежить над листом: лишаємо під нього місце, як у листі «+».
+          "pb-[calc(88px+env(safe-area-inset-bottom))] phone:pb-[calc(88px+1.5rem)] lg:pb-0",
+        )}
       >
         <div className="flex items-center gap-1 px-2 pt-3">
           <DrawerClose
@@ -243,7 +247,7 @@ export function TeamExportSheet({
           </section>
         </div>
 
-        <div className="space-y-2 border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <div className="space-y-2 border-t border-border px-4 pt-3 pb-3 lg:pb-4">
           <button
             type="button"
             onClick={() => run("download")}

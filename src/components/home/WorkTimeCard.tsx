@@ -251,7 +251,7 @@ export function WorkTimeCard({ sites, entries, className }: WorkTimeCardProps) {
       </div>
 
       {isRunning && (
-        <p className="tabular mt-4 text-center text-[40px] leading-none font-extrabold tracking-[-0.02em] lg:text-[32px]">
+        <p suppressHydrationWarning className="tabular mt-4 text-center text-[40px] leading-none font-extrabold tracking-[-0.02em] lg:text-[32px]">
           {formatDuration(workedSec)}
         </p>
       )}
