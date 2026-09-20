@@ -3,6 +3,8 @@ import { Camera, ChevronRight, Clock, FileText, Users } from "lucide-react";
 
 import { MetaRow } from "@/components/shared/MetaRow";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Thumb } from "@/components/shared/Thumb";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -27,19 +29,19 @@ export function ObjectCard({
   className,
 }: ObjectCardProps) {
   return (
-    <Link
-      href={`/objects/${object.id}`}
+    <Card
+      asChild
+      interactive
+      elevated
       className={cn(
-        "flex w-full items-stretch gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
-        "transition-transform duration-150 active:scale-[0.98]",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        "flex w-full items-stretch gap-3",
         "lg:flex-col lg:items-stretch lg:gap-0 lg:overflow-hidden lg:p-0",
-        "lg:transition-all lg:duration-150 lg:active:scale-100",
-        "lg:hover:-translate-y-0.5 lg:hover:border-text-dim/40 lg:hover:shadow-md",
+        "lg:hover:-translate-y-0.5 lg:hover:border-border-strong lg:hover:shadow-md lg:active:scale-100",
         object.archivedAt && "opacity-60",
         className,
       )}
     >
+    <Link href={`/objects/${object.id}`}>
       <Thumb
         name={object.name}
         gradient={object.gradient}
@@ -83,9 +85,7 @@ export function ObjectCard({
             ]}
           />
           {object.archivedAt ? (
-            <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">
-              {t.objects.archivedBadge}
-            </span>
+            <Badge>{t.objects.archivedBadge}</Badge>
           ) : (
             <StatusBadge status={object.status} />
           )}
@@ -100,5 +100,6 @@ export function ObjectCard({
         />
       )}
     </Link>
+    </Card>
   );
 }

@@ -30,17 +30,20 @@ const token = (name) => {
   if (!match) throw new Error(`Токен --${name} не найден в tokens.css`);
   return match[1].trim();
 };
-const BG = token("brand-deep");
+const BG = token("primary");
 const BRAND = token("accent");
-const INK = token("on-scrim");
+const INK = token("on-primary");
+/** Сплэш встречает светлым экраном приложения — тот же фон, что `background_color` манифеста. */
+const SPLASH_BG = token("bg");
+const SPLASH_INK = token("text");
 
 /**
  * Знак `K` в системе координат 100×100 — те же path, что в `Logo.tsx`,
  * и его bbox (низ срезан по диагонали, поэтому высота не ровно 100).
  */
 const MARK_PATHS = [
-  { d: "M0 0h32.6v36.9L68.4 0H100v17.1L24.6 98.4H0Z", fill: INK },
-  { d: "M71.1 69.5 98.4 98.4H46Z", fill: BRAND },
+  { d: "M0 0h32.6v36.9L68.4 0H100v17.1L24.6 98.4H0Z", role: "ink" },
+  { d: "M71.1 69.5 98.4 98.4H46Z", role: "brand" },
 ];
 const MARK_BOX = { x: 0, y: 0, w: 100, h: 98.4 };
 
@@ -51,12 +54,12 @@ const MARK_BOX = { x: 0, y: 0, w: 100, h: 98.4 };
  * Именно ширина, а не «вписать целиком»: знак шире, чем выше, и подгонка
  * по высоте делала бы его визуально громоздким.
  */
-function markSvg({ w, h, ratio, bg = BG }) {
+function markSvg({ w, h, ratio, bg = BG, ink = INK }) {
   const scale = (Math.min(w, h) * ratio) / MARK_BOX.w;
   const tx = (w - MARK_BOX.w * scale) / 2 - MARK_BOX.x * scale;
   const ty = (h - MARK_BOX.h * scale) / 2 - MARK_BOX.y * scale;
   const paths = MARK_PATHS.map(
-    (p) => `<path d="${p.d}" fill="${p.fill}"/>`,
+    (p) => `<path d="${p.d}" fill="${p.role === "ink" ? ink : BRAND}"/>`,
   ).join("");
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
@@ -199,7 +202,7 @@ async function main() {
     const w = cssW * dpr;
     const h = cssH * dpr;
     written.push(
-      await png(markSvg({ w, h, ratio: 0.34 }), `splash/${w}x${h}.png`),
+      await png(markSvg({ w, h, ratio: 0.34, bg: SPLASH_BG, ink: SPLASH_INK }), `splash/${w}x${h}.png`),
     );
   }
 

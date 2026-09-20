@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 export type ThumbSize = "sm" | "md" | "wide";
 
 const sizeStyles: Record<ThumbSize, string> = {
-  sm: "size-[48px] rounded-[10px] text-[15px]",
-  md: "h-[72px] w-[88px] rounded-[12px] text-[20px]",
-  wide: "h-[84px] w-[104px] rounded-[12px] text-[22px]",
+  sm: "size-[48px] rounded-md text-[15px]",
+  md: "h-[72px] w-[88px] rounded-ctl text-[20px]",
+  wide: "h-[84px] w-[104px] rounded-ctl text-[22px]",
 };
 
 /** «Villa Project» → «VP», «Reimond» → «RE». Максимум две буквы. */
