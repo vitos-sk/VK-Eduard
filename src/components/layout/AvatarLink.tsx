@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface AvatarLinkProps {
   initials: string;
@@ -16,18 +17,10 @@ interface AvatarLinkProps {
  */
 export function AvatarLink({ initials, className }: AvatarLinkProps) {
   return (
-    <Link
-      href="/more"
-      aria-label={t.common.profile}
-      className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2",
-        "text-[15px] font-bold text-text",
-        "transition-transform duration-150 active:scale-95",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-        className,
-      )}
-    >
-      {initials}
-    </Link>
+    <Button asChild variant="secondary" size="icon" className={cn("border-border", className)}>
+      <Link href="/more" aria-label={t.common.profile}>
+        {initials}
+      </Link>
+    </Button>
   );
 }

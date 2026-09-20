@@ -16,7 +16,7 @@ export const quickActions: readonly QuickAction[] = [
     id: "manual_time",
     title: t.quick.manualTime.title,
     description: t.quick.manualTime.description,
-    accent: "var(--brand)",
+    accent: "var(--primary)",
     href: "/time/manual",
   },
   {
@@ -44,7 +44,7 @@ export const quickActions: readonly QuickAction[] = [
     id: "dashboard",
     title: t.quick.dashboard.title,
     description: t.quick.dashboard.description,
-    accent: "var(--brand)",
+    accent: "var(--primary)",
     href: "/dashboard",
   },
 ];

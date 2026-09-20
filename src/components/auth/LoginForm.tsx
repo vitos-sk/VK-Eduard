@@ -7,6 +7,8 @@ import { Logo } from "@/components/brand/Logo";
 import { signIn, type SignInState } from "@/modules/auth/actions";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const initialState: SignInState = { error: null };
 
@@ -53,7 +55,7 @@ export function LoginForm() {
       <p
         aria-live="polite"
         className={cn(
-          "mt-4 min-h-[20px] text-[14px] font-semibold text-danger",
+          "mt-4 min-h-[20px] text-[14px] font-semibold text-danger-fg",
           !state.error && "sr-only",
         )}
       >
@@ -75,16 +77,11 @@ function Field({
       <span className="text-[13px] font-bold tracking-wide text-text-muted uppercase">
         {label}
       </span>
-      <input
+      <Input
         {...input}
         name={name}
         required
-        // 16px и больше — иначе iOS зумит страницу при фокусе в поле
-        className={cn(
-          "h-14 rounded-[14px] border border-border bg-surface-2 px-4",
-          "text-[16px] font-semibold text-text placeholder:text-text-muted",
-          "focus-visible:border-brand focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand",
-        )}
+        size="lg"
       />
     </label>
   );
@@ -94,18 +91,8 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className={cn(
-        "mt-6 flex h-14 w-full items-center justify-center rounded-[14px]",
-        "bg-brand text-[17px] font-bold text-brand-ink",
-        "transition-transform duration-150 active:scale-[0.98]",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-        "disabled:opacity-60",
-      )}
-    >
+    <Button size="xl" block className="mt-6" type="submit" disabled={pending}>
       {pending ? t.auth.submitting : t.auth.submit}
-    </button>
+    </Button>
   );
 }

@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uploadSitePhoto } from "@/modules/media/photos";
 import type { Database } from "@/lib/supabase/types.gen";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -88,17 +89,13 @@ export function SitePhotoUploader({
 
   return (
     <div className={cn("flex items-center gap-4", className)}>
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="bare"
         onClick={() => inputRef.current?.click()}
         disabled={isUploading}
         aria-label={path ? t.objects.form.changePhoto : t.objects.form.addPhoto}
-        className={cn(
-          "relative size-20 shrink-0 overflow-hidden rounded-full border border-border bg-surface-2",
-          "transition-transform duration-150 active:scale-95",
-          "disabled:pointer-events-none disabled:opacity-60",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-        )}
+        className="relative size-20 shrink-0 justify-center overflow-hidden rounded-full border-border"
       >
         {url && (
           // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
@@ -107,13 +104,13 @@ export function SitePhotoUploader({
 
         <span
           className={cn(
-            "absolute inset-0 flex items-center justify-center bg-black/40 text-white",
+            "absolute inset-0 flex items-center justify-center bg-scrim text-on-scrim",
             url && "opacity-0 transition-opacity duration-150 hover:opacity-100",
           )}
         >
           <Camera className="size-5" strokeWidth={2} aria-hidden />
         </span>
-      </button>
+      </Button>
 
       <div>
         <p className="text-[14px] font-bold">

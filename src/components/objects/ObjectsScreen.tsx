@@ -26,6 +26,7 @@ import type { WorkEntryWithNames } from "@/modules/entries/types";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
+import { Button } from "@/components/ui/button";
 
 /** «Всі» + три статуса объектов из справочника 3.4. */
 type ObjectFilter = "all" | "in_progress" | "not_started" | "completed";
@@ -130,17 +131,11 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
         action={
           <div className="flex items-center gap-2">
             {isBoss && (
-              <Link
-                href="/objects/new"
-                aria-label={t.objects.addObject}
-                className={cn(
-                  "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
-                  "transition-transform duration-150 active:scale-95",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                )}
-              >
+              <Button asChild variant="accent" size="icon" aria-label={t.objects.addObject}>
+                <Link href="/objects/new">
                 <Plus className="size-6" strokeWidth={2.6} aria-hidden />
-              </Link>
+                </Link>
+              </Button>
             )}
             <AvatarLink initials={initialsOf(profile)} />
           </div>

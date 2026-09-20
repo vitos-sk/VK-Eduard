@@ -5,7 +5,9 @@ import { toast } from "sonner";
 
 import { companyStrings as s } from "@/lib/i18n/parts/company";
 import { updateCompanyDailyNorm } from "@/modules/company/actions";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface CompanyDailyNormFormProps {
   initialMinutes: number;
@@ -62,7 +64,7 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
   };
 
   return (
-    <div className="rounded-[16px] border border-border bg-surface p-4">
+    <Card>
       <p className="text-[16px] font-bold text-text">{s.settings.dailyNormTitle}</p>
       <p className="mt-1 text-[13px] font-medium text-text-muted">
         {s.settings.dailyNormDescription}
@@ -73,7 +75,7 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
           {s.settings.dailyNormLabel}
         </label>
 
-        <input
+        <Input
           id="company-daily-norm"
           type="number"
           inputMode="decimal"
@@ -87,40 +89,20 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
           }}
           disabled={isPending}
           aria-invalid={error !== null}
-          className={cn(
-            "h-9 w-16 rounded-[10px] border border-border bg-surface-2 px-2 text-center",
-            "text-[14px] font-bold text-text outline-none transition-colors",
-            "focus-visible:border-brand",
-            "disabled:opacity-60",
-            // Текст у полі рендериться на bg-surface-2 (фон самого інпута), де
-            // --danger дає лише 3.86:1 — нижче порога 4.5:1. Бордер лишаємо
-            // токеном (для 3px+ ліній поріг 3:1, і без нього виникне непослідовність
-            // з іншими invalid-полями), а колір тексту — локальний світліший
-            // відтінок, без зміни глобального токена.
-            error && "border-danger text-[#f4897b]",
-          )}
+          className="h-ctl-sm w-20 px-2 text-center text-[14px]"
         />
         <span className="text-[13px] font-medium text-text-dim">
           {s.settings.dailyNormUnit}
         </span>
 
         {isDirty && (
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isPending}
-            className={cn(
-              "h-9 shrink-0 rounded-[10px] bg-brand px-3 text-[13px] font-bold text-brand-ink",
-              "transition-transform duration-150 hover:brightness-110 active:scale-[0.97]",
-              "disabled:pointer-events-none disabled:opacity-60",
-            )}
-          >
+          <Button size="sm" onClick={handleSave} disabled={isPending}>
             {s.settings.dailyNormSave}
-          </button>
+          </Button>
         )}
       </div>
 
-      {error && <p className="mt-2 text-[12px] font-semibold text-danger">{error}</p>}
-    </div>
+      {error && <p className="mt-2 text-[12px] font-semibold text-danger-fg">{error}</p>}
+    </Card>
   );
 }

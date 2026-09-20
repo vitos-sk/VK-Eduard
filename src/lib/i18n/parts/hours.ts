@@ -21,5 +21,6 @@ export const hoursStrings = {
   emptyFilteredHint: "Спробуйте скинути фільтри або обрати інший місяць",
   loadMore: "Показати ще",
   shownCount: "Показано {shown} із {total}",
+  entriesTotal: "Разом {total} · {n}",
   exportHint: "Табель за обраний місяць",
 } as const;

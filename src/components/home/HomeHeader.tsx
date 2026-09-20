@@ -4,6 +4,7 @@ import { Logo } from "@/components/brand/Logo";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Шапка главной: логотип «K group.» слева, колокольчик и аватар справа.
@@ -38,17 +39,9 @@ export function HomeHeader({
       </p>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label={t.common.notifications}
-          className={cn(
-            "flex size-11 items-center justify-center rounded-full text-text",
-            "transition-colors duration-150 active:bg-surface-2",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
+        <Button variant="ghost" size="icon" aria-label={t.common.notifications}>
           <Bell className="size-6" strokeWidth={2} aria-hidden />
-        </button>
+        </Button>
 
         <AvatarLink initials={initials} />
       </div>

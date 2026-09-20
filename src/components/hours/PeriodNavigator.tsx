@@ -4,6 +4,8 @@ import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface PeriodNavigatorProps {
   /** «Середа, 30 липня 2025», «28 липня — 3 серпня», «Липень 2025». */
@@ -21,12 +23,7 @@ export function PeriodNavigator({
   className,
 }: PeriodNavigatorProps) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-[16px] border border-border bg-surface px-2 py-2",
-        className,
-      )}
-    >
+    <Card padding="none" className={cn("flex items-center gap-2 px-2 py-2", className)}>
       <ArrowButton
         label={t.hours.prevPeriod}
         icon={ChevronLeft}
@@ -35,7 +32,7 @@ export function PeriodNavigator({
 
       <p className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-[15px] font-bold">
         <CalendarDays
-          className="size-[18px] shrink-0 text-brand"
+          className="size-[18px] shrink-0 text-primary"
           strokeWidth={2}
           aria-hidden
         />
@@ -47,7 +44,7 @@ export function PeriodNavigator({
         icon={ChevronRight}
         onClick={onNext}
       />
-    </div>
+    </Card>
   );
 }
 
@@ -61,17 +58,14 @@ function ArrowButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon"
+      className="rounded-ctl"
       onClick={onClick}
       aria-label={label}
-      className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-[12px] text-text",
-        "transition-colors duration-150 active:bg-surface-2",
-        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-      )}
     >
       <Icon className="size-5" strokeWidth={2.4} aria-hidden />
-    </button>
+    </Button>
   );
 }

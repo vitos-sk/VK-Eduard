@@ -31,7 +31,7 @@ export function LogoMark({
         fill="currentColor"
       />
       {/* Пирамидка в вырезе — единственный жёлтый элемент знака */}
-      <path d="M71.1 69.5 98.4 98.4H46Z" fill="var(--brand)" />
+      <path d="M71.1 69.5 98.4 98.4H46Z" fill="var(--accent)" />
     </svg>
   );
 }
@@ -56,7 +56,7 @@ export function Logo({
         style={{ fontSize: size }}
       >
         {t.common.appWordmark}
-        <span className="text-brand">.</span>
+        <span className="text-primary">.</span>
       </span>
     </div>
   );

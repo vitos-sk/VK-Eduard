@@ -3,6 +3,7 @@
 import { t } from "@/lib/i18n";
 import type { WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
+import { Chip } from "@/components/ui/chip";
 
 interface WorkCategoryChipsProps {
   categories: readonly WorkCategory[];
@@ -37,26 +38,17 @@ export function WorkCategoryChips({
         const selected = value.includes(category.id);
 
         return (
-          <button
+          <Chip
             key={category.id}
-            type="button"
+            selected={selected}
             disabled={readOnly}
+            className={cn(readOnly && "disabled:opacity-100")}
             onClick={() => {
               onChange(selected ? value.filter((id) => id !== category.id) : [...value, category.id]);
             }}
-            aria-pressed={selected}
-            className={cn(
-              "flex h-9 items-center rounded-full border px-3 text-[13px] font-bold",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-              !readOnly && "transition-transform duration-150 active:scale-95",
-              selected
-                ? "border-brand bg-brand text-brand-ink"
-                : "border-border bg-surface-2 text-text",
-              readOnly && "pointer-events-none",
-            )}
           >
             {category.label}
-          </button>
+          </Chip>
         );
       })}
     </div>

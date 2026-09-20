@@ -15,7 +15,8 @@ import { t } from "@/lib/i18n";
 import type { WorkStatus } from "@/lib/types";
 import { createSite, updateSite } from "@/modules/sites/actions";
 import type { Site } from "@/modules/sites/queries";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
   { value: "not_started", label: t.status.not_started },
@@ -23,12 +24,6 @@ const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
   { value: "paused", label: t.status.paused },
   { value: "completed", label: t.status.completed },
 ];
-
-const inputClassName = cn(
-  "h-[52px] w-full rounded-[14px] border border-border bg-surface px-3",
-  "text-[15px] font-bold text-text placeholder:text-text-dim outline-none",
-  "focus-visible:border-brand",
-);
 
 interface ObjectFormProps {
   /** Не задан — форма створення, задан — редагування цього об'єкта. */
@@ -94,18 +89,9 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
 
           <SitePhotoUploader companyId={companyId} siteId={createdSiteId} photoPath={null} photoUrl={null} />
 
-          <button
-            type="button"
-            onClick={() => router.push(`/objects/${createdSiteId}`)}
-            className={cn(
-              "mt-2 flex h-[56px] w-full items-center justify-center rounded-[14px]",
-              "bg-brand text-[15px] font-bold text-brand-ink",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
+          <Button size="xl" block className="mt-2" onClick={() => router.push(`/objects/${createdSiteId}`)}>
             {t.objects.form.done}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -129,32 +115,29 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
         )}
 
         <Field label={t.objects.form.nameLabel}>
-          <input
+          <Input
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={t.objects.form.namePlaceholder}
             aria-invalid={!isValid}
-            className={inputClassName}
-          />
+                      />
         </Field>
 
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4">
           <Field label={t.objects.form.kindLabel}>
-            <input
+            <Input
               value={kind}
               onChange={(event) => setKind(event.target.value)}
               placeholder={t.objects.form.kindPlaceholder}
-              className={inputClassName}
-            />
+                          />
           </Field>
 
           <Field label={t.objects.form.addressLabel}>
-            <input
+            <Input
               value={address}
               onChange={(event) => setAddress(event.target.value)}
               placeholder={t.objects.form.addressPlaceholder}
-              className={inputClassName}
-            />
+                          />
           </Field>
         </div>
 
@@ -167,20 +150,9 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
           />
         </Field>
 
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!isValid || isPending}
-          className={cn(
-            "mt-2 flex h-[56px] w-full items-center justify-center rounded-[14px]",
-            "bg-brand text-[15px] font-bold text-brand-ink",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "disabled:pointer-events-none disabled:opacity-60",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
+        <Button size="xl" block className="mt-2" onClick={handleSave} disabled={!isValid || isPending}>
           {t.objects.form.save}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -7,17 +7,18 @@ import { toast } from "sonner";
 
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { t } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 import { setEntrySite, updateEntryDescription } from "@/modules/entries/actions";
 import type { Site } from "@/modules/sites/queries";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/input";
 
 interface PostShiftSiteDialogProps {
   open: boolean;
@@ -86,85 +87,51 @@ export function PostShiftSiteDialog({
 
   return (
     <>
-      <Dialog open={open && !isPickerOpen} onOpenChange={(next) => !next && close()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.home.postShift.title}</DialogTitle>
-            <DialogDescription>{t.home.postShift.body}</DialogDescription>
-          </DialogHeader>
+      <Modal open={open && !isPickerOpen} onOpenChange={(next) => !next && close()}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>{t.home.postShift.title}</ModalTitle>
+            <ModalDescription>{t.home.postShift.body}</ModalDescription>
+          </ModalHeader>
 
           {isWriting ? (
             <div className="flex flex-col gap-3">
-              <textarea
+              <Textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 rows={3}
                 autoFocus
                 placeholder={t.home.postShift.placeholder}
-                className={cn(
-                  "w-full resize-none rounded-[16px] border border-border bg-surface p-4",
-                  "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-                  "outline-none focus-visible:border-brand",
-                )}
               />
 
-              <DialogFooter>
-                <button
-                  type="button"
-                  onClick={close}
-                  className="flex h-12 items-center justify-center rounded-[14px] border border-border text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98]"
-                >
+              <ModalFooter>
+                <Button variant="outline" onClick={close}>
                   {t.home.postShift.skip}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDescriptionSave}
-                  disabled={isPending || description.trim() === ""}
-                  className="flex h-12 items-center justify-center rounded-[14px] bg-brand text-[15px] font-bold text-brand-ink transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
-                >
+                </Button>
+                <Button onClick={handleDescriptionSave} disabled={isPending || description.trim() === ""}>
                   {t.home.postShift.save}
-                </button>
-              </DialogFooter>
+                </Button>
+              </ModalFooter>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setIsPickerOpen(true)}
-                className={cn(
-                  "flex h-12 items-center gap-3 rounded-[14px] border border-border bg-surface-2 px-4",
-                  "text-[15px] font-bold text-text",
-                  "transition-transform duration-150 active:scale-[0.98]",
-                )}
-              >
-                <Building2 className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
+              <Button variant="secondary" className="gap-3" onClick={() => setIsPickerOpen(true)}>
+                <Building2 className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
                 {t.home.postShift.pickAction}
-              </button>
+              </Button>
 
-              <button
-                type="button"
-                onClick={() => setIsWriting(true)}
-                className={cn(
-                  "flex h-12 items-center gap-3 rounded-[14px] border border-border bg-surface-2 px-4",
-                  "text-[15px] font-bold text-text",
-                  "transition-transform duration-150 active:scale-[0.98]",
-                )}
-              >
-                <PenLine className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
+              <Button variant="secondary" className="gap-3" onClick={() => setIsWriting(true)}>
+                <PenLine className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
                 {t.home.postShift.writeAction}
-              </button>
+              </Button>
 
-              <button
-                type="button"
-                onClick={close}
-                className="mt-1 h-10 text-[13px] font-semibold text-text-muted"
-              >
+              <Button variant="ghost" size="sm" className="mt-1 text-text-muted" onClick={close}>
                 {t.home.postShift.skip}
-              </button>
+              </Button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </ModalContent>
+      </Modal>
 
       <ObjectPickerDrawer
         open={isPickerOpen}

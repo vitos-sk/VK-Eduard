@@ -11,6 +11,7 @@ import { t } from "@/lib/i18n";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithNames } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 const MAX_VISIBLE_CATEGORIES = 2;
 
@@ -40,7 +41,7 @@ export function CompanyReportCard({ report, onDeleted }: CompanyReportCardProps)
         className={cn(
           "block rounded-[12px] border border-border bg-surface-2 p-4 pr-12",
           "transition-transform duration-150 active:scale-[0.99]",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           state === "no_description" && "opacity-80",
         )}
       >
@@ -79,9 +80,7 @@ export function CompanyReportCard({ report, onDeleted }: CompanyReportCardProps)
         )}
 
         {state === "no_description" && (
-          <span className="mt-2 inline-block rounded-[8px] bg-warning/12 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-warning uppercase">
-            {t.reports.noDescriptionBadge}
-          </span>
+          <Badge variant="warning" className="mt-2">{t.reports.noDescriptionBadge}</Badge>
         )}
 
         {state === "ready" && report.description !== "" && (

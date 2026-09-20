@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/modules/auth/profile";
 import { signOut } from "@/modules/auth/actions";
+import { Button } from "@/components/ui/button";
 
 interface DesktopSidebarProps {
   profile: Profile;
@@ -34,52 +35,50 @@ export function DesktopSidebar({ profile, onFabClick }: DesktopSidebarProps) {
             item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           const Icon = item.icon;
           return (
-            <Link
+            <Button
               key={item.href}
-              href={item.href}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "flex h-11 items-center gap-3 rounded-[10px] px-2 text-[14px] font-bold",
-                "transition-colors duration-150",
-                isActive
-                  ? "bg-brand text-brand-ink"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text",
-              )}
+              asChild
+              variant={isActive ? "primary" : "ghost"}
+              size="md"
+              className={cn("justify-start gap-3 rounded-md px-2", !isActive && "text-text-muted")}
             >
-              <Icon className="size-[18px] shrink-0" strokeWidth={2.2} aria-hidden />
-              {item.label}
-            </Link>
+              <Link href={item.href} aria-current={isActive ? "page" : undefined}>
+                <Icon className="size-[18px] shrink-0" strokeWidth={2.2} aria-hidden />
+                {item.label}
+              </Link>
+            </Button>
           );
         })}
 
         {profile.role === "boss" && (
-          <Link
-            href="/dashboard"
-            aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
+          <Button
+            asChild
+            variant={pathname.startsWith("/dashboard") ? "primary" : "ghost"}
+            size="md"
             className={cn(
-              "flex h-11 items-center gap-3 rounded-[10px] px-2 text-[14px] font-bold",
-              "transition-colors duration-150",
-              pathname.startsWith("/dashboard")
-                ? "bg-brand text-brand-ink"
-                : "text-text-muted hover:bg-surface-2 hover:text-text",
+              "justify-start gap-3 rounded-md px-2",
+              !pathname.startsWith("/dashboard") && "text-text-muted",
             )}
           >
-            <LayoutDashboard className="size-[18px] shrink-0" strokeWidth={2.2} aria-hidden />
-            {t.nav.dashboard}
-          </Link>
+            <Link
+              href="/dashboard"
+              aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
+            >
+              <LayoutDashboard className="size-[18px] shrink-0" strokeWidth={2.2} aria-hidden />
+              {t.nav.dashboard}
+            </Link>
+          </Button>
         )}
 
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="md"
+          className="mt-2 justify-start gap-3 rounded-md px-2 text-primary"
           onClick={onFabClick}
-          className={cn(
-            "mt-2 flex h-11 items-center gap-3 rounded-[10px] px-2 text-[14px] font-bold",
-            "text-brand transition-colors duration-150 hover:bg-surface-2",
-          )}
         >
           <Plus className="size-[18px] shrink-0" strokeWidth={2.2} aria-hidden />
           {t.nav.add}
-        </button>
+        </Button>
       </nav>
 
       <div className="mt-4 border-t border-border pt-4">
@@ -98,17 +97,16 @@ export function DesktopSidebar({ profile, onFabClick }: DesktopSidebarProps) {
         </Link>
 
         <form action={signOut} className="mt-3">
-          <button
+          <Button
             type="submit"
-            className={cn(
-              "flex h-10 w-full items-center gap-2 rounded-[10px] px-2",
-              "text-[14px] font-semibold text-text-muted",
-              "transition-colors duration-150 hover:bg-surface-2 hover:text-danger",
-            )}
+            variant="ghost"
+            size="md"
+            block
+            className="justify-start rounded-md px-2 text-text-muted hover:text-danger-fg"
           >
             <LogOut className="size-[18px]" strokeWidth={2} aria-hidden />
             {t.auth.signOut}
-          </button>
+          </Button>
         </form>
       </div>
     </aside>

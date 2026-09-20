@@ -261,12 +261,12 @@ export const uk = {
     noEntriesToday: "Записів за цей день ще немає",
     /** Таблиця «Зміни за місяць» внизу екрана — своя рабочому, вся компанія шефу. */
     monthTableTitle: "Зміни за місяць",
+    monthTableScrollHint: "Гортати таблицю по горизонталі",
     monthTableWorkerColumn: "Ім'я",
     monthTableDateColumn: "Дата",
     monthTableTimeColumn: "Час",
     monthTableObjectColumn: "Об'єкт",
     monthTableEmpty: "За цей місяць змін ще немає",
-    monthTableScrollHint: "Гортати таблицю по горизонталі",
     /** Ошибки действий таймера — один текст на разные причины отказа базы. */
     alreadyRunning: "Зміна вже триває",
     noOpenShift: "Немає активної зміни",

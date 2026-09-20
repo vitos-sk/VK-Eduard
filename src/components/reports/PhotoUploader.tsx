@@ -14,6 +14,7 @@ import {
   type EntryPhoto,
 } from "@/modules/media/photos";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const BUCKET = "entry-photos";
 
@@ -117,36 +118,32 @@ export function PhotoUploader({
             )}
 
             {editable && (
-              <button
-                type="button"
+              <Button
+                variant="scrim"
+                size="icon-xs"
                 onClick={() => handleRemove(photo)}
                 aria-label={t.reportDetail.removePhoto}
-                className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-black/60 text-white"
+                className="absolute top-1 right-1"
               >
                 <X className="size-3.5" strokeWidth={2.5} aria-hidden />
-              </button>
+              </Button>
             )}
           </div>
         ))}
 
         {editable && photos.length < MAX_PHOTOS_PER_ENTRY && (
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="bare"
             onClick={() => inputRef.current?.click()}
             disabled={isUploading}
-            className={cn(
-              "flex size-20 shrink-0 flex-col items-center justify-center gap-1 rounded-[12px]",
-              "border border-dashed border-border text-text-muted",
-              "transition-transform duration-150 active:scale-95",
-              "disabled:pointer-events-none disabled:opacity-50",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
+            className="size-20 flex-col justify-center gap-1 rounded-ctl border-dashed text-text-muted"
           >
             <Camera className="size-5" strokeWidth={2} aria-hidden />
             <span className="text-[11px] font-semibold">
               {isUploading ? t.reportDetail.uploading : t.reportDetail.addPhoto}
             </span>
-          </button>
+          </Button>
         )}
       </div>
 

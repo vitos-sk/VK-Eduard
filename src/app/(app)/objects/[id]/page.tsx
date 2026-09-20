@@ -18,6 +18,7 @@ import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { getReportsFeed, getSiteReportsFeed, getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
+import { Card } from "@/components/ui/card";
 
 /**
  * Объект: адрес, вид робіт, статус, мої звіти по ньому і статистика
@@ -78,7 +79,7 @@ export default async function ObjectDetailPage({
       />
 
       <div className="px-4 lg:hidden">
-        <section className="rounded-[16px] border border-border bg-surface p-4">
+        <Card asChild><section>
           {coverPhotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
             <img
@@ -124,7 +125,7 @@ export default async function ObjectDetailPage({
               </div>
             )}
           </dl>
-        </section>
+        </section></Card>
 
         {isBoss && (
           <ObjectHoursCard companyId={profile.company_id} site={site} className="mt-3" />
@@ -191,7 +192,7 @@ export default async function ObjectDetailPage({
       {/* Desktop: фото/карта зліва, деталі + звіти справа — паралельна гілка, мобільна розмітка вище лишається без змін. */}
       <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8">
         <div className="flex flex-col gap-4">
-          <section className="rounded-[16px] border border-border bg-surface p-4">
+          <Card asChild><section>
             {coverPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
               <img
@@ -204,7 +205,7 @@ export default async function ObjectDetailPage({
                 {t.common.dash}
               </div>
             )}
-          </section>
+          </section></Card>
 
           {site.address && (
             <a
@@ -220,7 +221,7 @@ export default async function ObjectDetailPage({
         </div>
 
         <div className="flex flex-col">
-          <section className="rounded-[16px] border border-border bg-surface p-4">
+          <Card asChild><section>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate text-[20px] font-bold">{site.name}</p>
@@ -247,7 +248,7 @@ export default async function ObjectDetailPage({
                 </div>
               )}
             </dl>
-          </section>
+          </section></Card>
 
           {isBoss && (
             <ObjectHoursCard companyId={profile.company_id} site={site} className="mt-3" />

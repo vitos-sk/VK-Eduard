@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { InstallHint } from "@/components/welcome/InstallHint";
 import { t } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 
 /**
  * Пять возможностей приложения. Порядок как на макете:
@@ -53,12 +54,9 @@ export function WelcomeScreen() {
 
       {/* Отступ фиксированный, как на макете: кнопка идёт сразу за списком, а не прижимается к низу экрана */}
       <div className="mt-12 pb-2">
-        <Link
-          href="/login"
-          className="flex h-14 w-full items-center justify-center rounded-[14px] bg-brand text-[17px] font-bold text-brand-ink transition-transform duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-        >
-          {t.welcome.start}
-        </Link>
+        <Button asChild size="xl" block>
+          <Link href="/login">{t.welcome.start}</Link>
+        </Button>
 
         <InstallHint />
       </div>

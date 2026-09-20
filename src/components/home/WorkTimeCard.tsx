@@ -37,6 +37,8 @@ import type { WorkEntry } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf, elapsedSecondsNow, hhmmOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 /** Мінімум із записів, потрібний для «Сьогодні» — не тягнемо фото. */
 export type EntryForStats = Pick<WorkEntry, "site_id" | "work_date" | "ended_at" | "total_minutes">;
@@ -191,7 +193,7 @@ export function WorkTimeCard({ sites, entries, className }: WorkTimeCardProps) {
   const startedValue = openEntry?.started_at?.slice(0, 5) ?? t.common.dash;
 
   return (
-    <section className={cn("rounded-[16px] border border-border bg-surface p-4 lg:p-5", className)}>
+    <Card asChild><section className={cn("lg:p-5", className)}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span
@@ -257,52 +259,24 @@ export function WorkTimeCard({ sites, entries, className }: WorkTimeCardProps) {
       )}
 
       <div className="mt-4 flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={handleToggle}
-          disabled={isPending}
-          className={cn(
-            "flex h-[56px] w-full items-center justify-center gap-2 rounded-[14px]",
-            "bg-brand text-[15px] font-bold text-brand-ink",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "disabled:pointer-events-none disabled:opacity-60",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
+        <Button size="xl" block onClick={handleToggle} disabled={isPending}>
           <ActionIcon className="size-[18px] fill-current" strokeWidth={2} aria-hidden />
           {isRunning ? t.home.finishWork : t.home.startWork}
-        </button>
+        </Button>
 
         {isRunning && (
-          <button
-            type="button"
-            onClick={handleTogglePause}
-            disabled={isPending}
-            className={cn(
-              "flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px]",
-              "border border-border bg-surface-2 text-[15px] font-bold text-text",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "disabled:pointer-events-none disabled:opacity-40",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
+          <Button variant="secondary" block onClick={handleTogglePause} disabled={isPending}>
             <PauseIcon className="size-[18px] fill-current" strokeWidth={2} aria-hidden />
             {isOnBreak ? t.hours.resume : t.hours.pause}
-          </button>
+          </Button>
         )}
 
-        <Link
-          href="/reports"
-          className={cn(
-            "flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px]",
-            "border border-border text-[15px] font-bold text-text",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
-          <FileText className="size-[18px]" strokeWidth={2} aria-hidden />
-          {t.home.viewReport}
-        </Link>
+        <Button asChild variant="outline" block>
+          <Link href="/reports">
+            <FileText className="size-[18px]" strokeWidth={2} aria-hidden />
+            {t.home.viewReport}
+          </Link>
+        </Button>
       </div>
 
       <ObjectPickerDrawer
@@ -321,7 +295,7 @@ export function WorkTimeCard({ sites, entries, className }: WorkTimeCardProps) {
           sites={sites}
         />
       )}
-    </section>
+    </section></Card>
   );
 }
 
@@ -356,7 +330,7 @@ function InfoRow({ icon: Icon, label, value, onClick, href }: InfoRowProps) {
     return (
       <Link
         href={href}
-        className="rounded-[8px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="rounded-[8px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {content}
       </Link>
@@ -365,13 +339,9 @@ function InfoRow({ icon: Icon, label, value, onClick, href }: InfoRowProps) {
 
   if (onClick) {
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      >
+      <Button variant="bare" size="bare" block onClick={onClick}>
         {content}
-      </button>
+      </Button>
     );
   }
 

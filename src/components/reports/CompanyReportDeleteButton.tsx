@@ -5,17 +5,18 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { reportsStrings as s } from "@/lib/i18n/parts/reports";
 import { t } from "@/lib/i18n";
 import { deleteReport } from "@/modules/reports/actions";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface CompanyReportDeleteButtonProps {
   reportId: string;
@@ -26,7 +27,7 @@ interface CompanyReportDeleteButtonProps {
 
 /**
  * Кнопка видалення звіту прямо зі стрічки адмінки — іконка з підтвердженням
- * через `Dialog` (не `window.confirm`). Клік по ній не має спливати на
+ * через `Modal` (не `window.confirm`). Клік по ній не має спливати на
  * `Link`-обгортку картки, тому `stopPropagation` на самій кнопці.
  */
 export function CompanyReportDeleteButton({ reportId, onDeleted, className }: CompanyReportDeleteButtonProps) {
@@ -50,50 +51,37 @@ export function CompanyReportDeleteButton({ reportId, onDeleted, className }: Co
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-sm"
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           setOpen(true);
         }}
         aria-label={s.feed.deleteReport}
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full text-danger",
-          "transition-colors duration-150 hover:bg-surface active:bg-surface",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          className,
-        )}
+        className={cn("text-danger-fg", className)}
       >
         <Trash2 className="size-[18px]" strokeWidth={2} aria-hidden />
-      </button>
+      </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent onClick={(event) => event.stopPropagation()}>
-          <DialogHeader>
-            <DialogTitle>{s.feed.deleteConfirmTitle}</DialogTitle>
-            <DialogDescription>{s.feed.deleteConfirmBody}</DialogDescription>
-          </DialogHeader>
+      <Modal open={open} onOpenChange={setOpen}>
+        <ModalContent onClick={(event) => event.stopPropagation()}>
+          <ModalHeader>
+            <ModalTitle>{s.feed.deleteConfirmTitle}</ModalTitle>
+            <ModalDescription>{s.feed.deleteConfirmBody}</ModalDescription>
+          </ModalHeader>
 
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="flex h-12 items-center justify-center rounded-[14px] border border-border text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98]"
-            >
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
               {t.common.cancel}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={isPending}
-              className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
-            >
+            </Button>
+            <Button variant="danger" onClick={handleConfirm} disabled={isPending}>
               {s.feed.deleteConfirmAction}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }

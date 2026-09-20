@@ -5,7 +5,8 @@ import { toast } from "sonner";
 
 import { companyStrings as s } from "@/lib/i18n/parts/company";
 import { updateWorkerDailyNorm } from "@/modules/team/actions";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface DailyNormEditorProps {
   workerId: string;
@@ -72,7 +73,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
           {s.team.dailyNorm}
         </label>
 
-        <input
+        <Input
           id={`daily-norm-${workerId}`}
           type="number"
           inputMode="decimal"
@@ -85,28 +86,14 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
             setError(null);
           }}
           disabled={isPending}
-          className={cn(
-            "h-9 w-16 rounded-[10px] border border-border bg-surface px-2 text-center",
-            "text-[14px] font-bold outline-none focus-visible:border-brand",
-            "disabled:opacity-60",
-            error && "border-danger text-danger",
-          )}
+          className="h-ctl-sm w-20 px-2 text-center text-[14px]"
         />
         <span className="text-[13px] font-medium text-text-dim">{s.team.dailyNormUnit}</span>
 
         {isDirty && (
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isPending}
-            className={cn(
-              "h-9 shrink-0 rounded-[10px] bg-brand px-3 text-[13px] font-bold text-brand-ink",
-              "transition-transform duration-150 active:scale-[0.97]",
-              "disabled:pointer-events-none disabled:opacity-60",
-            )}
-          >
+          <Button size="sm" onClick={handleSave} disabled={isPending}>
             {s.team.dailyNormSave}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -114,7 +101,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
           де токен --danger дає лише 3.86:1 — нижче порога 4.5:1 для звичайного
           тексту. Локальний світліший відтінок замість зміни глобального
           токена (він використовується по всьому застосунку). */}
-      {error && <p className="text-[12px] font-semibold text-[#f4897b]">{error}</p>}
+      {error && <p className="text-[12px] font-semibold text-danger-fg">{error}</p>}
     </div>
   );
 }

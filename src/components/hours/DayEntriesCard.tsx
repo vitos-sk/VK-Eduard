@@ -2,7 +2,7 @@ import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { WorkEntry } from "@/modules/entries/types";
 import { elapsedSecondsNow } from "@/modules/time/calc";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 interface DayEntriesCardProps {
   entries: readonly WorkEntry[];
@@ -27,27 +27,17 @@ export function DayEntriesCard({
 }: DayEntriesCardProps) {
   if (entries.length === 0) {
     return (
-      <section
-        className={cn(
-          "rounded-[16px] border border-border bg-surface p-4",
-          className,
-        )}
-      >
+      <Card asChild><section className={className}>
         <h2 className="text-[17px] font-bold">{t.hours.entriesTitle}</h2>
         <p className="mt-2 text-[14px] font-medium text-text-muted">
           {t.hours.noEntriesToday}
         </p>
-      </section>
+      </section></Card>
     );
   }
 
   return (
-    <section
-      className={cn(
-        "rounded-[16px] border border-border bg-surface p-4",
-        className,
-      )}
-    >
+    <Card asChild><section className={className}>
       <h2 className="text-[17px] font-bold">{t.hours.entriesTitle}</h2>
 
       <ul className="mt-3 space-y-3">
@@ -64,7 +54,7 @@ export function DayEntriesCard({
           />
         ))}
       </ul>
-    </section>
+    </section></Card>
   );
 }
 

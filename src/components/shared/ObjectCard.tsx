@@ -32,10 +32,10 @@ export function ObjectCard({
       className={cn(
         "flex w-full items-stretch gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
         "transition-transform duration-150 active:scale-[0.98]",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         "lg:flex-col lg:items-stretch lg:gap-0 lg:overflow-hidden lg:p-0",
         "lg:transition-all lg:duration-150 lg:active:scale-100",
-        "lg:hover:-translate-y-0.5 lg:hover:border-text-dim/40 lg:hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]",
+        "lg:hover:-translate-y-0.5 lg:hover:border-text-dim/40 lg:hover:shadow-md",
         object.archivedAt && "opacity-60",
         className,
       )}

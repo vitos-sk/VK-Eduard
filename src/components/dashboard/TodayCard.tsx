@@ -1,8 +1,8 @@
 // src/components/dashboard/TodayCard.tsx
-import { cn } from "@/lib/utils";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { TodayOverview } from "@/modules/dashboard/aggregate";
+import { Card } from "@/components/ui/card";
 
 interface TodayCardProps {
   overview: TodayOverview;
@@ -13,7 +13,7 @@ interface TodayCardProps {
 /** Блок «Сьогодні»: скільки з усіх активних відмітились + бейджі відкритих змін. */
 export function TodayCard({ overview, activeWorkersCount, className }: TodayCardProps) {
   return (
-    <section className={cn("rounded-[16px] border border-border bg-surface p-5", className)}>
+    <Card asChild padding="lg"><section className={className}>
       <h3 className="text-[13px] font-bold tracking-wide text-text-muted uppercase">
         {t.dashboard.todayTitle}
       </h3>
@@ -39,6 +39,6 @@ export function TodayCard({ overview, activeWorkersCount, className }: TodayCard
       <p className="mt-2 text-[14px] font-medium text-text-muted">
         {fmt(t.dashboard.todayHoursLogged, { hours: formatHoursShort(overview.totalMinutes) })}
       </p>
-    </section>
+    </section></Card>
   );
 }

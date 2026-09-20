@@ -1,7 +1,7 @@
 // src/components/dashboard/TopList.tsx
-import { cn } from "@/lib/utils";
 import { formatHoursShort } from "@/lib/format";
 import type { RankedItem } from "@/modules/dashboard/aggregate";
+import { Card } from "@/components/ui/card";
 
 interface TopListProps {
   title: string;
@@ -19,7 +19,7 @@ export function TopList({ title, items, emptyLabel, className }: TopListProps) {
   const maxMinutes = items[0]?.minutes ?? 0;
 
   return (
-    <section className={cn("rounded-[16px] border border-border bg-surface p-5", className)}>
+    <Card asChild padding="lg"><section className={className}>
       <h3 className="text-[17px] font-bold">{title}</h3>
 
       {items.length === 0 ? (
@@ -31,7 +31,7 @@ export function TopList({ title, items, emptyLabel, className }: TopListProps) {
               <p className="min-w-0 flex-1 truncate text-[14px] font-bold">{item.name}</p>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
                 <div
-                  className="h-full rounded-full bg-brand"
+                  className="h-full rounded-full bg-primary"
                   style={{ width: `${maxMinutes === 0 ? 0 : (item.minutes / maxMinutes) * 100}%` }}
                 />
               </div>
@@ -42,6 +42,6 @@ export function TopList({ title, items, emptyLabel, className }: TopListProps) {
           ))}
         </ul>
       )}
-    </section>
+    </section></Card>
   );
 }

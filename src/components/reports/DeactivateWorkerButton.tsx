@@ -5,16 +5,16 @@ import { UserX } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { t } from "@/lib/i18n";
 import { setWorkerActive } from "@/modules/team/actions";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface DeactivateWorkerButtonProps {
   workerId: string;
@@ -52,46 +52,28 @@ export function DeactivateWorkerButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "flex h-12 w-full items-center justify-center gap-2 rounded-[14px]",
-          "border border-danger/40 text-[15px] font-bold text-danger",
-          "transition-transform duration-150 active:scale-[0.98]",
-          className,
-        )}
-      >
+      <Button variant="danger-outline" block onClick={() => setOpen(true)} className={className}>
         <UserX className="size-[18px]" strokeWidth={2} aria-hidden />
         {t.reports.team.deactivate}
-      </button>
+      </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.reports.team.deactivateConfirmTitle}</DialogTitle>
-            <DialogDescription>{t.reports.team.deactivateConfirmBody}</DialogDescription>
-          </DialogHeader>
+      <Modal open={open} onOpenChange={setOpen}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>{t.reports.team.deactivateConfirmTitle}</ModalTitle>
+            <ModalDescription>{t.reports.team.deactivateConfirmBody}</ModalDescription>
+          </ModalHeader>
 
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="flex h-12 items-center justify-center rounded-[14px] border border-border text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98]"
-            >
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
               {t.common.cancel}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={isPending}
-              className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
-            >
+            </Button>
+            <Button variant="danger" onClick={handleConfirm} disabled={isPending}>
               {t.reports.team.deactivateConfirmAction}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }

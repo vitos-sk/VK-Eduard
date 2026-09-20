@@ -9,7 +9,9 @@ import {
 } from "@/components/shared/SegmentedTabs";
 import { t } from "@/lib/i18n";
 import { createWorker } from "@/modules/team/actions";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Role = "worker" | "boss";
 
@@ -17,12 +19,6 @@ const ROLE_OPTIONS: readonly SegmentedOption<Role>[] = [
   { value: "worker", label: t.reports.team.form.roleWorker },
   { value: "boss", label: t.reports.team.form.roleBoss },
 ];
-
-const inputClassName = cn(
-  "h-[52px] w-full rounded-[14px] border border-border bg-surface px-3",
-  "text-[15px] font-bold text-text placeholder:text-text-dim outline-none",
-  "focus-visible:border-brand",
-);
 
 interface AddWorkerFormProps {
   onClose: () => void;
@@ -67,7 +63,7 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
 
   if (result) {
     return (
-      <div className={cn("rounded-[16px] border border-border bg-surface p-4", className)}>
+      <Card className={className}>
         <p className="text-[16px] font-bold">{t.reports.team.form.createdTitle}</p>
 
         <dl className="mt-3 flex flex-col gap-2">
@@ -84,67 +80,57 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
         </p>
 
         <div className="mt-4 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className={cn(
-              "flex h-12 flex-1 items-center justify-center rounded-[14px]",
-              "bg-brand text-[15px] font-bold text-brand-ink",
-              "transition-transform duration-150 active:scale-[0.98]",
-            )}
-          >
+          <Button className="flex-1" onClick={onClose}>
             {t.reports.team.form.close}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className={cn("rounded-[16px] border border-border bg-surface p-4", className)}>
+    <Card className={className}>
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-[16px] font-bold">
-          <UserPlus className="size-5 text-brand" strokeWidth={2} aria-hidden />
+          <UserPlus className="size-5 text-primary" strokeWidth={2} aria-hidden />
           {t.reports.team.form.title}
         </p>
 
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={onClose}
           aria-label={t.reports.team.form.cancel}
-          className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+          className="text-text-muted"
         >
           <X className="size-5" strokeWidth={2} aria-hidden />
-        </button>
+        </Button>
       </div>
 
       <div className="mt-4 flex flex-col gap-3">
-        <input
+        <Input
           value={fullName}
           onChange={(event) => setFullName(event.target.value)}
           placeholder={t.reports.team.form.namePlaceholder}
           aria-label={t.reports.team.form.nameLabel}
-          className={inputClassName}
-        />
+                  />
 
-        <input
+        <Input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder={t.reports.team.form.emailPlaceholder}
           aria-label={t.reports.team.form.emailLabel}
-          className={inputClassName}
-        />
+                  />
 
-        <input
+        <Input
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder={t.reports.team.form.passwordPlaceholder}
           aria-label={t.reports.team.form.passwordLabel}
           autoComplete="new-password"
-          className={inputClassName}
-        />
+                  />
 
         <SegmentedTabs
           options={ROLE_OPTIONS}
@@ -153,22 +139,12 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
           label={t.reports.team.form.roleLabel}
         />
 
-        {error && <p className="text-[13px] font-semibold text-danger">{error}</p>}
+        {error && <p className="text-[13px] font-semibold text-danger-fg">{error}</p>}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!isValid || isPending}
-          className={cn(
-            "flex h-[52px] w-full items-center justify-center rounded-[14px]",
-            "bg-brand text-[15px] font-bold text-brand-ink",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "disabled:pointer-events-none disabled:opacity-60",
-          )}
-        >
+        <Button block onClick={handleSubmit} disabled={!isValid || isPending}>
           {t.reports.team.form.save}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

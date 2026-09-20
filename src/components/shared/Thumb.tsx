@@ -64,7 +64,7 @@ export function Thumb({ name, gradient, photoUrl, size = "md", className }: Thum
       }}
       className={cn(
         "flex shrink-0 items-center justify-center",
-        "font-extrabold tracking-[0.04em] text-white/70",
+        "font-extrabold tracking-[0.04em] text-on-scrim-muted",
         sizeStyles[size],
         className,
       )}

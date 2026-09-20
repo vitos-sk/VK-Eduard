@@ -26,7 +26,7 @@ import {
 import { t } from "@/lib/i18n";
 import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import { createClient } from "@/lib/supabase/client";
-import { getAllSites, type Site } from "@/modules/sites/queries";
+import { getActiveSites, getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
@@ -34,6 +34,7 @@ import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { dateKeyOf } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /** Заголовок навигатора: месяц з роком. */
 function getMonthTitle(date: Date): string {
@@ -67,6 +68,7 @@ export function HoursScreen({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
+  const [loadedMonthKey, setLoadedMonthKey] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
 
   // Шеф: «Я / Команда» + фільтри по співробітнику й об'єкту.
@@ -78,6 +80,9 @@ export function HoursScreen({
   const [siteFilter, setSiteFilter] = useState(ALL_FILTER);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [sites, setSites] = useState<readonly Site[]>([]);
+  // Активні об'єкти для модалки «Де ви сьогодні працювали?» (`DayActions`) —
+  // потрібні і рядовому робітнику, не тільки шефу, на відміну від `sites` вище.
+  const [activeSites, setActiveSites] = useState<readonly Site[]>([]);
   const isTeamView = isBoss && scope === "team";
 
   useEffect(() => {
@@ -100,6 +105,20 @@ export function HoursScreen({
     };
   }, [isBoss, supabase, profile.company_id]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    getActiveSites(supabase)
+      .then((data) => {
+        if (!cancelled) setActiveSites(data);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+
   const todayKey = dateKeyOf(new Date());
   const isToday = dateKeyOf(date) === todayKey;
 
@@ -111,14 +130,20 @@ export function HoursScreen({
 
     getCompanyEntriesInRange(supabase, profile.company_id, from, to)
       .then((entries) => {
-        if (!cancelled) setMonthEntries(entries);
+        if (cancelled) return;
+        setMonthEntries(entries);
+        setLoadedMonthKey(from);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setLoadedMonthKey(from);
+      });
 
     return () => {
       cancelled = true;
     };
   }, [supabase, profile.company_id, date, refreshToken, openEntry?.id]);
+
+  const isEntriesLoading = loadedMonthKey !== dateKeyOf(startOfMonth(date));
 
   const visibleEntries = useMemo(() => {
     if (!isBoss) return monthEntries;
@@ -177,38 +202,30 @@ export function HoursScreen({
             "bg-surface-2 p-1",
           )}
         >
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => shiftMonth(-1)}
             aria-label={t.hours.prevPeriod}
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
-              "transition-colors duration-150 active:bg-surface",
-              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-            )}
           >
             <ChevronLeft className="size-4" strokeWidth={2.4} aria-hidden />
-          </button>
+          </Button>
 
           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="sm"
                 aria-label={t.hours.pickDate}
-                className={cn(
-                  "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-surface px-3",
-                  "text-[13px] font-bold text-text",
-                  "transition-transform duration-150 active:scale-95",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                )}
+                className="flex-1 rounded-full border-transparent bg-surface hover:bg-surface"
               >
                 <CalendarDays
-                  className="size-4 shrink-0 text-brand"
+                  className="size-4 shrink-0 text-primary"
                   strokeWidth={2}
                   aria-hidden
                 />
                 <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
-              </button>
+              </Button>
             </PopoverTrigger>
 
             <PopoverContent
@@ -230,18 +247,14 @@ export function HoursScreen({
             </PopoverContent>
           </Popover>
 
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => shiftMonth(1)}
             aria-label={t.hours.nextPeriod}
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full text-text",
-              "transition-colors duration-150 active:bg-surface",
-              "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-            )}
           >
             <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -269,21 +282,10 @@ export function HoursScreen({
                 onWorkerChange={setWorkerFilter}
                 onSiteChange={setSiteFilter}
               />
-              <button
-                type="button"
-                onClick={() => {
-                  setExportIds(workerFilter !== ALL_FILTER ? [workerFilter] : []);
-                  setIsExportOpen(true);
-                }}
-                className={cn(
-                  "flex h-10 items-center justify-center gap-2 rounded-[12px] border border-border px-4",
-                  "text-[14px] font-bold text-text transition-transform duration-150 active:scale-[0.98]",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:ml-auto",
-                )}
-              >
+              <Button variant="outline" size="sm" className="lg:ml-auto" onClick={() => { setExportIds(workerFilter !== ALL_FILTER ? [workerFilter] : []); setIsExportOpen(true); }}>
                 <Share2 className="size-4" strokeWidth={2.2} aria-hidden />
                 {t.export.label}
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -308,6 +310,7 @@ export function HoursScreen({
         {isToday && (
           <DayActions
             openEntry={openEntry}
+            sites={activeSites}
             onChanged={handleChanged}
           />
         )}
@@ -332,6 +335,7 @@ export function HoursScreen({
           entries={visibleEntries}
           showAuthor={isTeamView}
           isFiltered={isFiltered}
+          isLoading={isEntriesLoading}
           onChanged={handleChanged}
         />
       </div>
@@ -343,6 +347,7 @@ export function HoursScreen({
           {isToday && (
             <DayActions
               openEntry={openEntry}
+              sites={activeSites}
               onChanged={handleChanged}
             />
           )}
@@ -363,6 +368,7 @@ export function HoursScreen({
           entries={visibleEntries}
           showAuthor={isTeamView}
           isFiltered={isFiltered}
+          isLoading={isEntriesLoading}
           onChanged={handleChanged}
         />
       </div>

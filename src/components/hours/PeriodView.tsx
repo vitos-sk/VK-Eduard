@@ -3,6 +3,7 @@ import { t } from "@/lib/i18n";
 import { dateKeyOf } from "@/modules/time/calc";
 import type { PeriodSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 const TODAY_KEY = dateKeyOf(new Date());
 
@@ -30,20 +31,20 @@ export function PeriodView({
 
   if (variant === "totalOnly") {
     return (
-      <section className={cn("rounded-[16px] border border-border bg-surface p-4", className)}>
+      <Card asChild><section className={className}>
         <p className="tabular text-[28px] leading-none font-extrabold">
           {formatHoursShort(summary.totalMin)}
         </p>
         <p className="mt-1.5 text-[13px] font-medium text-text-muted">
           {t.hours.workedPeriod}
         </p>
-      </section>
+      </section></Card>
     );
   }
 
   return (
     <div className={cn("space-y-3", className)}>
-      <section className="rounded-[16px] border border-border bg-surface p-4">
+      <Card asChild><section>
         <p className="tabular text-[34px] leading-none font-extrabold">
           {formatHoursShort(summary.totalMin)}
         </p>
@@ -65,9 +66,9 @@ export function PeriodView({
             value={formatHoursShort(summary.averageMin)}
           />
         </div>
-      </section>
+      </section></Card>
 
-      <section className="rounded-[16px] border border-border bg-surface p-4">
+      <Card asChild><section>
         {/* Период уже подписан в навигаторе выше — здесь только столбцы. */}
         <div aria-hidden className="flex h-[140px] items-end gap-1">
           {summary.bars.map((bar) => {
@@ -86,8 +87,8 @@ export function PeriodView({
                   bar.workedMin === 0
                     ? "bg-surface-2"
                     : isToday
-                      ? "bg-brand"
-                      : "bg-brand/45",
+                      ? "bg-primary"
+                      : "bg-primary/45",
                 )}
               />
             );
@@ -100,14 +101,14 @@ export function PeriodView({
               key={bar.date}
               className={cn(
                 "tabular flex-1 text-center text-[11px] font-semibold",
-                bar.date === TODAY_KEY ? "text-brand" : "text-text-dim",
+                bar.date === TODAY_KEY ? "text-primary" : "text-text-dim",
               )}
             >
               {index % labelEvery === 0 ? bar.label : ""}
             </span>
           ))}
         </div>
-      </section>
+      </section></Card>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import PDFDocument from "pdfkit";
 
+import { tokens } from "@/design-system/tokens";
 import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { ExportMeta, ExportRow } from "./types";
@@ -95,9 +96,9 @@ function drawHeader(doc: PDFKit.PDFDocument, meta: ExportMeta) {
   doc
     .font("PTSans")
     .fontSize(11)
-    .fillColor("#555555")
+    .fillColor(tokens.textMuted)
     .text(meta.periodTitle, PAGE_MARGIN, doc.y + 2)
-    .fillColor("#000000");
+    .fillColor(tokens.text);
 }
 
 function drawTableHeader(doc: PDFKit.PDFDocument, y: number): number {
@@ -112,7 +113,7 @@ function drawTableHeader(doc: PDFKit.PDFDocument, y: number): number {
   doc
     .moveTo(PAGE_MARGIN, y + 14)
     .lineTo(PAGE_MARGIN + TABLE_WIDTH, y + 14)
-    .strokeColor("#cccccc")
+    .strokeColor(tokens.border)
     .stroke();
 
   return y + 20;

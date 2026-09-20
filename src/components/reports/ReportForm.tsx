@@ -21,7 +21,9 @@ import { createReport } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf } from "@/modules/time/calc";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/input";
 
 interface ReportFormProps {
   companyId: string;
@@ -104,18 +106,9 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
             editable
           />
 
-          <button
-            type="button"
-            onClick={() => router.push(`/reports/${createdReportId}`)}
-            className={cn(
-              "flex h-[56px] w-full items-center justify-center rounded-[14px]",
-              "bg-brand text-[15px] font-bold text-brand-ink",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
+          <Button size="xl" block onClick={() => router.push(`/reports/${createdReportId}`)}>
             {t.reportForm.done}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -127,32 +120,19 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
       <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
         {lastReport && (
-          <button
-            type="button"
-            onClick={applyRepeatLast}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
-            <History className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
+          <Card asChild interactive className="flex w-full items-center gap-3">
+          <button type="button" onClick={applyRepeatLast}>
+            <History className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
             <span className="text-[14px] font-bold text-text">
               {t.reportForm.repeatYesterday}
             </span>
           </button>
+          </Card>
         )}
 
         <Field label={t.manualTime.objectLabel}>
-          <button
-            type="button"
-            onClick={() => setIsObjectPickerOpen(true)}
-            className={cn(
-              "flex min-h-[68px] w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-3 text-left",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
+          <Card asChild padding="sm" interactive className="flex min-h-[68px] w-full items-center gap-3">
+          <button type="button" onClick={() => setIsObjectPickerOpen(true)}>
             {selectedSite ? (
               <>
                 <Thumb name={selectedSite.name} gradient={gradientForId(selectedSite.id)} size="sm" />
@@ -173,23 +153,16 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
             <ChevronRight className="size-5 shrink-0 text-text-dim" strokeWidth={2.4} aria-hidden />
           </button>
+          </Card>
         </Field>
 
         <Field label={t.manualTime.date}>
           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "flex h-[52px] w-full items-center gap-2 rounded-[14px] px-3",
-                  "border border-border bg-surface text-[15px] font-bold text-text",
-                  "transition-transform duration-150 active:scale-[0.98]",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                )}
-              >
+              <Button variant="field" size="field" className="gap-2 px-3 text-[15px]">
                 <CalendarDays className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
                 <span className="tabular truncate">{formatDateShort(date)}</span>
-              </button>
+              </Button>
             </PopoverTrigger>
 
             <PopoverContent align="start" className="w-auto border border-border bg-surface p-2">
@@ -216,38 +189,22 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         )}
 
         <Field label={t.manualTime.description}>
-          <textarea
+          <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             rows={4}
             placeholder={t.manualTime.descriptionPlaceholder}
-            className={cn(
-              "w-full resize-none rounded-[16px] border border-border bg-surface p-4",
-              "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-              "outline-none focus-visible:border-brand",
-            )}
           />
         </Field>
 
         <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
-          <Info className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
+          <Info className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
           {t.reportForm.hint}
         </p>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isPending}
-          className={cn(
-            "flex h-[56px] w-full items-center justify-center rounded-[14px]",
-            "bg-brand text-[15px] font-bold text-brand-ink",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "disabled:pointer-events-none disabled:opacity-40",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
+        <Button size="xl" block onClick={handleSubmit} disabled={isPending}>
           {t.reportForm.submit}
-        </button>
+        </Button>
       </div>
 
       <ObjectPickerDrawer

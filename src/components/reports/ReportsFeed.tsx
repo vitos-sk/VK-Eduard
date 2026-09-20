@@ -16,6 +16,7 @@ import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf } from "@/modules/time/calc";
+import { Card } from "@/components/ui/card";
 
 type ReportFilter = "all" | "no_description" | "with_photo";
 
@@ -139,7 +140,7 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFe
       </div>
 
       {visible.length > 0 && (
-        <div className="mt-4 flex items-baseline justify-between rounded-[16px] border border-border bg-surface px-4 py-3">
+        <Card padding="none" className="mt-4 flex items-baseline justify-between px-4 py-3">
           <p className="text-[13px] font-medium text-text-muted">
             {fmt(t.reports.reportsSummaryCount, { n: visible.length })}
           </p>
@@ -148,7 +149,7 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFe
               {fmt(t.reports.reportsSummaryDominant, { label: dominantCategory.label })}
             </p>
           )}
-        </div>
+        </Card>
       )}
 
       {groups.length > 0 ? (

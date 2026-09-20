@@ -17,6 +17,8 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/modules/auth/actions";
 import { requireProfile } from "@/modules/auth/session";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface SettingsRow {
   icon: typeof Bell;
@@ -61,11 +63,11 @@ export default async function MorePage() {
       <BackHeader title={t.profile.title} href="/" />
 
       <div className="flex flex-col gap-6 px-4 lg:mx-auto lg:max-w-[480px]">
-        <div className="flex items-center gap-3 rounded-[16px] border border-border bg-surface-2 p-4">
+        <Card tone="muted" className="flex items-center gap-3">
           <div
             aria-hidden
             style={{ backgroundColor: `hsl(${profile.avatar_hue} 45% 26%)` }}
-            className="flex size-14 shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold text-white"
+            className="flex size-14 shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold text-on-scrim"
           >
             {initialsOf(profile.full_name)}
           </div>
@@ -82,25 +84,26 @@ export default async function MorePage() {
           <Link
             href="/more/profile"
             className={cn(
-              "shrink-0 rounded-full border border-brand/40 px-3 py-1.5",
-              "text-[13px] font-bold text-brand",
+              "shrink-0 rounded-full border border-primary/40 px-3 py-1.5",
+              "text-[13px] font-bold text-primary",
               "transition-transform duration-150 active:scale-[0.96]",
             )}
           >
             {t.profile.change}
           </Link>
-        </div>
+        </Card>
 
         <div className="flex flex-col gap-2">
           {rows.map((row) => (
-            <Link
+            <Card
               key={row.href}
-              href={row.href}
-              className={cn(
-                "flex h-14 items-center gap-3 rounded-[14px] border border-border bg-surface-2 px-4",
-                "transition-transform duration-150 active:scale-[0.98]",
-              )}
+              asChild
+              tone="muted"
+              padding="none"
+              interactive
+              className="flex h-14 items-center gap-3 px-4"
             >
+              <Link href={row.href}>
               <row.icon className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
               <span className="flex-1 text-[15px] font-bold">{row.label}</span>
               {row.value && (
@@ -108,22 +111,15 @@ export default async function MorePage() {
               )}
               <ChevronRight className="size-[18px] shrink-0 text-text-dim" strokeWidth={2.4} aria-hidden />
             </Link>
+            </Card>
           ))}
         </div>
 
         <form action={signOut}>
-          <button
-            type="submit"
-            className={cn(
-              "flex h-14 w-full items-center justify-center gap-2 rounded-[14px]",
-              "border border-danger/40 text-[15px] font-bold text-danger",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
+          <Button type="submit" variant="danger-outline" size="xl" block>
             <LogOut className="size-5" strokeWidth={2} aria-hidden />
             {t.auth.signOut}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

@@ -5,16 +5,17 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { t } from "@/lib/i18n";
 import { deleteEntry } from "@/modules/entries/actions";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface DeleteEntryButtonProps {
   entryId: string;
@@ -57,51 +58,35 @@ export function DeleteEntryButton({
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant={iconOnly ? "ghost" : "danger-outline"}
+        size={iconOnly ? "icon-sm" : "lg"}
+        block={!iconOnly}
         onClick={() => setOpen(true)}
         aria-label={t.hours.deleteEntry}
-        className={cn(
-          iconOnly
-            ? "flex size-9 shrink-0 items-center justify-center rounded-full text-danger active:bg-surface-2"
-            : cn(
-                "flex h-12 w-full items-center justify-center gap-2 rounded-[14px]",
-                "border border-danger/40 text-[15px] font-bold text-danger",
-                "transition-transform duration-150 active:scale-[0.98]",
-              ),
-          className,
-        )}
+        className={cn(iconOnly && "text-danger-fg", className)}
       >
         <Trash2 className="size-[18px]" strokeWidth={2} aria-hidden />
         {!iconOnly && t.hours.deleteEntry}
-      </button>
+      </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.hours.deleteConfirmTitle}</DialogTitle>
-            <DialogDescription>{t.hours.deleteConfirmBody}</DialogDescription>
-          </DialogHeader>
+      <Modal open={open} onOpenChange={setOpen}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>{t.hours.deleteConfirmTitle}</ModalTitle>
+            <ModalDescription>{t.hours.deleteConfirmBody}</ModalDescription>
+          </ModalHeader>
 
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="flex h-12 items-center justify-center rounded-[14px] border border-border text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98]"
-            >
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
               {t.common.cancel}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={isPending}
-              className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
-            >
+            </Button>
+            <Button variant="danger" onClick={handleConfirm} disabled={isPending}>
               {t.hours.deleteConfirmAction}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }

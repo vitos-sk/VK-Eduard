@@ -1,14 +1,44 @@
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+/** 16px и больше — иначе iOS зумит страницу при фокусе в поле. */
+const fieldVariants = cva(
+  "w-full min-w-0 rounded-ctl border border-border-strong bg-field text-[16px] font-semibold text-text transition-[border-color,box-shadow] outline-none placeholder:font-medium placeholder:text-text-dim hover:border-text-dim focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-55 aria-invalid:border-danger-fg aria-invalid:ring-3 aria-invalid:ring-danger/20",
+  {
+    variants: {
+      size: {
+        sm: "h-ctl-md px-3",
+        md: "h-field px-4",
+        lg: "h-ctl-xl px-4",
+      },
+    },
+    defaultVariants: { size: "md" },
+  }
+)
+
+type InputProps = Omit<React.ComponentProps<"input">, "size"> &
+  VariantProps<typeof fieldVariants>
+
+function Input({ className, size, type, ...props }: InputProps) {
   return (
     <input
       type={type}
       data-slot="input"
+      className={cn(fieldVariants({ size }), className)}
+      {...props}
+    />
+  )
+}
+
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+  return (
+    <textarea
+      data-slot="textarea"
       className={cn(
-        "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        fieldVariants({ size: null }),
+        "min-h-24 resize-y px-4 py-3 leading-[1.45]",
         className
       )}
       {...props}
@@ -16,4 +46,4 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   )
 }
 
-export { Input }
+export { Input, Textarea, fieldVariants }

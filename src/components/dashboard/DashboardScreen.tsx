@@ -25,6 +25,7 @@ import { buildHoursChartData, getPeriodRange, type DashboardPeriod } from "@/mod
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { dateKeyOf } from "@/modules/time/calc";
+import { Card } from "@/components/ui/card";
 
 interface DashboardScreenProps {
   profile: Profile;
@@ -123,12 +124,12 @@ export function DashboardScreen({
 
         <TodayCard className="mt-4" overview={today} activeWorkersCount={activeWorkersCount} />
 
-        <section className="mt-4 rounded-[16px] border border-border bg-surface p-5">
+        <Card asChild padding="lg"><section className="mt-4">
           <h3 className="text-[17px] font-bold">{t.dashboard.chartTitle}</h3>
           <div className="mt-4">
             <HoursChart data={chartData} emptyLabel={t.dashboard.chartEmpty} />
           </div>
-        </section>
+        </section></Card>
 
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <TopList title={t.dashboard.topSitesTitle} items={topSites} emptyLabel={t.dashboard.topSitesEmpty} />

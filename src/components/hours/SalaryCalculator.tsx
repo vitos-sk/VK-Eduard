@@ -17,6 +17,9 @@ import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { sumTotalMinutes } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const ALL_WORKERS_ID = "all";
 
@@ -97,12 +100,7 @@ export function SalaryCalculator({
   };
 
   return (
-    <section
-      className={cn(
-        "rounded-[16px] border border-border bg-surface p-3.5",
-        className,
-      )}
-    >
+    <Card asChild padding="none"><section className={cn("p-3.5", className)}>
       <h2 className="text-[15px] font-bold">{t.hours.salaryCalcTitle}</h2>
 
       <div className="mt-2.5 flex flex-col gap-2.5">
@@ -114,11 +112,7 @@ export function SalaryCalculator({
               </label>
               <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
                 <SelectTrigger
-                  className={cn(
-                    "mt-1 h-8 w-full rounded-[10px] border-border bg-surface-2 px-2.5",
-                    "text-[13px] font-bold text-text",
-                    "focus-visible:border-border focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                  )}
+                  className="mt-1 h-ctl-sm w-full rounded-md px-2.5 text-[13px] font-bold text-text"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -141,7 +135,7 @@ export function SalaryCalculator({
             <label htmlFor="salary-rate" className="text-[12px] font-medium text-text-muted">
               {t.hours.salaryCalcRateLabel}
             </label>
-            <input
+            <Input
               id="salary-rate"
               type="number"
               inputMode="decimal"
@@ -150,12 +144,7 @@ export function SalaryCalculator({
               placeholder={t.hours.salaryCalcRatePlaceholder}
               value={rate}
               onChange={(event) => setRate(event.target.value)}
-              className={cn(
-                "mt-1 h-8 w-full rounded-[10px] border border-border bg-surface-2 px-2.5",
-                "text-[13px] font-bold text-text placeholder:text-text-dim placeholder:font-medium",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-              )}
+              className="mt-1 h-ctl-sm px-2.5 text-[13px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         </div>
@@ -168,27 +157,23 @@ export function SalaryCalculator({
             <span className="tabular text-[18px] font-extrabold">
               {formatCurrency(amount)}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon-sm"
+              className="rounded-md"
               onClick={handleCopy}
               disabled={!hasValidRate}
               aria-label={isCopied ? t.hours.salaryCalcCopied : t.hours.salaryCalcCopy}
-              className={cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-[10px]",
-                "border border-border text-text",
-                "transition-transform duration-150 active:scale-[0.94]",
-                "disabled:opacity-40",
-              )}
             >
               {isCopied ? (
                 <Check className="size-4" strokeWidth={2} aria-hidden />
               ) : (
                 <Copy className="size-4" strokeWidth={2} aria-hidden />
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-    </section>
+    </section></Card>
   );
 }

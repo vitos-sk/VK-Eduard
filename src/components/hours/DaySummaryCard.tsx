@@ -3,7 +3,7 @@ import { formatHoursShort, minutesToTime } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { DayAggregate } from "@/modules/entries/period";
 import type { WorkStatus } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 interface DaySummaryCardProps {
   aggregate: DayAggregate;
@@ -17,12 +17,7 @@ export function DaySummaryCard({ aggregate, className }: DaySummaryCardProps) {
     : "completed";
 
   return (
-    <section
-      className={cn(
-        "rounded-[16px] border border-border bg-surface p-4",
-        className,
-      )}
-    >
+    <Card asChild><section className={className}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="tabular text-[34px] leading-none font-extrabold">
@@ -50,7 +45,7 @@ export function DaySummaryCard({ aggregate, className }: DaySummaryCardProps) {
           value={minutesToTime(aggregate.breakMinutes)}
         />
       </div>
-    </section>
+    </section></Card>
   );
 }
 

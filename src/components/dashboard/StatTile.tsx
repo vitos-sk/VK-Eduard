@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface StatTileProps {
   icon: LucideIcon;
@@ -12,10 +13,10 @@ interface StatTileProps {
  */
 export function StatTile({ icon: Icon, label, value }: StatTileProps) {
   return (
-    <div className="rounded-[16px] border border-border bg-surface p-5">
-      <Icon className="size-5 text-brand" strokeWidth={2} aria-hidden />
+    <Card padding="lg">
+      <Icon className="size-5 text-primary" strokeWidth={2} aria-hidden />
       <p className="tabular mt-3 text-[28px] font-extrabold tracking-tight">{value}</p>
       <p className="mt-1 text-[13px] font-semibold text-text-muted">{label}</p>
-    </div>
+    </Card>
   );
 }

@@ -5,13 +5,13 @@ import { Archive, ArchiveRestore, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { fmt } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { companyStrings as s } from "@/lib/i18n/parts/company";
@@ -21,19 +21,14 @@ import {
   restoreWorkCategory,
 } from "@/modules/reports/actions";
 import type { WorkCategory } from "@/modules/reports/types";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface WorkCategoriesManagerProps {
   companyId: string;
   initialCategories: readonly WorkCategory[];
 }
-
-const inputClassName = cn(
-  "h-11 w-full rounded-[12px] border border-border bg-surface-2 px-3",
-  "text-[14px] font-bold text-text placeholder:text-text-dim outline-none transition-colors",
-  "focus-visible:border-brand",
-  "disabled:opacity-60",
-);
 
 /**
  * Категорії робіт компанії (`work_categories`) — розділ «Налаштування»
@@ -139,14 +134,14 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
   };
 
   return (
-    <div className="rounded-[16px] border border-border bg-surface p-4">
+    <Card>
       <p className="text-[16px] font-bold text-text">{s.settings.categoriesTitle}</p>
       <p className="mt-1 text-[13px] font-medium text-text-muted">
         {s.settings.categoriesDescription}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
-        <input
+        <Input size="sm"
           value={name}
           onChange={(event) => {
             setName(event.target.value);
@@ -158,26 +153,15 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
           placeholder={s.settings.categoriesAddPlaceholder}
           disabled={isAdding}
           aria-invalid={addError !== null}
-          className={cn(inputClassName, addError && "border-danger")}
-        />
+                  />
 
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={isAdding || name.trim() === ""}
-          className={cn(
-            "flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-[12px] bg-brand px-3.5",
-            "text-[14px] font-bold text-brand-ink",
-            "transition-transform duration-150 hover:brightness-110 active:scale-[0.97]",
-            "disabled:pointer-events-none disabled:opacity-60",
-          )}
-        >
+        <Button size="md" onClick={handleAdd} disabled={isAdding || name.trim() === ""}>
           <Plus className="size-4" strokeWidth={2.5} aria-hidden />
           {s.settings.categoriesAdd}
-        </button>
+        </Button>
       </div>
 
-      {addError && <p className="mt-2 text-[12px] font-semibold text-danger">{addError}</p>}
+      {addError && <p className="mt-2 text-[12px] font-semibold text-danger-fg">{addError}</p>}
 
       {categories.length === 0 ? (
         <p className="mt-4 text-[13px] font-medium text-text-muted">
@@ -205,19 +189,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    isArchived ? handleRestore(category) : setConfirmTarget(category)
-                  }
-                  disabled={isRowPending}
-                  className={cn(
-                    "flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-2.5",
-                    "text-[13px] font-bold text-text",
-                    "transition-transform duration-150 hover:bg-surface active:scale-[0.97]",
-                    "disabled:pointer-events-none disabled:opacity-60",
-                  )}
-                >
+                <Button variant="outline" size="sm" onClick={() => isArchived ? handleRestore(category) : setConfirmTarget(category) } disabled={isRowPending}>
                   {isArchived ? (
                     <ArchiveRestore className="size-4" strokeWidth={2} aria-hidden />
                   ) : (
@@ -226,43 +198,34 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
                   {isArchived
                     ? s.settings.categoriesRestore
                     : s.settings.categoriesArchive}
-                </button>
+                </Button>
               </li>
             );
           })}
         </ul>
       )}
 
-      <Dialog open={confirmTarget !== null} onOpenChange={(open) => !open && setConfirmTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{s.settings.categoriesArchiveConfirmTitle}</DialogTitle>
-            <DialogDescription>
+      <Modal open={confirmTarget !== null} onOpenChange={(open) => !open && setConfirmTarget(null)}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>{s.settings.categoriesArchiveConfirmTitle}</ModalTitle>
+            <ModalDescription>
               {confirmTarget
                 ? fmt(s.settings.categoriesArchiveConfirmBody, { name: confirmTarget.label })
                 : ""}
-            </DialogDescription>
-          </DialogHeader>
+            </ModalDescription>
+          </ModalHeader>
 
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setConfirmTarget(null)}
-              className="flex h-12 items-center justify-center rounded-[14px] border border-border text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98]"
-            >
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setConfirmTarget(null)}>
               {t.common.cancel}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirmArchive}
-              disabled={isArchiving}
-              className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
-            >
+            </Button>
+            <Button variant="danger" onClick={handleConfirmArchive} disabled={isArchiving}>
               {s.settings.categoriesArchiveConfirmAction}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Card>
   );
 }

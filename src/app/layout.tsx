@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 
 import { t } from "@/lib/i18n";
+import { tokens } from "@/design-system/tokens";
 import { appleStartupImages } from "@/lib/pwa";
 
 const manrope = Manrope({
@@ -27,18 +28,18 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   // iOS не читает манифест: имя, режим и статус-бар задаются только этими метатегами.
-  // `black-translucent` вместе с `viewportFit: "cover"` пускает контент под «чёлку»,
-  // поэтому шапки и таб-бар обязаны учитывать `env(safe-area-inset-*)`.
+  // Тема светлая, поэтому статус-бар `default` (тёмный текст); шапки и таб-бар
+  // всё равно учитывают `env(safe-area-inset-*)` из-за `viewportFit: "cover"`.
   appleWebApp: {
     capable: true,
     title: t.common.appName,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     startupImage: appleStartupImages,
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e220a",
+  themeColor: tokens.bg,
   viewportFit: "cover",
   width: "device-width",
   initialScale: 1,
@@ -48,7 +49,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="uk" className={`dark ${manrope.variable} h-full antialiased`}>
+    <html lang="uk" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );

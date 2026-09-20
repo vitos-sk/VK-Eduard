@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ScreenHeaderProps {
   title: string;
@@ -57,9 +58,6 @@ export function BackHeader({
   action,
   className,
 }: BackHeaderProps) {
-  const backClassName =
-    "-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2 focus-visible:outline-2 focus-visible:outline-brand";
-
   return (
     <header
       className={cn(
@@ -68,18 +66,21 @@ export function BackHeader({
       )}
     >
       {href ? (
-        <Link href={href} aria-label={t.common.back} className={backClassName}>
-          <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
-        </Link>
+        <Button asChild variant="ghost" size="icon" className="-ml-2">
+          <Link href={href} aria-label={t.common.back}>
+            <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
+          </Link>
+        </Button>
       ) : (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-ml-2"
           onClick={onBack}
           aria-label={t.common.back}
-          className={backClassName}
         >
           <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
-        </button>
+        </Button>
       )}
 
       <h1 className="flex-1 text-center text-[17px] font-bold">{title}</h1>

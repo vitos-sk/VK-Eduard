@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Search, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CompanyReportCard } from "@/components/reports/CompanyReportCard";
@@ -29,7 +29,10 @@ import type { SiteReportWithNames, SiteReportWithPhotos, WorkCategory } from "@/
 import type { Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { dateKeyOf } from "@/modules/time/calc";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { CheckMark } from "@/components/ui/checkbox";
+import { SearchField } from "@/components/shared/SearchField";
 
 const SITE_FILTER_ALL = "all";
 
@@ -277,14 +280,15 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     return (
       <div>
         <div className="flex items-center justify-between gap-3 px-4 pb-2">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="md"
+            className="min-w-0 justify-start gap-1 px-1"
             onClick={() => setOpenWorkerId(null)}
-            className="flex min-w-0 items-center gap-1 py-2 text-left active:opacity-70"
           >
             <ChevronLeft className="size-6 shrink-0" strokeWidth={2.4} aria-hidden />
             <span className="truncate text-[20px] font-extrabold tracking-tight">{worker?.full_name}</span>
-          </button>
+          </Button>
 
           <ExportButton onClick={() => openExport("reports")} />
         </div>
@@ -333,38 +337,28 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
       {view === "people" ? (
         <>
           <div className="mt-3 flex items-center gap-2">
-            <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-[12px] border border-border bg-surface-2 px-3">
-              <Search className="size-4 shrink-0 text-text-dim" strokeWidth={2} aria-hidden />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={s.team.searchPlaceholder}
-                aria-label={s.team.searchPlaceholder}
-                className="w-full bg-transparent text-[14px] font-medium outline-none placeholder:text-text-dim"
-              />
-            </div>
+            <SearchField
+              compact
+              className="min-w-0 flex-1"
+              value={search}
+              onChange={setSearch}
+              placeholder={s.team.searchPlaceholder}
+            />
 
-            <button
-              type="button"
+            <Button
+              variant={isSelectMode ? "primary" : "outline"}
+              size="md"
               onClick={toggleSelectMode}
               aria-pressed={isSelectMode}
-              className={cn(
-                "h-11 shrink-0 rounded-[12px] border px-4 text-[14px] font-bold transition-colors duration-150",
-                isSelectMode ? "border-brand bg-brand text-brand-ink" : "border-border text-text",
-              )}
             >
               {isSelectMode ? s.team.selectDone : s.team.select}
-            </button>
+            </Button>
           </div>
 
           {isSelectMode && (
-            <button
-              type="button"
-              onClick={toggleSelectAll}
-              className="mt-2 h-9 rounded-full border border-border px-3 text-[13px] font-bold text-text-muted"
-            >
+            <Button variant="outline" size="sm" className="mt-2 rounded-full text-text-muted" onClick={toggleSelectAll}>
               {allVisibleSelected ? s.team.deselectAll : s.team.selectAll}
-            </button>
+            </Button>
           )}
 
           {rows.length === 0 ? (
@@ -376,37 +370,18 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
                 return (
                   <li key={worker.id}>
+                    <Card
+                      asChild
+                      interactive
+                      selected={isChecked}
+                      className="flex w-full items-center gap-3"
+                    >
                     <button
                       type="button"
                       onClick={() => (isSelectMode ? toggleWorker(worker.id) : openWorker(worker.id))}
                       aria-pressed={isSelectMode ? isChecked : undefined}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-[16px] border p-4 text-left",
-                        "transition-colors duration-150 active:scale-[0.99]",
-                        isChecked ? "border-brand bg-brand/10" : "border-border bg-surface",
-                      )}
                     >
-                      {isSelectMode && (
-                        <span
-                          aria-hidden
-                          className={cn(
-                            "flex size-5 shrink-0 items-center justify-center rounded-[6px] border-2",
-                            isChecked ? "border-brand bg-brand" : "border-text-dim",
-                          )}
-                        >
-                          {isChecked && (
-                            <svg viewBox="0 0 16 16" className="size-3 text-brand-ink" fill="none">
-                              <path
-                                d="M3 8.5 6.5 12 13 4.5"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          )}
-                        </span>
-                      )}
+                      {isSelectMode && <CheckMark checked={isChecked} />}
 
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[16px] font-bold">{worker.full_name}</span>
@@ -423,6 +398,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
                         <ChevronRight className="size-5 shrink-0 text-text-dim" strokeWidth={2.2} aria-hidden />
                       )}
                     </button>
+                    </Card>
                   </li>
                 );
               })}
@@ -475,23 +451,20 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
 function ExportButton({ onClick, badge = 0 }: { onClick: () => void; badge?: number }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="icon"
+      className="relative border-border"
       onClick={onClick}
       aria-label={s.export.open}
-      className={cn(
-        "relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-text",
-        "transition-transform duration-150 active:scale-95",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-      )}
     >
       <Share2 className="size-5" strokeWidth={2.2} aria-hidden />
       {badge > 0 && (
-        <span className="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-extrabold text-brand-ink">
+        <span className="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-on-accent">
           {badge}
         </span>
       )}
-    </button>
+    </Button>
   );
 }
 

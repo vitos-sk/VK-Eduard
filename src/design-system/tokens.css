@@ -1,0 +1,212 @@
+/*
+  ЕДИНСТВЕННЫЙ ИСТОЧНИК ПРАВДЫ по цветам, радиусам, теням и шрифтам.
+  Вариант B «Дневной свет»: тёплая бумага, лесной зелёный, жёлтый маркер.
+  Светлая тема — единственная. Хекс-коды живут только здесь (и в зеркале tokens.ts
+  для мест, где CSS-переменные недоступны: PDF, manifest, генератор иконок).
+*/
+
+:root {
+  /* --- Поверхности --- */
+  --bg: #f6f3ea;
+  --bg-outer: #ebe6d4;
+  --surface: #ffffff;
+  --surface-2: #ece7d6;
+  --field: #ffffff;
+  --border: #ddd7c3;
+  --border-strong: #b9b198;
+
+  /* --- Текст --- */
+  --text: #14210f;
+  --text-muted: #55624d;
+  --text-dim: #667259;
+
+  /* --- Главные цвета --- */
+  --primary: #1f5a17;
+  --primary-hover: #184a12;
+  --on-primary: #ffffff;
+  --secondary: #ece7d6;
+  --secondary-hover: #e0d9c1;
+  --on-secondary: #14210f;
+  --accent: #f5c43c;
+  --accent-hover: #ffd25e;
+  --on-accent: #14210f;
+
+  /* --- Статусы: заливка и цвет текста поверх светлого фона --- */
+  --success: #2e8b3a;
+  --success-fg: #1f6b2b;
+  --warning: #e0a012;
+  --warning-fg: #8a5a00;
+  --danger: #c8402f;
+  --danger-fg: #b0311f;
+  --danger-hover: #ad3223;
+  --on-danger: #ffffff;
+
+  --ring: #1f5a17;
+
+  /* --- Слои поверх контента --- */
+  --overlay: rgb(20 33 15 / 0.45);
+  --scrim: rgb(0 0 0 / 0.6);
+  --scrim-strong: rgb(0 0 0 / 0.95);
+  --on-scrim: #ffffff;
+  --on-scrim-muted: rgb(255 255 255 / 0.7);
+
+  /* --- Бренд-ассеты (логотип, иконки PWA) --- */
+  --brand-deep: #0d2b08;
+
+  /* --- Миниатюры объектов: пары «от → до», текст поверх — --on-scrim --- */
+  --site-1-from: #3b5c2e;
+  --site-1-to: #1b2c15;
+  --site-2-from: #5a5a24;
+  --site-2-to: #2b2b11;
+  --site-3-from: #2e5541;
+  --site-3-to: #15281f;
+  --site-4-from: #4a5c2a;
+  --site-4-to: #232c14;
+  --site-5-from: #2f4e3c;
+  --site-5-to: #16241c;
+
+  /* --- Радиусы --- */
+  --r-sm: 0.5rem;
+  --r-md: 0.625rem;
+  --r-ctl: 0.75rem;
+  --r-card: 1rem;
+  --r-modal: 1.25rem;
+
+  /* --- Тени (тёплые, мягкие) --- */
+  --sh-sm: 0 1px 2px rgb(60 50 20 / 0.08), 0 1px 1px rgb(60 50 20 / 0.04);
+  --sh-md: 0 8px 20px -6px rgb(60 50 20 / 0.18);
+  --sh-lg: 0 24px 56px -12px rgb(40 35 10 / 0.35);
+  --sh-accent: 0 6px 20px -4px color-mix(in srgb, var(--accent) 60%, transparent);
+
+  /* --- Высоты контролов --- */
+  --ctl-h-sm: 2.25rem;
+  --ctl-h-md: 2.75rem;
+  --ctl-h-lg: 3rem;
+  --ctl-h-xl: 3.5rem;
+  --field-h: 3.25rem;
+
+  /* --- shadcn-алиасы на семантические токены (внутренности radix-обёрток) --- */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary-foreground: var(--on-primary);
+  --secondary-foreground: var(--on-secondary);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--on-accent);
+  --destructive: var(--danger);
+  --input: var(--border-strong);
+  --chart-1: var(--primary);
+  --chart-2: var(--accent);
+  --chart-3: var(--success);
+  --chart-4: var(--danger);
+  --chart-5: var(--text-dim);
+  --radius: var(--r-card);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--on-primary);
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-outer: var(--bg-outer);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-field: var(--field);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-on-secondary: var(--on-secondary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+
+  --color-success: var(--success);
+  --color-success-fg: var(--success-fg);
+  --color-warning: var(--warning);
+  --color-warning-fg: var(--warning-fg);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-hover: var(--danger-hover);
+  --color-on-danger: var(--on-danger);
+
+  --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+  --color-scrim: var(--scrim);
+  --color-scrim-strong: var(--scrim-strong);
+  --color-on-scrim: var(--on-scrim);
+  --color-on-scrim-muted: var(--on-scrim-muted);
+  --color-brand-deep: var(--brand-deep);
+
+  /* shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Шрифт */
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-manrope);
+  --font-heading: var(--font-manrope);
+
+  /* Радиусы: rounded-sm / md / ctl / card / modal */
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-ctl);
+  --radius-xl: var(--r-card);
+  --radius-2xl: var(--r-modal);
+  --radius-ctl: var(--r-ctl);
+  --radius-card: var(--r-card);
+  --radius-modal: var(--r-modal);
+
+  /* Тени: shadow-sm / md / lg / accent */
+  --shadow-sm: var(--sh-sm);
+  --shadow-md: var(--sh-md);
+  --shadow-lg: var(--sh-lg);
+  --shadow-accent: var(--sh-accent);
+
+  /* Высоты контролов: h-ctl-sm ... */
+  --spacing-ctl-sm: var(--ctl-h-sm);
+  --spacing-ctl-md: var(--ctl-h-md);
+  --spacing-ctl-lg: var(--ctl-h-lg);
+  --spacing-ctl-xl: var(--ctl-h-xl);
+  --spacing-field: var(--field-h);
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Search, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 
 import { AddWorkerForm } from "@/components/reports/AddWorkerForm";
 import { DeactivateWorkerButton } from "@/components/reports/DeactivateWorkerButton";
@@ -11,10 +11,11 @@ import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { companyStrings as s } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { buildWorkerHoursList } from "@/modules/team/hours";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
+import { Button } from "@/components/ui/button";
+import { SearchField } from "@/components/shared/SearchField";
 
 interface TeamManagementScreenProps {
   companyId: string;
@@ -62,31 +63,18 @@ export function TeamManagementScreen({
   return (
     <div className="flex flex-col gap-4 px-4 pb-6 lg:mx-auto lg:max-w-[960px]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex h-11 flex-1 items-center gap-2 rounded-[12px] border border-border bg-surface-2 px-3 focus-within:border-brand lg:max-w-[320px]">
-          <Search className="size-4 shrink-0 text-text-dim" strokeWidth={2} aria-hidden />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={s.team.searchPlaceholder}
-            aria-label={s.team.searchPlaceholder}
-            className="w-full bg-transparent text-[14px] font-medium outline-none placeholder:text-text-dim"
-          />
-        </div>
+        <SearchField
+          compact
+          className="flex-1 lg:max-w-[320px]"
+          value={search}
+          onChange={setSearch}
+          placeholder={s.team.searchPlaceholder}
+        />
 
-        <button
-          type="button"
-          onClick={() => setIsAddOpen((open) => !open)}
-          aria-expanded={isAddOpen}
-          className={cn(
-            "flex h-11 shrink-0 items-center justify-center gap-2 rounded-[12px] px-4",
-            "bg-brand text-[14px] font-bold text-brand-ink",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
+        <Button size="md" onClick={() => setIsAddOpen((open) => !open)} aria-expanded={isAddOpen}>
           <UserPlus className="size-[18px]" strokeWidth={2.2} aria-hidden />
           {s.team.addWorker}
-        </button>
+        </Button>
       </div>
 
       {isAddOpen && (

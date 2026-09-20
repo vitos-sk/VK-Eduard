@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { t } from "@/lib/i18n";
 import { setSiteArchived } from "@/modules/sites/actions";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ObjectArchiveButtonProps {
   siteId: string;
@@ -39,20 +39,15 @@ export function ObjectArchiveButton({
   };
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      block
       onClick={handleClick}
-      disabled={isPending}
-      className={cn(
-        "flex h-12 w-full items-center justify-center gap-2 rounded-[14px]",
-        "border border-border text-[15px] font-bold text-text",
-        "transition-transform duration-150 active:scale-[0.98]",
-        "disabled:pointer-events-none disabled:opacity-60",
-        className,
-      )}
+      loading={isPending}
+      className={className}
     >
       <Icon className="size-[18px]" strokeWidth={2} aria-hidden />
       {isArchived ? t.objects.detail.restore : t.objects.detail.archive}
-    </button>
+    </Button>
   );
 }

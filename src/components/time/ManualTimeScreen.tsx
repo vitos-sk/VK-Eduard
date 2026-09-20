@@ -31,6 +31,10 @@ import {
   dateKeyOf,
 } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
+import { Textarea } from "@/components/ui/input";
 
 /** Значения по умолчанию — те же, что на макете. */
 const DEFAULT_START = "07:00";
@@ -130,21 +134,14 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
       <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
         {!entry && (
           <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
-            <Info className="size-5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
+            <Info className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
             {t.manualTime.hint}
           </p>
         )}
 
         <Field label={t.manualTime.objectLabel}>
-          <button
-            type="button"
-            onClick={() => setIsObjectPickerOpen(true)}
-            className={cn(
-              "flex min-h-[68px] w-full items-center gap-3 rounded-[16px] border border-border bg-surface p-3 text-left",
-              "transition-transform duration-150 active:scale-[0.98]",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-            )}
-          >
+          <Card asChild padding="sm" interactive className="flex min-h-[68px] w-full items-center gap-3">
+          <button type="button" onClick={() => setIsObjectPickerOpen(true)}>
             {selectedSite ? (
               <>
                 <Thumb
@@ -173,21 +170,14 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
               aria-hidden
             />
           </button>
+          </Card>
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label={t.manualTime.date}>
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex h-[52px] w-full items-center gap-2 rounded-[14px] px-3",
-                    "border border-border bg-surface text-[15px] font-bold text-text",
-                    "transition-transform duration-150 active:scale-[0.98]",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                  )}
-                >
+                <Button variant="field" size="field" className="gap-2 px-3 text-[15px]">
                   <CalendarDays
                     className="size-5 shrink-0 text-text-muted"
                     strokeWidth={2}
@@ -196,7 +186,7 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
                   <span className="tabular truncate">
                     {formatDateShort(date)}
                   </span>
-                </button>
+                </Button>
               </PopoverTrigger>
 
               <PopoverContent
@@ -256,25 +246,18 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
           </p>
           <div className="flex gap-2">
             {BREAK_OPTIONS_MIN.map((minutes) => (
-              <button
+              <Chip
                 key={minutes}
-                type="button"
+                selected={breakMin === minutes}
                 onClick={() => setBreakMin((current) => (current === minutes ? 0 : minutes))}
-                aria-pressed={breakMin === minutes}
-                className={cn(
-                  "flex h-9 items-center gap-1 rounded-full border px-3 text-[13px] font-bold active:scale-95",
-                  breakMin === minutes
-                    ? "border-brand bg-brand text-brand-ink"
-                    : "border-border bg-surface-2 text-text",
-                )}
               >
                 {minutes < 60 ? `${minutes} ${t.units.minutesShort}` : `1 ${t.units.hoursShort}`}
-              </button>
+              </Chip>
             ))}
           </div>
 
           {!isDurationOk && (
-            <p className="mt-2 text-[13px] font-medium text-danger">
+            <p className="mt-2 text-[13px] font-medium text-danger-fg">
               {t.manualTime.errorDuration}
             </p>
           )}
@@ -282,16 +265,11 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
 
         <div>
           <Field label={t.manualTime.description}>
-            <textarea
+            <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={3}
               placeholder={t.manualTime.descriptionPlaceholder}
-              className={cn(
-                "w-full resize-none rounded-[16px] border border-border bg-surface p-4",
-                "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-                "outline-none focus-visible:border-brand",
-              )}
             />
           </Field>
 
@@ -302,20 +280,9 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!isValid || isPending}
-          className={cn(
-            "flex h-[56px] w-full items-center justify-center rounded-[14px]",
-            "bg-brand text-[15px] font-bold text-brand-ink",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "disabled:pointer-events-none disabled:opacity-40",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
-        >
+        <Button size="xl" block onClick={handleSubmit} disabled={!isValid || isPending}>
           {entry ? t.manualTime.saveChanges : t.manualTime.submit}
-        </button>
+        </Button>
       </div>
 
       <ObjectPickerDrawer
@@ -361,29 +328,31 @@ function TimeStepper({
   return (
     <div
       className={cn(
-        "flex h-[52px] w-full items-center justify-between rounded-[14px] border bg-surface pr-1 pl-1",
-        invalid ? "border-danger" : "border-border",
+        "flex h-field w-full items-center justify-between rounded-ctl border bg-field pr-1 pl-1",
+        invalid ? "border-danger-fg" : "border-border-strong",
       )}
     >
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="rounded-md text-text-muted"
         onClick={() => shift(-TIME_STEP_MIN)}
         aria-label={t.manualTime.decreaseTime}
-        className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-text-muted active:bg-surface-2"
       >
         <ChevronLeft className="size-5" strokeWidth={2.4} aria-hidden />
-      </button>
+      </Button>
 
       <span className="tabular text-[15px] font-bold text-text">{value}</span>
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="rounded-md text-text-muted"
         onClick={() => shift(TIME_STEP_MIN)}
         aria-label={t.manualTime.increaseTime}
-        className="flex size-10 shrink-0 items-center justify-center rounded-[10px] text-text-muted active:bg-surface-2"
       >
         <ChevronRight className="size-5" strokeWidth={2.4} aria-hidden />
-      </button>
+      </Button>
     </div>
   );
 }

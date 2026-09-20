@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Share } from "lucide-react";
 
 import { t } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 
 /**
  * Событие установки. В типах TS его нет — оно нестандартное
@@ -72,17 +73,10 @@ export function InstallHint() {
 
   if (promptEvent) {
     return (
-      <button
-        type="button"
-        onClick={() => {
-          void promptEvent.prompt();
-          setPromptEvent(null);
-        }}
-        className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-[14px] border border-border text-[15px] font-semibold text-text transition-colors duration-150 active:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      >
+      <Button variant="outline" block className="mt-3" onClick={() => { void promptEvent.prompt(); setPromptEvent(null); }}>
         <Download className="size-[18px]" strokeWidth={2} aria-hidden />
         {t.welcome.install}
-      </button>
+      </Button>
     );
   }
 

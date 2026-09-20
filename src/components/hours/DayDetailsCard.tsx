@@ -3,6 +3,7 @@ import { t } from "@/lib/i18n";
 import type { WorkEntry } from "@/modules/entries/types";
 import type { DayAggregate } from "@/modules/entries/period";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 interface DayDetailsCardProps {
   aggregate: DayAggregate;
@@ -22,12 +23,7 @@ export function DayDetailsCard({
   const objectsLabel = objectsSummary(entries, siteNameById);
 
   return (
-    <section
-      className={cn(
-        "rounded-[16px] border border-border bg-surface p-4",
-        className,
-      )}
-    >
+    <Card asChild><section className={className}>
       <h2 className="text-[17px] font-bold">{t.hours.details}</h2>
 
       <dl className="mt-3 space-y-3">
@@ -47,7 +43,7 @@ export function DayDetailsCard({
           dotClassName="bg-text-dim"
         />
       </dl>
-    </section>
+    </section></Card>
   );
 }
 

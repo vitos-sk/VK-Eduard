@@ -14,6 +14,7 @@ import { t } from "@/lib/i18n";
 import { gradientForId } from "@/lib/siteGradient";
 import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 interface ObjectPickerDrawerProps {
   open: boolean;
@@ -54,22 +55,22 @@ export function ObjectPickerDrawer({
             const isActive = site.id === value;
 
             return (
-              <button
+              <Card
                 key={site.id}
-                type="button"
-                onClick={() => {
-                  onSelect(site.id);
-                  onOpenChange(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-[16px] border p-3 text-left",
-                  "transition-transform duration-150 active:scale-[0.98]",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                  isActive
-                    ? "border-brand bg-brand/10"
-                    : "border-border bg-surface-2",
-                )}
+                asChild
+                tone="muted"
+                padding="sm"
+                interactive
+                selected={isActive}
+                className="flex w-full items-center gap-3"
               >
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelect(site.id);
+                    onOpenChange(false);
+                  }}
+                >
                 <Thumb name={site.name} gradient={gradientForId(site.id)} size="sm" />
 
                 <span className="min-w-0 flex-1">
@@ -83,12 +84,13 @@ export function ObjectPickerDrawer({
 
                 {isActive && (
                   <Check
-                    className="size-5 shrink-0 text-brand"
+                    className="size-5 shrink-0 text-primary"
                     strokeWidth={2.6}
                     aria-hidden
                   />
                 )}
-              </button>
+                </button>
+              </Card>
             );
           })}
         </div>
@@ -98,7 +100,7 @@ export function ObjectPickerDrawer({
             "mx-4 mt-4 mb-3 flex h-[56px] items-center justify-center",
             "rounded-[14px] bg-surface-2 text-[15px] font-bold text-text",
             "transition-transform duration-150 active:scale-[0.98]",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {t.common.cancel}

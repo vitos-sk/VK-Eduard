@@ -83,8 +83,8 @@ function NavTab({ item, pathname }: { item: NavItem; pathname: string }) {
       className={cn(
         "flex flex-1 flex-col items-center justify-center gap-1 pt-1",
         "transition-colors duration-150",
-        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
-        isActive ? "text-brand" : "text-text-dim",
+        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+        isActive ? "text-primary" : "text-text-dim",
       )}
     >
       <Icon className="size-6" strokeWidth={isActive ? 2.4 : 2} aria-hidden />

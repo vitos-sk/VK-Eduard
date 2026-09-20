@@ -43,7 +43,7 @@ export function HoursChart({ data, emptyLabel }: HoursChartProps) {
             labelFormatter={(label) => label}
             contentStyle={{ borderRadius: 12, fontSize: 13 }}
           />
-          <Bar dataKey="minutes" fill="var(--color-brand)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="minutes" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

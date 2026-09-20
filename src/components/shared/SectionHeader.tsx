@@ -23,9 +23,9 @@ export function SectionHeader({ title, action, className }: SectionHeaderProps) 
         <Link
           href={action.href}
           className={cn(
-            "flex shrink-0 items-center gap-0.5 py-2 text-[13px] font-semibold text-brand",
+            "flex shrink-0 items-center gap-0.5 py-2 text-[13px] font-semibold text-primary",
             "transition-opacity duration-150 active:opacity-70",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {action.label}

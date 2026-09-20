@@ -4,6 +4,8 @@ import { Search, SlidersHorizontal } from "lucide-react";
 
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface SearchFieldProps {
   value: string;
@@ -11,48 +13,49 @@ interface SearchFieldProps {
   placeholder: string;
   /** Кнопка фильтров справа появляется, только если передан обработчик. */
   onFilterClick?: () => void;
+  /** Низкая версия (44px) для плотных панелей. */
+  compact?: boolean;
   className?: string;
 }
 
-/** Поле поиска высотой 52px + необязательная квадратная кнопка фильтров. */
+/** Поле поиска + необязательная квадратная кнопка фильтров. */
 export function SearchField({
   value,
   onChange,
   placeholder,
   onFilterClick,
+  compact = false,
   className,
 }: SearchFieldProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <div className="flex h-[52px] min-w-0 flex-1 items-center gap-2 rounded-[14px] border border-border bg-surface px-4 focus-within:border-brand">
-        <Search className="size-5 shrink-0 text-text-dim" strokeWidth={2} aria-hidden />
-        <input
+      <div className="relative min-w-0 flex-1">
+        <Search
+          className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-text-dim"
+          strokeWidth={2}
+          aria-hidden
+        />
+        <Input
           type="search"
+          size={compact ? "sm" : "md"}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
-          className={cn(
-            "min-w-0 flex-1 bg-transparent text-[15px] font-medium text-text",
-            "placeholder:text-text-dim focus:outline-none",
-            "[&::-webkit-search-cancel-button]:appearance-none",
-          )}
+          className="pl-11 [&::-webkit-search-cancel-button]:appearance-none"
         />
       </div>
 
       {onFilterClick && (
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn("rounded-ctl bg-field", compact ? "size-ctl-md" : "size-field")}
           onClick={onFilterClick}
           aria-label={t.common.filters}
-          className={cn(
-            "flex size-[52px] shrink-0 items-center justify-center rounded-[14px] border border-border bg-surface text-text",
-            "transition-transform duration-150 active:scale-95",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
         >
           <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
-        </button>
+        </Button>
       )}
     </div>
   );

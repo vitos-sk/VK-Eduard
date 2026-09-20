@@ -14,7 +14,9 @@ import { fmt, formatDateFull, formatDateShort, fromDateKey } from "@/lib/format"
 import { t } from "@/lib/i18n";
 import { updateReportCategories, updateReportDescription } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportDetail, WorkCategory } from "@/modules/reports/types";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/input";
 
 interface ReportDetailProps {
   report: SiteReportDetail;
@@ -92,7 +94,7 @@ export function ReportDetail({
   };
 
   const photosSection = (photos.length > 0 || editable) && (
-    <section className="rounded-[16px] border border-border bg-surface p-4">
+    <Card asChild><section>
       <h2 className="text-[17px] font-bold">{t.reportDetail.photosTitle}</h2>
       <ReportPhotoUploader
         className="mt-3"
@@ -104,12 +106,12 @@ export function ReportDetail({
         onUrlsChange={(patch) => setUrls((current) => ({ ...current, ...patch }))}
         editable={editable}
       />
-    </section>
+    </section></Card>
   );
 
   const content = (
     <>
-      <section className="rounded-[16px] border border-border bg-surface p-4">
+      <Card asChild><section>
         <p className="text-[20px] font-bold">{siteName ?? t.hours.noObject}</p>
         <p className="mt-1 text-[14px] font-medium text-text-muted">
           {formatDateFull(fromDateKey(report.work_date))}
@@ -119,17 +121,18 @@ export function ReportDetail({
           <h2 className="text-[15px] font-bold">{t.reportDetail.categoriesLabel}</h2>
 
           {editable && !isEditingCategories && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => {
                 setCategoryDraft(categoryIds);
                 setIsEditingCategories(true);
               }}
               aria-label={t.reportDetail.edit}
-              className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+              className="text-text-muted"
             >
               <Pencil className="size-4" strokeWidth={2} aria-hidden />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -137,21 +140,12 @@ export function ReportDetail({
           <div className="mt-3 space-y-3">
             <WorkCategoryChips categories={categories} value={categoryDraft} onChange={setCategoryDraft} />
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleSaveCategories}
-                disabled={isCatPending}
-                className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-brand text-[14px] font-bold text-brand-ink disabled:opacity-60"
-              >
+              <Button size="md" className="flex-1" onClick={handleSaveCategories} disabled={isCatPending}>
                 {t.reportDetail.save}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditingCategories(false)}
-                className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border text-[14px] font-bold text-text"
-              >
+              </Button>
+              <Button variant="outline" size="md" className="flex-1" onClick={() => setIsEditingCategories(false)}>
                 {t.common.cancel}
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -163,60 +157,47 @@ export function ReportDetail({
             readOnly
           />
         )}
-      </section>
+      </section></Card>
 
-      <section className="rounded-[16px] border border-border bg-surface p-4">
+      <Card asChild><section>
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[17px] font-bold">
             {description === "" ? t.reportDetail.addDescriptionTitle : t.manualTime.description}
           </h2>
 
           {editable && !isEditingDescription && description !== "" && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => {
                 setDraft(description);
                 setIsEditingDescription(true);
               }}
               aria-label={t.reportDetail.edit}
-              className="flex size-9 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+              className="text-text-muted"
             >
               <Pencil className="size-4" strokeWidth={2} aria-hidden />
-            </button>
+            </Button>
           )}
         </div>
 
         {isEditingDescription ? (
           <div className="mt-3 space-y-3">
-            <textarea
+            <Textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               rows={4}
               placeholder={t.reportDetail.addDescriptionPlaceholder}
               autoFocus
-              className={cn(
-                "w-full resize-none rounded-[14px] border border-border bg-surface-2 p-4",
-                "text-[15px] leading-[1.4] font-medium text-text placeholder:text-text-dim",
-                "outline-none focus-visible:border-brand",
-              )}
             />
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleSaveDescription}
-                disabled={isDescPending}
-                className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-brand text-[14px] font-bold text-brand-ink disabled:opacity-60"
-              >
+              <Button size="md" className="flex-1" onClick={handleSaveDescription} disabled={isDescPending}>
                 {t.reportDetail.save}
-              </button>
+              </Button>
               {description !== "" && (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingDescription(false)}
-                  className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border text-[14px] font-bold text-text"
-                >
+                <Button variant="outline" size="md" className="flex-1" onClick={() => setIsEditingDescription(false)}>
                   {t.common.cancel}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -225,7 +206,7 @@ export function ReportDetail({
             {description}
           </p>
         )}
-      </section>
+      </section></Card>
 
       <div className="lg:hidden">{photosSection}</div>
 
@@ -238,29 +219,27 @@ export function ReportDetail({
   const menu = canEdit && (
     <Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={t.reportDetail.openMenu}
-          className="flex size-11 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2"
-        >
+        <Button variant="ghost" size="icon" aria-label={t.reportDetail.openMenu}>
           <MoreVertical className="size-5" strokeWidth={2} aria-hidden />
-        </button>
+        </Button>
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
         {!isEditing && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            block
+            className="justify-start rounded-sm px-2"
             onClick={() => {
               setIsEditing(true);
               if (description === "") setIsEditingDescription(true);
               setIsMenuOpen(false);
             }}
-            className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-semibold hover:bg-surface-2"
           >
             <Pencil className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
             {t.reportDetail.edit}
-          </button>
+          </Button>
         )}
 
         <DeleteReportButton
@@ -269,7 +248,7 @@ export function ReportDetail({
             router.push("/reports");
             router.refresh();
           }}
-          className="!h-10 !w-full !justify-start !gap-2 !rounded-[8px] !border-0 !px-2 !text-[14px] hover:bg-danger/10"
+          className="h-9 w-full justify-start gap-2 rounded-sm border-transparent px-2"
         />
       </PopoverContent>
     </Popover>

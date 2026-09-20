@@ -10,6 +10,7 @@
  * и от данных, а нужны как статические файлы — в том числе `/apple-touch-icon.png`,
  * который iOS ищет в корне сам, ещё до того как прочитает разметку.
  */
+import { readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,10 +20,19 @@ import sharp from "sharp";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC = path.join(ROOT, "public");
 
-/** Цвета берём из `globals.css` — они не должны разъезжаться с темой. */
-const BG = "#0d2b08";
-const BRAND = "#f5c43c";
-const INK = "#ffffff";
+/** Цвета читаем из `src/design-system/tokens.css` — единственного источника правды. */
+const TOKENS_CSS = readFileSync(
+  path.join(ROOT, "src", "design-system", "tokens.css"),
+  "utf8",
+);
+const token = (name) => {
+  const match = TOKENS_CSS.match(new RegExp(`--${name}:\\s*([^;]+);`));
+  if (!match) throw new Error(`Токен --${name} не найден в tokens.css`);
+  return match[1].trim();
+};
+const BG = token("brand-deep");
+const BRAND = token("accent");
+const INK = token("on-scrim");
 
 /**
  * Знак `K` в системе координат 100×100 — те же path, что в `Logo.tsx`,

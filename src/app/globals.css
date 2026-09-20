@@ -2,121 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@import "../design-system/tokens.css";
 
+/* Порог, с которого приложение показывается «телефоном по центру». */
 @theme inline {
-  /* Порог, с которого приложение показывается «телефоном по центру». */
   --breakpoint-phone: 30rem;
-
-  /* --- Дизайн-система K group — зелёная тема (docs/DESIGN-SYSTEM.md) --- */
-  --color-bg: var(--bg);
-  --color-bg-outer: var(--bg-outer);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-brand: var(--brand);
-  --color-brand-ink: var(--brand-ink);
-  --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
-  --color-text-dim: var(--text-dim);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-
-  /* --- Токены shadcn, замапленные на дизайн-систему --- */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-manrope);
-  --font-mono: var(--font-manrope);
-  --font-heading: var(--font-manrope);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-/*
-  Тёмная тема — единственная. Светлой темы нет, переключателя нет.
-  Значения живут в :root, класс `dark` на <html> нужен только для того,
-  чтобы срабатывали `dark:`-варианты внутри компонентов shadcn.
-*/
-:root {
-  --bg: #0e220a;
-  --bg-outer: #061204;
-  --surface: #1d3418;
-  --surface-2: #26421f;
-  --border: #2f5227;
-  --brand: #f5c43c;
-  --brand-ink: #0d2b08;
-  --text: #ffffff;
-  --text-muted: #9db394;
-  --text-dim: #7e9675;
-  --success: #7bc96f;
-  --warning: #f5c43c;
-  --danger: #f2705f;
-
-  --background: var(--bg);
-  --foreground: var(--text);
-  --card: var(--surface);
-  --card-foreground: var(--text);
-  --popover: var(--surface);
-  --popover-foreground: var(--text);
-  --primary: var(--brand);
-  --primary-foreground: var(--brand-ink);
-  --secondary: var(--surface-2);
-  --secondary-foreground: var(--text);
-  --muted: var(--surface-2);
-  --muted-foreground: var(--text-muted);
-  --accent: var(--surface-2);
-  --accent-foreground: var(--text);
-  --destructive: var(--danger);
-  --input: var(--border);
-  --ring: var(--brand);
-  --chart-1: var(--brand);
-  --chart-2: var(--success);
-  --chart-3: var(--warning);
-  --chart-4: var(--danger);
-  --chart-5: var(--text-dim);
-  --radius: 0.875rem;
-  --sidebar: var(--surface);
-  --sidebar-foreground: var(--text);
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: var(--brand-ink);
-  --sidebar-accent: var(--surface-2);
-  --sidebar-accent-foreground: var(--text);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--brand);
 }
 
 @layer base {
@@ -137,27 +27,21 @@
   }
 }
 
-/* Меш-фон екрану додатку: плями бренд-жовтого й мʼятного success
-   розкидані впереміш по всій висоті, дуже м'яко розмиті — щоб читалось
-   як одна спокійна тонована поверхня, а не набір окремих плям. Живе
-   окремим класом (не в `body`), бо `PhoneFrame` рендерить екран у
-   внутрішньому контейнері поверх body. */
+/* Меш-фон экрана: тёплая бумага с двумя едва заметными пятнами — жёлтым и зелёным.
+   Живёт отдельным классом (не в `body`), потому что `PhoneFrame` рендерит экран
+   во внутреннем контейнере поверх body. */
 .app-bg {
   background-color: var(--bg);
   background-image:
-    radial-gradient(55% 42% at 14% 10%, color-mix(in oklab, var(--brand) 13%, transparent) 0%, transparent 78%),
-    radial-gradient(60% 46% at 88% 6%, color-mix(in oklab, var(--success) 11%, transparent) 0%, transparent 78%),
-    radial-gradient(58% 44% at 92% 46%, color-mix(in oklab, var(--brand) 9%, transparent) 0%, transparent 80%),
-    radial-gradient(62% 48% at 6% 52%, color-mix(in oklab, var(--success) 10%, transparent) 0%, transparent 80%),
-    radial-gradient(58% 44% at 78% 88%, color-mix(in oklab, var(--brand) 8%, transparent) 0%, transparent 80%),
-    radial-gradient(62% 48% at 16% 92%, color-mix(in oklab, var(--success) 9%, transparent) 0%, transparent 82%),
-    radial-gradient(65% 50% at 50% 50%, transparent 0%, color-mix(in oklab, var(--bg-outer) 60%, var(--bg)) 100%);
+    radial-gradient(55% 40% at 12% 8%, color-mix(in oklab, var(--accent) 16%, transparent) 0%, transparent 78%),
+    radial-gradient(60% 44% at 92% 40%, color-mix(in oklab, var(--primary) 6%, transparent) 0%, transparent 80%),
+    radial-gradient(60% 46% at 10% 90%, color-mix(in oklab, var(--accent) 10%, transparent) 0%, transparent 82%);
   background-attachment: fixed;
 }
 
-/* Подложка нижних листов: в тёмной теме дефолтные 10% почти не видны */
+/* Подложка нижних листов: дефолтные 10% почти не видны */
 [data-slot="drawer-overlay"] {
-  background-color: rgb(0 0 0 / 0.6);
+  background-color: var(--overlay);
 }
 
 /* Моноширинные цифры для таймера и метрик */

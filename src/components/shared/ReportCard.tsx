@@ -9,6 +9,7 @@ import { gradientForId } from "@/lib/siteGradient";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface ReportCardProps {
   report: SiteReportWithPhotos;
@@ -43,7 +44,7 @@ export function ReportCard({ report, siteName, categories, thumbUrl, className }
       className={cn(
         "flex w-full items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
         "transition-transform duration-150 active:scale-[0.98]",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         state === "no_description" && "opacity-80",
         className,
       )}
@@ -75,10 +76,8 @@ export function ReportCard({ report, siteName, categories, thumbUrl, className }
 
         {state === "no_description" && (
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="rounded-[8px] bg-warning/12 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-warning uppercase">
-              {t.reports.noDescriptionBadge}
-            </span>
-            <span className="text-[13px] font-bold text-brand">
+            <Badge variant="warning">{t.reports.noDescriptionBadge}</Badge>
+            <span className="text-[13px] font-bold text-primary">
               {t.reports.addDescription}
             </span>
           </div>

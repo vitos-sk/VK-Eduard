@@ -13,6 +13,7 @@ import { objectsStrings as s } from "@/lib/i18n/parts/objects";
 import { cn } from "@/lib/utils";
 import { buildSiteHoursList } from "@/modules/sites/hours";
 import type { Site } from "@/modules/sites/queries";
+import { Card } from "@/components/ui/card";
 
 interface ObjectHoursCardProps {
   companyId: string;
@@ -32,13 +33,8 @@ export function ObjectHoursCard({ companyId, site, className }: ObjectHoursCardP
   const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
 
   return (
-    <section
-      className={cn(
-        "rounded-[16px] border border-border bg-surface p-4",
-        isLoading && "opacity-70",
-        className,
-      )}
-    >
+    <Card asChild><section className={cn(isLoading && "opacity-70",
+        className,)}>
       <h2 className="text-[16px] font-bold">{s.detail.periodTitle}</h2>
 
       <PeriodNavigator
@@ -62,6 +58,6 @@ export function ObjectHoursCard({ companyId, site, className }: ObjectHoursCardP
           </dd>
         </div>
       </dl>
-    </section>
+    </section></Card>
   );
 }

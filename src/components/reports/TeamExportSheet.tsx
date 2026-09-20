@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, ChevronDown, ChevronLeft, Download, Loader2, MessageCircle, Search } from "lucide-react";
+import { ChevronDown, ChevronLeft, Download, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { downloadExportFile, shareExportFile } from "@/components/reports/shareExport";
@@ -17,6 +17,10 @@ import {
   type ExportFormat,
   type ExportKind,
 } from "@/modules/export/formats";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { CheckMark } from "@/components/ui/checkbox";
+import { SearchField } from "@/components/shared/SearchField";
 
 const FORMAT_STORAGE_KEY = "export:format";
 /** Пошук у списку співробітників корисний, лише коли їх багато. */
@@ -164,33 +168,31 @@ export function TeamExportSheet({
 
           <section>
             <p className="text-[12px] font-medium text-text-muted">{s.export.whoLabel}</p>
-            <button
-              type="button"
+            <Button
+              variant="field"
+              size="field"
+              className="mt-1.5 h-12 gap-2 px-3"
               onClick={() => setIsWorkersOpen((current) => !current)}
               aria-expanded={isWorkersOpen}
-              className="mt-1.5 flex h-12 w-full items-center gap-2 rounded-[14px] border border-border bg-surface-2 px-3 text-left"
             >
-              <span className="min-w-0 flex-1 truncate text-[15px] font-bold">{scopeLabel}</span>
+              <span className="min-w-0 flex-1 truncate text-left text-[15px] font-bold">{scopeLabel}</span>
               <ChevronDown
                 className={cn("size-5 shrink-0 text-text-muted transition-transform duration-150", isWorkersOpen && "rotate-180")}
                 strokeWidth={2.2}
                 aria-hidden
               />
-            </button>
+            </Button>
 
             {isWorkersOpen && (
-              <div className="mt-2 rounded-[14px] border border-border bg-surface-2 p-1.5">
+              <Card tone="muted" padding="none" className="mt-2 rounded-ctl p-1.5">
                 {workers.length > SEARCH_THRESHOLD && (
-                  <div className="mb-1 flex h-10 items-center gap-2 rounded-[10px] bg-surface px-3">
-                    <Search className="size-4 shrink-0 text-text-dim" strokeWidth={2} aria-hidden />
-                    <input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder={s.export.searchPlaceholder}
-                      aria-label={s.export.searchPlaceholder}
-                      className="w-full bg-transparent text-[14px] font-medium outline-none placeholder:text-text-dim"
-                    />
-                  </div>
+                  <SearchField
+                    compact
+                    className="mb-1"
+                    value={search}
+                    onChange={setSearch}
+                    placeholder={s.export.searchPlaceholder}
+                  />
                 )}
 
                 <ul className="max-h-[220px] overflow-y-auto">
@@ -211,7 +213,7 @@ export function TeamExportSheet({
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             )}
           </section>
 
@@ -223,21 +225,23 @@ export function TeamExportSheet({
                   const isActive = value === format;
 
                   return (
-                    <button
+                    <Card
                       key={value}
-                      type="button"
-                      role="radio"
-                      aria-checked={isActive}
-                      onClick={() => chooseFormat(value)}
+                      asChild
+                      tone="muted"
+                      padding="none"
+                      interactive
+                      selected={isActive}
                       className={cn(
-                        "flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-[14px] border text-[13px] font-bold",
-                        "transition-colors duration-150 active:scale-[0.98]",
-                        isActive ? "border-brand bg-brand/10 text-text" : "border-border bg-surface-2 text-text-muted",
+                        "flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-ctl text-center text-[13px] font-bold",
+                        isActive ? "text-text" : "text-text-muted",
                       )}
                     >
-                      <Icon className={cn("size-5", isActive && "text-brand")} strokeWidth={2} aria-hidden />
-                      {label}
-                    </button>
+                      <button type="button" role="radio" aria-checked={isActive} onClick={() => chooseFormat(value)}>
+                        <Icon className={cn("size-5", isActive && "text-primary")} strokeWidth={2} aria-hidden />
+                        {label}
+                      </button>
+                    </Card>
                   );
                 })}
               </div>
@@ -248,39 +252,23 @@ export function TeamExportSheet({
         </div>
 
         <div className="space-y-2 border-t border-border px-4 pt-3 pb-3 lg:pb-4">
-          <button
-            type="button"
-            onClick={() => run("download")}
-            disabled={busy !== null}
-            className={cn(
-              "flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-brand",
-              "text-[15px] font-bold text-brand-ink transition-transform duration-150 active:scale-[0.98] disabled:opacity-60",
-            )}
-          >
+          <Button block onClick={() => run("download")} disabled={busy !== null}>
             {busy === "download" ? (
               <Loader2 className="size-[18px] animate-spin" aria-hidden />
             ) : (
               <Download className="size-[18px]" strokeWidth={2.2} aria-hidden />
             )}
             {s.export.download}
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={() => run("share")}
-            disabled={busy !== null}
-            className={cn(
-              "flex h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-border",
-              "text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98] disabled:opacity-60",
-            )}
-          >
+          <Button variant="outline" block onClick={() => run("share")} disabled={busy !== null}>
             {busy === "share" ? (
               <Loader2 className="size-[18px] animate-spin" aria-hidden />
             ) : (
               <MessageCircle className="size-[18px]" strokeWidth={2.2} aria-hidden />
             )}
             {s.export.sendWhatsapp}
-          </button>
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
@@ -289,22 +277,16 @@ export function TeamExportSheet({
 
 function WorkerRow({ label, checked, onClick }: { label: string; checked: boolean; onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="md"
+      block
+      className="justify-start gap-3 rounded-md px-2.5 hover:bg-surface"
       onClick={onClick}
       aria-pressed={checked}
-      className="flex h-11 w-full items-center gap-3 rounded-[10px] px-2.5 text-left active:bg-surface"
     >
-      <span
-        aria-hidden
-        className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-[6px] border-2",
-          checked ? "border-brand bg-brand" : "border-text-dim",
-        )}
-      >
-        {checked && <Check className="size-3.5 text-brand-ink" strokeWidth={3} />}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{label}</span>
-    </button>
+      <CheckMark checked={checked} />
+      <span className="min-w-0 flex-1 truncate text-left text-[14px] font-semibold">{label}</span>
+    </Button>
   );
 }

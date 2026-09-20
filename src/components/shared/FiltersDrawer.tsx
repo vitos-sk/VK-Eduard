@@ -53,7 +53,7 @@ export function FiltersDrawer({
             "mx-4 mt-4 mb-3 flex h-[56px] items-center justify-center",
             "rounded-[14px] bg-surface-2 text-[15px] font-bold text-text",
             "transition-transform duration-150 active:scale-[0.98]",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {t.common.cancel}

@@ -16,7 +16,7 @@ import { t } from "@/lib/i18n";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type ScreenTab = "mine" | "team";
 
@@ -49,17 +49,11 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
         title={t.reports.title}
         action={
           <div className="flex items-center gap-2">
-            <Link
-              href="/reports/new"
-              aria-label={t.reports.createReport}
-              className={cn(
-                "flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink",
-                "transition-transform duration-150 active:scale-95",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-              )}
-            >
+            <Button asChild variant="accent" size="icon" aria-label={t.reports.createReport}>
+              <Link href="/reports/new">
               <Plus className="size-6" strokeWidth={2.6} aria-hidden />
-            </Link>
+              </Link>
+            </Button>
             <AvatarLink initials={initialsOf(profile)} />
           </div>
         }

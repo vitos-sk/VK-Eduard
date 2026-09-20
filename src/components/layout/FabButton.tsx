@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface FabButtonProps {
   onClick: () => void;
@@ -18,21 +19,16 @@ interface FabButtonProps {
  */
 export function FabButton({ onClick, expanded = false, className }: FabButtonProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="accent"
+      size="icon-lg"
       // Метка для листа быстрых действий: клик по FAB не должен закрываться
       // как «клик вне листа» — кнопка сама переключает состояние.
       data-quick-fab=""
       onClick={onClick}
       aria-label={t.nav.add}
       aria-expanded={expanded}
-      className={cn(
-        "flex size-[60px] items-center justify-center rounded-full bg-brand text-brand-ink",
-        "shadow-[0_6px_20px_-4px_rgba(255,201,60,0.45)]",
-        "transition-transform duration-200 active:scale-95",
-        "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand",
-        className,
-      )}
+      className={cn("active:scale-95", className)}
     >
       <Plus
         className={cn(
@@ -42,6 +38,6 @@ export function FabButton({ onClick, expanded = false, className }: FabButtonPro
         strokeWidth={2.5}
         aria-hidden
       />
-    </button>
+    </Button>
   );
 }

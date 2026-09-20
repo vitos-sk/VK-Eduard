@@ -11,14 +11,11 @@ import {
 } from "@/components/ui/select";
 import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export const ALL_FILTER = "all";
 
-const triggerClassName = cn(
-  "mt-1 h-10 w-full rounded-[12px] border-border bg-surface-2 px-3",
-  "text-[13px] font-bold text-text",
-  "focus-visible:border-border focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-);
+const triggerClassName = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[13px] font-bold text-text";
 
 interface Option {
   id: string;
@@ -90,21 +87,18 @@ export function HoursFilters({
       </div>
 
       {isActive && (
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-fit rounded-full text-text-muted"
           onClick={() => {
             onWorkerChange(ALL_FILTER);
             onSiteChange(ALL_FILTER);
           }}
-          className={cn(
-            "flex h-8 w-fit items-center gap-1 rounded-full border border-border px-3",
-            "text-[12px] font-bold text-text-muted transition-colors duration-150 hover:bg-surface-2",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-          )}
         >
           <X className="size-3.5" strokeWidth={2.2} aria-hidden />
           {s.resetFilters}
-        </button>
+        </Button>
       )}
     </div>
   );

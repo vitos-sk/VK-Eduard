@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -43,24 +44,17 @@ export function SegmentedTabs<T extends string>({
         const isActive = option.value === value;
 
         return (
-          <button
+          <Button
             key={option.value}
-            type="button"
             role="tab"
             aria-selected={isActive}
+            variant={isActive ? "primary" : "secondary"}
+            size={size === "sm" ? "sm" : "md"}
+            className={cn("rounded-full", !isActive && "text-text-muted")}
             onClick={() => onChange(option.value)}
-            className={cn(
-              "shrink-0 rounded-full font-semibold whitespace-nowrap",
-              size === "sm" ? "h-8 px-3 text-[13px]" : "h-11 px-4 text-[14px]",
-              "transition-colors duration-150",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-              isActive
-                ? "bg-brand text-brand-ink"
-                : "bg-surface-2 text-text-muted",
-            )}
           >
             {option.label}
-          </button>
+          </Button>
         );
       })}
     </div>

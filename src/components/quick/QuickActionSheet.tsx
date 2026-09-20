@@ -27,6 +27,7 @@ import { startCurrentBreak, startShift } from "@/modules/entries/actions";
 import { dateKeyOf, hhmmOf } from "@/modules/time/calc";
 import type { QuickAction, QuickActionId } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 /** Иконки не хранятся в моке — сопоставляем их по id пункта. */
 const icons: Record<QuickActionId, LucideIcon> = {
@@ -118,7 +119,7 @@ export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionShee
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-full text-text",
                 "transition-colors duration-150 active:bg-surface-2",
-                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand",
+                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
               )}
             >
               <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
@@ -178,23 +179,23 @@ function QuickActionRow({
     </>
   );
 
-  const className = cn(
-    "flex w-full items-center gap-3 rounded-[16px] border border-border bg-surface-2 p-3 text-left",
-    "transition-transform duration-150 active:scale-[0.98]",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-  );
+  const className = "flex w-full items-center gap-3";
 
   if (action.href) {
     return (
-      <Link href={action.href} onClick={onSelect} className={className}>
-        {content}
-      </Link>
+      <Card asChild tone="muted" padding="sm" interactive className={className}>
+        <Link href={action.href} onClick={onSelect}>
+          {content}
+        </Link>
+      </Card>
     );
   }
 
   return (
-    <button type="button" onClick={onSelect} className={className}>
-      {content}
-    </button>
+    <Card asChild tone="muted" padding="sm" interactive className={className}>
+      <button type="button" onClick={onSelect}>
+        {content}
+      </button>
+    </Card>
   );
 }

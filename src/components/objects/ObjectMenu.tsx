@@ -7,19 +7,20 @@ import { Archive, ArchiveRestore, MoreVertical, Pencil, Trash2 } from "lucide-re
 import { toast } from "sonner";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fmt } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { objectsStrings as s } from "@/lib/i18n/parts/objects";
 import { cn } from "@/lib/utils";
 import { deleteSite, setSiteArchived } from "@/modules/sites/actions";
+import { Button } from "@/components/ui/button";
 
 interface ObjectMenuProps {
   siteId: string;
@@ -71,36 +72,31 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
     <>
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>
         <PopoverTrigger asChild>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             aria-label={s.menu.open}
             disabled={isArchivePending}
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted",
-              "transition-colors duration-150 hover:bg-surface-2 hover:text-text active:bg-surface-2",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-              "disabled:pointer-events-none disabled:opacity-50",
-              className,
-            )}
+            className={cn("text-text-muted", className)}
           >
             <MoreVertical className="size-[18px]" strokeWidth={2} aria-hidden />
-          </button>
+          </Button>
         </PopoverTrigger>
 
         <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
-          <Link
-            href={`/objects/${siteId}/edit`}
-            onClick={() => setMenuOpen(false)}
-            className="flex h-10 items-center gap-2 rounded-[8px] px-2 text-[14px] font-semibold hover:bg-surface-2"
-          >
-            <Pencil className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
-            {s.menu.edit}
-          </Link>
+          <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
+            <Link href={`/objects/${siteId}/edit`} onClick={() => setMenuOpen(false)}>
+              <Pencil className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+              {s.menu.edit}
+            </Link>
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            block
+            className="justify-start rounded-sm px-2"
             onClick={handleArchiveToggle}
-            className="flex h-10 w-full items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-semibold hover:bg-surface-2"
           >
             {isArchived ? (
               <ArchiveRestore className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
@@ -108,48 +104,41 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
               <Archive className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
             )}
             {isArchived ? s.menu.restore : s.menu.archive}
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            block
+            className="justify-start rounded-sm px-2 text-danger-fg hover:bg-danger/10"
             onClick={() => {
               setMenuOpen(false);
               setDeleteOpen(true);
             }}
-            className="flex h-10 w-full items-center gap-2 rounded-[8px] px-2 text-left text-[14px] font-semibold text-danger hover:bg-danger/10"
           >
             <Trash2 className="size-[16px]" strokeWidth={2} aria-hidden />
             {s.menu.delete}
-          </button>
+          </Button>
         </PopoverContent>
       </Popover>
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{s.menu.deleteConfirmTitle}</DialogTitle>
-            <DialogDescription>{fmt(s.menu.deleteConfirmBody, { name: siteName })}</DialogDescription>
-          </DialogHeader>
+      <Modal open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>{s.menu.deleteConfirmTitle}</ModalTitle>
+            <ModalDescription>{fmt(s.menu.deleteConfirmBody, { name: siteName })}</ModalDescription>
+          </ModalHeader>
 
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setDeleteOpen(false)}
-              className="flex h-12 items-center justify-center rounded-[14px] border border-border text-[15px] font-bold text-text transition-transform duration-150 active:scale-[0.98]"
-            >
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               {t.common.cancel}
-            </button>
-            <button
-              type="button"
-              onClick={handleDeleteConfirm}
-              disabled={isDeletePending}
-              className="flex h-12 items-center justify-center rounded-[14px] bg-danger text-[15px] font-bold text-white transition-transform duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
-            >
+            </Button>
+            <Button variant="danger" onClick={handleDeleteConfirm} disabled={isDeletePending}>
               {s.menu.deleteConfirmAction}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }
