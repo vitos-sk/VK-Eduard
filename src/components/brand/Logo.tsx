@@ -49,14 +49,14 @@ export function Logo({
   size?: number;
 }) {
   return (
-    <div className={cn("flex items-center gap-2 text-text", className)}>
+    <div className={cn("flex items-center gap-2 text-primary", className)}>
       <LogoMark size={size * 1.7} />
       <span
         className="font-extrabold tracking-tight"
         style={{ fontSize: size }}
       >
         {t.common.appWordmark}
-        <span className="text-primary">.</span>
+        <span className="text-accent">.</span>
       </span>
     </div>
   );
