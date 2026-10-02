@@ -154,36 +154,46 @@ export function WorkTimeFields({
         </div>
       </div>
 
-      <p className="mt-3 mb-2 text-[13px] font-semibold text-text-muted">{t.hours.break}</p>
-      <div className="flex flex-wrap items-center gap-2">
+      <p className="mt-4 mb-2 text-[13px] font-semibold text-text-muted">{t.hours.break}</p>
+      <div className="grid grid-cols-5 gap-2">
         {BREAK_OPTIONS_MIN.map((minutes) => (
           <Chip
             key={minutes}
             selected={breakMin === minutes}
             onClick={() => onBreakChange(breakMin === minutes ? 0 : minutes)}
+            className="w-full px-0"
           >
             {minutes < 60 ? `${minutes} ${t.units.minutesShort}` : `1 ${t.units.hoursShort}`}
           </Chip>
         ))}
+        <Chip
+          selected={breakMin === 0}
+          onClick={() => onBreakChange(0)}
+          className="w-full px-0"
+        >
+          {t.manualTime.noBreak}
+        </Chip>
+      </div>
 
-        <label className="ml-auto flex items-center gap-2 text-[13px] font-semibold text-text-muted">
-          {t.manualTime.customBreak}
-          <Input
-            size="sm"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={MAX_BREAK_MIN}
-            value={breakMin === 0 ? "" : breakMin}
-            placeholder="0"
-            onChange={(event) => {
-              const next = Math.floor(Number(event.target.value));
+      <div className="relative mt-2">
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={MAX_BREAK_MIN}
+          value={breakMin === 0 ? "" : breakMin}
+          placeholder={t.manualTime.customBreak}
+          aria-label={t.manualTime.customBreak}
+          onChange={(event) => {
+            const next = Math.floor(Number(event.target.value));
 
-              onBreakChange(Number.isFinite(next) ? Math.min(Math.max(next, 0), MAX_BREAK_MIN) : 0);
-            }}
-            className="tabular w-20 text-center"
-          />
-        </label>
+            onBreakChange(Number.isFinite(next) ? Math.min(Math.max(next, 0), MAX_BREAK_MIN) : 0);
+          }}
+          className="tabular pr-12 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[14px] font-semibold text-text-muted">
+          {t.units.minutesShort}
+        </span>
       </div>
 
       <div className="mt-3 flex items-center gap-2 text-[14px] font-bold text-text">
