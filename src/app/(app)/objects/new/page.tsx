@@ -1,15 +1,9 @@
-import { redirect } from "next/navigation";
-
 import { ObjectForm } from "@/components/objects/ObjectForm";
 import { requireProfile } from "@/modules/auth/session";
 
-/** Створення об'єкта — тільки boss (RLS `sites_insert` все одно б відхилила). */
+/** Створення об'єкта — доступне кожному співробітнику компанії (RLS `sites_insert`). */
 export default async function NewObjectPage() {
   const profile = await requireProfile();
-
-  if (profile.role !== "boss") {
-    redirect("/objects");
-  }
 
   return <ObjectForm companyId={profile.company_id} />;
 }

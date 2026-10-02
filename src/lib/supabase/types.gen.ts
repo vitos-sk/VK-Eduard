@@ -258,6 +258,7 @@ export type Database = {
           archived_at: string | null
           company_id: string
           created_at: string
+          created_by: string | null
           id: string
           kind: string | null
           name: string
@@ -269,6 +270,7 @@ export type Database = {
           archived_at?: string | null
           company_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
           kind?: string | null
           name: string
@@ -280,6 +282,7 @@ export type Database = {
           archived_at?: string | null
           company_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           kind?: string | null
           name?: string
@@ -287,6 +290,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["site_status"]
         }
         Relationships: [
+          {
+            foreignKeyName: "sites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sites_company_id_fkey"
             columns: ["company_id"]

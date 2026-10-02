@@ -12,6 +12,8 @@ import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { Thumb } from "@/components/shared/Thumb";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
+import { WorkTimeFields } from "@/components/time/WorkTimeFields";
+import { Toggle } from "@/components/ui/toggle";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatDateShort } from "@/lib/format";
@@ -20,7 +22,13 @@ import { gradientForId } from "@/lib/siteGradient";
 import { createReport } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
-import { dateKeyOf } from "@/modules/time/calc";
+import {
+  dateKeyOf,
+  isDurationValid,
+  minutesToTime,
+  timeToMinutes,
+  totalMinutes,
+} from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
@@ -46,12 +54,23 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const [date, setDate] = useState<Date>(() => new Date());
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+  const [withTime, setWithTime] = useState(false);
+  const [startAt, setStartAt] = useState("07:00");
+  const [endAt, setEndAt] = useState("16:00");
+  const [breakMin, setBreakMin] = useState(0);
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [createdReportId, setCreatedReportId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<ReportPhoto[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+
+  // Перерва завжди одразу після початку зміни — так само, як на екрані «Додати час».
+  const breakStart = breakMin > 0 ? startAt : null;
+  const breakEnd = breakMin > 0 ? minutesToTime(timeToMinutes(startAt) + breakMin) : null;
+  const durationMin = totalMinutes(startAt, endAt, breakStart, breakEnd) ?? 0;
+  const isDurationOk = isDurationValid(durationMin);
+  const canSubmit = !withTime || isDurationOk;
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
@@ -70,6 +89,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         siteId,
         description,
         categoryIds,
+        time: withTime ? { startedAt: startAt, endedAt: endAt, breakStart, breakEnd } : null,
       });
 
       if (result.error || !result.reportId) {
@@ -197,12 +217,37 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
           />
         </Field>
 
+        <Card padding="sm" className="space-y-4">
+          <label className="flex cursor-pointer items-center justify-between gap-3">
+            <span className="min-w-0">
+              <span className="block text-[15px] font-bold">{t.reportForm.addHours}</span>
+              <span className="mt-0.5 block text-[13px] font-medium text-text-muted">
+                {t.reportForm.addHoursHint}
+              </span>
+            </span>
+            <Toggle checked={withTime} onCheckedChange={setWithTime} />
+          </label>
+
+          {withTime && (
+            <WorkTimeFields
+              startAt={startAt}
+              endAt={endAt}
+              breakMin={breakMin}
+              onStartChange={setStartAt}
+              onEndChange={setEndAt}
+              onBreakChange={setBreakMin}
+              durationMin={durationMin}
+              isDurationOk={isDurationOk}
+            />
+          )}
+        </Card>
+
         <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
           <Info className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
           {t.reportForm.hint}
         </p>
 
-        <Button size="xl" block onClick={handleSubmit} disabled={isPending}>
+        <Button size="xl" block onClick={handleSubmit} disabled={isPending || !canSubmit}>
           {t.reportForm.submit}
         </Button>
       </div>

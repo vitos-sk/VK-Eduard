@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { Camera, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Camera, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PhotoLightbox } from "@/components/shared/PhotoLightbox";
@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { MAX_PHOTOS_PER_ENTRY, deleteReportPhoto, uploadReportPhoto } from "@/modules/media/photos";
 import type { ReportPhoto } from "@/modules/reports/types";
+import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -40,7 +41,6 @@ export function ReportPhotoUploader({
   className,
 }: ReportPhotoUploaderProps) {
   const supabase = useMemo(() => createClient(), []);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [viewedUrl, setViewedUrl] = useState<string | null>(null);
 
@@ -83,6 +83,8 @@ export function ReportPhotoUploader({
     onUrlsChange(nextUrls);
     setIsUploading(false);
   };
+
+  const { inputs, openCamera, openGallery } = usePhotoSources((files) => void handleFiles(files));
 
   const handleRemove = async (photo: ReportPhoto) => {
     try {
@@ -130,18 +132,30 @@ export function ReportPhotoUploader({
         ))}
 
         {editable && photos.length < MAX_PHOTOS_PER_ENTRY && (
-          <Button
-            variant="outline"
-            size="bare"
-            onClick={() => inputRef.current?.click()}
-            disabled={isUploading}
-            className="size-20 flex-col justify-center gap-1 rounded-ctl border-dashed text-text-muted"
-          >
-            <Camera className="size-5" strokeWidth={2} aria-hidden />
-            <span className="text-[11px] font-semibold">
-              {isUploading ? t.reportDetail.uploading : t.reportDetail.addPhoto}
-            </span>
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="bare"
+              onClick={openCamera}
+              disabled={isUploading}
+              className="size-20 flex-col justify-center gap-1 rounded-ctl border-dashed text-text-muted"
+            >
+              <Camera className="size-5" strokeWidth={2} aria-hidden />
+              <span className="text-[11px] font-semibold">
+                {isUploading ? t.reportDetail.uploading : t.reportDetail.takePhoto}
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              size="bare"
+              onClick={openGallery}
+              disabled={isUploading}
+              className="size-20 flex-col justify-center gap-1 rounded-ctl border-dashed text-text-muted"
+            >
+              <ImagePlus className="size-5" strokeWidth={2} aria-hidden />
+              <span className="text-[11px] font-semibold">{t.reportDetail.fromGallery}</span>
+            </Button>
+          </>
         )}
       </div>
 
@@ -151,18 +165,7 @@ export function ReportPhotoUploader({
         </p>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        multiple
-        hidden
-        onChange={(event) => {
-          void handleFiles(event.target.files);
-          event.target.value = "";
-        }}
-      />
+      {inputs}
 
       <PhotoLightbox url={viewedUrl} onOpenChange={(open) => !open && setViewedUrl(null)} title={t.reportDetail.photosTitle} />
     </div>

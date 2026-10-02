@@ -6,7 +6,7 @@ import { requireProfile } from "@/modules/auth/session";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { getSiteById } from "@/modules/sites/queries";
 
-/** Редагування об'єкта — тільки boss (RLS `sites_update` все одно б відхилила). */
+/** Редагування об'єкта — шеф або його автор. */
 export default async function EditObjectPage({
   params,
 }: {
@@ -15,15 +15,16 @@ export default async function EditObjectPage({
   const { id } = await params;
   const profile = await requireProfile();
 
-  if (profile.role !== "boss") {
-    redirect(`/objects/${id}`);
-  }
-
   const supabase = await createClient();
   const site = await getSiteById(supabase, id);
 
   if (!site) {
     notFound();
+  }
+
+  // Правити можуть шеф і автор об'єкта (RLS `sites_update`).
+  if (profile.role !== "boss" && site.created_by !== profile.id) {
+    redirect(`/objects/${id}`);
   }
 
   const photoUrl = site.photo_path

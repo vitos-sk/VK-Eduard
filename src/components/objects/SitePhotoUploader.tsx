@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { Camera } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { uploadSitePhoto } from "@/modules/media/photos";
 import type { Database } from "@/lib/supabase/types.gen";
+import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -59,7 +60,6 @@ export function SitePhotoUploader({
   className,
 }: SitePhotoUploaderProps) {
   const supabase = useMemo(() => createClient(), []);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [path, setPath] = useState(photoPath);
   const [url, setUrl] = useState(photoUrl);
@@ -87,12 +87,17 @@ export function SitePhotoUploader({
     }
   };
 
+  const { inputs, openCamera, openGallery } = usePhotoSources(
+    (files) => void handleFile(files[0]),
+    false,
+  );
+
   return (
     <div className={cn("flex items-center gap-4", className)}>
       <Button
         variant="secondary"
         size="bare"
-        onClick={() => inputRef.current?.click()}
+        onClick={openGallery}
         disabled={isUploading}
         aria-label={path ? t.objects.form.changePhoto : t.objects.form.addPhoto}
         className="relative size-20 shrink-0 justify-center overflow-hidden rounded-full border-border"
@@ -123,19 +128,19 @@ export function SitePhotoUploader({
         <p className="mt-0.5 text-[13px] font-medium text-text-muted">
           {t.objects.form.photoLabel}
         </p>
+        <div className="mt-2 flex gap-2">
+          <Button variant="outline" size="sm" onClick={openCamera} disabled={isUploading}>
+            <Camera className="size-4" strokeWidth={2} aria-hidden />
+            {t.reportDetail.takePhoto}
+          </Button>
+          <Button variant="outline" size="sm" onClick={openGallery} disabled={isUploading}>
+            <ImagePlus className="size-4" strokeWidth={2} aria-hidden />
+            {t.reportDetail.fromGallery}
+          </Button>
+        </div>
       </div>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        hidden
-        onChange={(event) => {
-          void handleFile(event.target.files?.[0]);
-          event.target.value = "";
-        }}
-      />
+      {inputs}
     </div>
   );
 }

@@ -10,6 +10,7 @@ function makeSite(overrides: Partial<Parameters<typeof buildSiteHoursList>[0][nu
     address: null,
     archived_at: null,
     created_at: "2026-01-01T00:00:00.000Z",
+    created_by: null,
     kind: null,
     photo_path: null,
     status: "not_started" as const,

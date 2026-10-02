@@ -8,16 +8,34 @@ import { t } from "@/lib/i18n";
 import { companyStrings } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
+import {
+  isBreakPairValid,
+  isDurationValid,
+  minutesBetweenWrapped,
+} from "@/modules/time/calc";
 
 export type ReportActionState = { error: string | null };
 
 const OK: ReportActionState = { error: null };
+
+/** Відпрацьований час, внесений прямо у формі звіту — стає записом табеля. */
+export interface ReportTimeInput {
+  startedAt: string;
+  endedAt: string;
+  breakStart: string | null;
+  breakEnd: string | null;
+}
 
 export interface ReportInput {
   workDate: string;
   siteId: string | null;
   description: string;
   categoryIds: string[];
+}
+
+export interface CreateReportInput extends ReportInput {
+  /** Не задано — звіт без годин, як і раніше. */
+  time?: ReportTimeInput | null;
 }
 
 export interface CreateReportState extends ReportActionState {
@@ -50,12 +68,33 @@ async function replaceReportCategories(
   if (insertError) throw insertError;
 }
 
-/** Створює звіт — без жодного поля часу, на відміну від `createManualEntry`. */
-export async function createReport(input: ReportInput): Promise<CreateReportState> {
+/**
+ * Створює звіт. Якщо передано `time`, паралельно пишеться закритий запис
+ * табеля (`work_entries`, source `manual`) з тим самим об'єктом, датою й
+ * описом — години й звіт вводяться одним кроком, а не двома окремими екранами.
+ *
+ * Годину перевіряємо до будь-якого запису; якщо щось падає вже після
+ * вставки звіту, звіт прибираємо, щоб повторне «Зберегти» не наплодило дублів.
+ */
+export async function createReport(input: CreateReportInput): Promise<CreateReportState> {
   const profile = await getProfile();
 
   if (!profile) {
     return { error: t.auth.noProfile, reportId: null };
+  }
+
+  const time = input.time ?? null;
+
+  if (time) {
+    const worked =
+      minutesBetweenWrapped(time.startedAt, time.endedAt) -
+      (time.breakStart && time.breakEnd
+        ? minutesBetweenWrapped(time.breakStart, time.breakEnd)
+        : 0);
+
+    if (!isBreakPairValid(time.breakStart, time.breakEnd) || !isDurationValid(worked)) {
+      return { error: t.manualTime.errorDuration, reportId: null };
+    }
   }
 
   const supabase = await createClient();
@@ -78,8 +117,28 @@ export async function createReport(input: ReportInput): Promise<CreateReportStat
 
   try {
     await replaceReportCategories(supabase, data.id, input.categoryIds);
+
+    if (time) {
+      const { error: entryError } = await supabase.from("work_entries").insert({
+        client_id: randomUUID(),
+        company_id: profile.company_id,
+        author_id: profile.id,
+        site_id: input.siteId,
+        work_date: input.workDate,
+        started_at: time.startedAt,
+        ended_at: time.endedAt,
+        break_start: time.breakStart,
+        break_end: time.breakEnd,
+        description: input.description,
+        source: "manual",
+      });
+
+      if (entryError) throw entryError;
+    }
   } catch {
-    return { error: t.reportForm.saveError, reportId: data.id };
+    await supabase.from("site_reports").delete().eq("id", data.id);
+
+    return { error: t.reportForm.saveError, reportId: null };
   }
 
   revalidatePath("/", "layout");

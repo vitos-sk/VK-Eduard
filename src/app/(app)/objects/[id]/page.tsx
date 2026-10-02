@@ -46,6 +46,8 @@ export default async function ObjectDetailPage({
     notFound();
   }
 
+  const canEdit = isBoss || site.created_by === profile.id;
+
   const reports = isBoss ? allReports : allReports.filter((report) => report.site_id === id);
   const categoryStats = aggregateCategoryStats(reports, categories);
 
@@ -66,7 +68,7 @@ export default async function ObjectDetailPage({
         title={site.name}
         href="/objects"
         action={
-          isBoss && (
+          canEdit && (
             <Link
               href={`/objects/${site.id}/edit`}
               aria-label={t.objects.detail.edit}

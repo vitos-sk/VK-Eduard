@@ -77,7 +77,7 @@ interface ObjectsScreenProps {
   /** Записи компанії за поточний місяць (тільки boss) — для годин на картках. */
   initialEntries?: readonly WorkEntryWithNames[];
   objects: readonly SiteObject[];
-  /** Кнопка «+» ведёт на форму создания только у шефа — сама вставка тоже под RLS. */
+  /** Шеф бачить архів, місячні години і статистику по компанії. */
   isBoss: boolean;
   profile: Profile;
 }
@@ -130,13 +130,11 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
         title={t.objects.title}
         action={
           <div className="flex items-center gap-2">
-            {isBoss && (
-              <Button asChild variant="accent" size="icon" aria-label={t.objects.addObject}>
-                <Link href="/objects/new">
+            <Button asChild variant="accent" size="icon" aria-label={t.objects.addObject}>
+              <Link href="/objects/new">
                 <Plus className="size-6" strokeWidth={2.6} aria-hidden />
-                </Link>
-              </Button>
-            )}
+              </Link>
+            </Button>
             <AvatarLink initials={initialsOf(profile)} />
           </div>
         }
