@@ -108,6 +108,9 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
         return false;
       }
 
+      // Архівні об'єкти працівнику не потрібні — вони лишаються лише в історії.
+      if (!isBoss && object.archivedAt !== null) return false;
+
       if (isBoss) {
         if (archiveFilter === "active" && object.archivedAt !== null) return false;
         if (archiveFilter === "archived" && object.archivedAt === null) return false;

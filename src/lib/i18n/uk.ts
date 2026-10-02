@@ -452,6 +452,7 @@ export const uk = {
     objectLabel: "Об'єкт (необов'язково)",
     objectPlaceholder: "Оберіть об'єкт",
     selectObject: "Оберіть об'єкт",
+    noObjects: "Об'єктів поки немає — додайте перший",
     date: "Дата",
     duration: "Тривалість",
     start: "Початок",
