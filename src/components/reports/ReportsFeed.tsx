@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
+import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { SearchField } from "@/components/shared/SearchField";
 import {
   SegmentedTabs,
@@ -59,6 +60,7 @@ interface ReportsFeedProps {
 export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
   const [filter, setFilter] = useState<ReportFilter>("all");
   const [query, setQuery] = useState("");
+  const [month, setMonth] = useState(() => new Date());
 
   const siteNameById = useMemo(
     () => new Map(sites.map((site) => [site.id, site.name] as const)),
@@ -72,7 +74,11 @@ export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
   const visible = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("uk");
 
+    const monthKey = dateKeyOf(month).slice(0, 7);
+
     return reports.filter((report) => {
+      if (!report.work_date.startsWith(monthKey)) return false;
+
       const state = reportState(report, report.report_photos.length);
 
       if (filter === "no_description" && state !== "no_description") return false;
@@ -85,7 +91,7 @@ export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
 
       return haystack.includes(needle);
     });
-  }, [reports, filter, query, siteNameById]);
+  }, [reports, filter, query, siteNameById, month]);
 
   const groups = useMemo<DateGroup[]>(() => {
     const byDate = new Map<string, SiteReportWithPhotos[]>();
@@ -123,6 +129,8 @@ export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
 
   return (
     <div className="px-4 lg:px-0">
+      <MonthNavigator className="mb-3" date={month} onChange={setMonth} />
+
       <div className="lg:flex lg:items-center lg:gap-4">
         <SearchField
           value={query}

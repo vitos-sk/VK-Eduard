@@ -15,7 +15,7 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
-import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
+import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { reportsStrings as s } from "@/lib/i18n/parts/reports";
@@ -302,17 +302,10 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     );
   }
 
-  const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
-
   return (
     <div className="px-4 pb-2 lg:px-0">
       <div className="flex items-center gap-2">
-        <PeriodNavigator
-          className="min-w-0 flex-1"
-          title={monthTitle}
-          onPrev={() => setMonth((current) => addMonthsSafe(current, -1))}
-          onNext={() => setMonth((current) => addMonthsSafe(current, 1))}
-        />
+        <MonthNavigator className="min-w-0 flex-1" date={month} onChange={setMonth} />
         <ExportButton
           badge={selectedIds.size}
           onClick={() => openExport(view === "reports" ? "reports" : "hours")}
@@ -469,6 +462,3 @@ function ExportButton({ onClick, badge = 0 }: { onClick: () => void; badge?: num
   );
 }
 
-function addMonthsSafe(date: Date, delta: number): Date {
-  return new Date(date.getFullYear(), date.getMonth() + delta, 1);
-}

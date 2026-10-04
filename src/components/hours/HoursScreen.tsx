@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { addMonths, eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
-import { uk as ukLocale } from "date-fns/locale";
+import { eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 
 import { DayActions } from "@/components/hours/DayActions";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
@@ -16,13 +15,8 @@ import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { TeamExportSheet } from "@/components/reports/TeamExportSheet";
 import type { ExportKind } from "@/modules/export/formats";
+import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { t } from "@/lib/i18n";
 import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import { createClient } from "@/lib/supabase/client";
@@ -35,7 +29,6 @@ import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { dateKeyOf } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
-import { Stepper } from "@/components/ui/stepper";
 
 /** Заголовок навигатора: месяц з роком. */
 function getMonthTitle(date: Date): string {
@@ -66,7 +59,6 @@ export function HoursScreen({
   const isBoss = profile.role === "boss";
 
   const [date, setDate] = useState<Date>(() => new Date(`${initialDate}T00:00:00`));
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
   const [loadedMonthKey, setLoadedMonthKey] = useState<string | null>(null);
@@ -163,10 +155,6 @@ export function HoursScreen({
     router.refresh();
   }, [router]);
 
-  const shiftMonth = (direction: 1 | -1) => {
-    setDate((current) => addMonths(current, direction));
-  };
-
   // Статистика норми/графіка показується тільки рабочому і завжди про
   // нього самого — RLS вже віддає йому лише власні записи в monthEntries.
   const monthSummary = useMemo(() => {
@@ -196,48 +184,7 @@ export function HoursScreen({
         action={<AvatarLink initials={initialsOf(profile.full_name)} />}
       />
 
-      <div className="flex items-center gap-1.5 px-4 pb-3 lg:px-0">
-        <Stepper
-          direction="earlier"
-          label={t.hours.prevPeriod}
-          onClick={() => shiftMonth(-1)}
-        />
-
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="field"
-              size="sm"
-              aria-label={t.hours.pickDate}
-              className="flex-1 border-edge"
-            >
-              <CalendarDays className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
-              <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
-            </Button>
-          </PopoverTrigger>
-
-          <PopoverContent align="center" className="w-auto border border-edge bg-ticket p-2">
-            <Calendar
-              mode="single"
-              selected={date}
-              defaultMonth={date}
-              onSelect={(next) => {
-                if (next) {
-                  setDate(next);
-                  setIsCalendarOpen(false);
-                }
-              }}
-              locale={ukLocale}
-            />
-          </PopoverContent>
-        </Popover>
-
-        <Stepper
-          direction="later"
-          label={t.hours.nextPeriod}
-          onClick={() => shiftMonth(1)}
-        />
-      </div>
+      <MonthNavigator className="px-4 pb-3 lg:px-0" date={date} onChange={setDate} />
 
       {isBoss && (
         <div className="flex flex-col gap-3 px-4 pb-3 lg:flex-row lg:items-end lg:gap-4 lg:px-0">
