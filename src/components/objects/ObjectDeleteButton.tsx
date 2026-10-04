@@ -48,8 +48,8 @@ export function ObjectDeleteButton({ siteId, className }: ObjectDeleteButtonProp
 
   return (
     <>
-      <Button variant="danger-outline" block onClick={() => setOpen(true)} className={className}>
-        <Trash2 className="size-[18px]" strokeWidth={2} aria-hidden />
+      <Button variant="danger" block onClick={() => setOpen(true)} className={className}>
+        <Trash2 className="size-[18px]" strokeWidth={1.9} aria-hidden />
         {t.objects.detail.delete}
       </Button>
 

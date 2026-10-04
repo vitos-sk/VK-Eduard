@@ -36,7 +36,7 @@ export function AppShell({ profile, openEntry, children }: AppShellProps) {
 
   return (
     <ShiftProvider openEntry={openEntry}>
-      {/* Мобильная ветка — без изменений */}
+      {/* Телефон и планшет */}
       <div className="lg:hidden">
         <PhoneFrame>
           {/* Бар — flex-элемент под скроллом, а не absolute: он всегда у низа
@@ -49,29 +49,27 @@ export function AppShell({ profile, openEntry, children }: AppShellProps) {
             onFabClick={() => setIsQuickOpen((open) => !open)}
             fabExpanded={isQuickOpen}
           />
+
+          {/* Меню «+» внутри колонки: выезжает из таб-бара */}
+          <QuickActionSheet
+            open={isQuickOpen}
+            onOpenChange={setIsQuickOpen}
+            isBoss={profile.role === "boss"}
+          />
         </PhoneFrame>
       </div>
 
       {/* Desktop-ветка: h-dvh (не min-h-dvh) — контейнер не растягивается
           вместе с контентом, поэтому скроллится только `main`, а сайдбар
           остаётся статичным по высоте вьюпорта. */}
-      <div className="hidden h-dvh bg-bg text-text lg:flex">
-        <DesktopSidebar
-          profile={profile}
-          onFabClick={() => setIsQuickOpen((open) => !open)}
-        />
+      <div className="hidden h-dvh bg-paper text-text lg:flex">
+        <DesktopSidebar profile={profile} />
         <main className="min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[1200px] px-8 py-8">{children}</div>
+          <div className="mx-auto max-w-[1240px] px-6 py-6">{children}</div>
         </main>
       </div>
 
-      <QuickActionSheet
-        open={isQuickOpen}
-        onOpenChange={setIsQuickOpen}
-        isBoss={profile.role === "boss"}
-      />
-
-      <Toaster position="top-center" />
+      <Toaster position="bottom-center" />
     </ShiftProvider>
   );
 }

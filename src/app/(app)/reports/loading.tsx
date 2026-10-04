@@ -7,16 +7,16 @@ export default function Loading() {
     <div className="pb-6">
       <ScreenHeader
         title={t.reports.title}
-        action={<Skeleton className="size-11 rounded-full" />}
+        action={<Skeleton className="size-8 rounded-md" />}
       />
 
       <div className="px-4">
-        <Skeleton className="h-11 w-full rounded-[12px]" />
-        <Skeleton className="mt-3 h-10 w-full rounded-[12px]" />
+        <Skeleton className="h-11 w-full rounded-ctl" />
+        <Skeleton className="mt-3 h-10 w-full rounded-ctl" />
 
         <div className="mt-4 space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-[104px] w-full rounded-[16px]" />
+            <Skeleton key={index} className="h-[104px] w-full rounded-card" />
           ))}
         </div>
       </div>

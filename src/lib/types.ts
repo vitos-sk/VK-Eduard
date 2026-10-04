@@ -1,3 +1,5 @@
+import type { SiteScene } from "@/lib/siteScene";
+
 /**
  * Общие типы приложения. Всё здесь строится из реальных данных — моков
  * в `src/lib/mock/` для этого больше не осталось (остался только `quick.ts`,
@@ -17,11 +19,13 @@ export interface SiteObject {
   id: string;
   name: string;
   address: string;
+  /** Вид работ (`sites.kind`) — подпись под названием в списках. */
+  kind: string;
   status: WorkStatus;
   photosCount: number;
   reportsCount: number;
-  /** Пара цветов для градиента в `Thumb` — используется, пока нет `photoUrl`. */
-  gradient: readonly [string, string];
+  /** SVG-сцена для `Thumb` — используется, пока нет `photoUrl`. */
+  scene: SiteScene;
   /** Подписанная ссылка на `sites.photo_path`, если фото объекта загружено. */
   photoUrl: string | null;
   /** `sites.archived_at` — не `null`, если объект архивирован. */
@@ -65,8 +69,6 @@ export interface QuickAction {
   id: QuickActionId;
   title: string;
   description: string;
-  /** CSS-цвет иконки: токен темы или HEX из таблицы шага 10. */
-  accent: string;
   /** Куда ведёт пункт. `null` — действие без своего экрана (тост). */
   href: string | null;
 }

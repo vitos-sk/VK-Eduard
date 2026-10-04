@@ -33,7 +33,7 @@ export function MetaRow({ items, className }: MetaRowProps) {
           <Fragment key={item.label}>
             {index > 0 && <span aria-hidden>·</span>}
             <span className="flex min-w-0 items-center gap-1">
-              <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+              <Icon className="size-3.5 shrink-0" strokeWidth={1.9} aria-hidden />
               <span className="truncate">{item.label}</span>
             </span>
           </Fragment>

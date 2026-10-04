@@ -26,12 +26,12 @@ function Radio({
     <RadioGroupPrimitive.Item
       data-slot="radio"
       className={cn(
-        "flex size-6 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-strong bg-field transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-45 data-checked:border-primary data-checked:bg-primary",
+        "relative flex size-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink-2 bg-ticket transition-colors outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 data-checked:border-primary",
         className
       )}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator className="block size-2 rounded-full bg-on-primary" />
+      <RadioGroupPrimitive.Indicator className="block size-2 rounded-full bg-primary" />
     </RadioGroupPrimitive.Item>
   )
 }

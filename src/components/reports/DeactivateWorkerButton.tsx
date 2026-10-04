@@ -52,8 +52,8 @@ export function DeactivateWorkerButton({
 
   return (
     <>
-      <Button variant="danger-outline" block onClick={() => setOpen(true)} className={className}>
-        <UserX className="size-[18px]" strokeWidth={2} aria-hidden />
+      <Button variant="danger" block onClick={() => setOpen(true)} className={className}>
+        <UserX className="size-[18px]" strokeWidth={1.9} aria-hidden />
         {t.reports.team.deactivate}
       </Button>
 

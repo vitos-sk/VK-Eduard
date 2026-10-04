@@ -7,10 +7,10 @@ export default function Loading() {
       <BackHeader title="" href="/reports" />
 
       <div className="px-4">
-        <Skeleton className="h-[220px] w-full rounded-[16px]" />
+        <Skeleton className="h-[220px] w-full rounded-card" />
         <Skeleton className="mt-4 h-6 w-2/3" />
         <Skeleton className="mt-2 h-4 w-1/2" />
-        <Skeleton className="mt-4 h-24 w-full rounded-[16px]" />
+        <Skeleton className="mt-4 h-24 w-full rounded-card" />
       </div>
     </div>
   );

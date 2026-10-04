@@ -134,20 +134,20 @@ export function TeamExportSheet({
       <DrawerContent
         aria-describedby={undefined}
         className={cn(
-          "mx-auto max-w-[430px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]",
+          "mx-auto max-w-[560px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]",
           // Таб-бар (z-60) лежить над листом: лишаємо під нього місце, як у листі «+».
-          "pb-[calc(88px+env(safe-area-inset-bottom))] phone:pb-[calc(88px+1.5rem)] lg:pb-0",
+          "pb-[calc(84px+env(safe-area-inset-bottom))] lg:pb-0",
         )}
       >
         <div className="flex items-center gap-1 px-2 pt-3">
           <DrawerClose
             aria-label={t.common.back}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2"
+            className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text transition-colors duration-150 hover:bg-primary-tint"
           >
-            <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
+            <ChevronLeft className="size-6" strokeWidth={1.9} aria-hidden />
           </DrawerClose>
           <div className="min-w-0">
-            <DrawerTitle className="text-[20px] font-bold text-text">{s.export.title}</DrawerTitle>
+            <DrawerTitle className="text-[20px] font-semibold text-text">{s.export.title}</DrawerTitle>
             <p className="truncate text-[13px] font-medium text-text-muted">
               {fmt(s.export.summary, { what: whatLabel, period: periodLabel })}
             </p>
@@ -175,10 +175,10 @@ export function TeamExportSheet({
               onClick={() => setIsWorkersOpen((current) => !current)}
               aria-expanded={isWorkersOpen}
             >
-              <span className="min-w-0 flex-1 truncate text-left text-[15px] font-bold">{scopeLabel}</span>
+              <span className="min-w-0 flex-1 truncate text-left text-[15px] font-semibold">{scopeLabel}</span>
               <ChevronDown
                 className={cn("size-5 shrink-0 text-text-muted transition-transform duration-150", isWorkersOpen && "rotate-180")}
-                strokeWidth={2.2}
+                strokeWidth={1.9}
                 aria-hidden
               />
             </Button>
@@ -233,12 +233,12 @@ export function TeamExportSheet({
                       interactive
                       selected={isActive}
                       className={cn(
-                        "flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-ctl text-center text-[13px] font-bold",
+                        "flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-ctl text-center text-[13px] font-semibold",
                         isActive ? "text-text" : "text-text-muted",
                       )}
                     >
                       <button type="button" role="radio" aria-checked={isActive} onClick={() => chooseFormat(value)}>
-                        <Icon className={cn("size-5", isActive && "text-primary")} strokeWidth={2} aria-hidden />
+                        <Icon className={cn("size-5", isActive && "text-primary")} strokeWidth={1.9} aria-hidden />
                         {label}
                       </button>
                     </Card>
@@ -254,18 +254,18 @@ export function TeamExportSheet({
         <div className="space-y-2 border-t border-border px-4 pt-3 pb-3 lg:pb-4">
           <Button block onClick={() => run("download")} disabled={busy !== null}>
             {busy === "download" ? (
-              <Loader2 className="size-[18px] animate-spin" aria-hidden />
+              <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden />
             ) : (
-              <Download className="size-[18px]" strokeWidth={2.2} aria-hidden />
+              <Download className="size-[18px]" strokeWidth={1.9} aria-hidden />
             )}
             {s.export.download}
           </Button>
 
           <Button variant="outline" block onClick={() => run("share")} disabled={busy !== null}>
             {busy === "share" ? (
-              <Loader2 className="size-[18px] animate-spin" aria-hidden />
+              <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden />
             ) : (
-              <MessageCircle className="size-[18px]" strokeWidth={2.2} aria-hidden />
+              <MessageCircle className="size-[18px]" strokeWidth={1.9} aria-hidden />
             )}
             {s.export.sendWhatsapp}
           </Button>

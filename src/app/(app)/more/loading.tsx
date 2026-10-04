@@ -8,13 +8,13 @@ export default function Loading() {
       <BackHeader title={t.profile.title} href="/" />
 
       <div className="flex flex-col gap-6 px-4 lg:mx-auto lg:max-w-[480px]">
-        <Skeleton className="h-[82px] rounded-[16px]" />
+        <Skeleton className="h-[82px] rounded-card" />
         <div className="flex flex-col gap-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 rounded-[14px]" />
+            <Skeleton key={i} className="h-14 rounded-ctl" />
           ))}
         </div>
-        <Skeleton className="h-14 rounded-[14px]" />
+        <Skeleton className="h-14 rounded-ctl" />
       </div>
     </div>
   );

@@ -29,8 +29,9 @@ import type { SiteReportWithNames, SiteReportWithPhotos, WorkCategory } from "@/
 import type { Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { dateKeyOf } from "@/modules/time/calc";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 import { CheckMark } from "@/components/ui/checkbox";
 import { SearchField } from "@/components/shared/SearchField";
 
@@ -279,15 +280,15 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
     return (
       <div>
-        <div className="flex items-center justify-between gap-3 px-4 pb-2">
+        <div className="flex items-center justify-between gap-3 px-4 pb-2 lg:px-0">
           <Button
             variant="ghost"
             size="md"
             className="min-w-0 justify-start gap-1 px-1"
             onClick={() => setOpenWorkerId(null)}
           >
-            <ChevronLeft className="size-6 shrink-0" strokeWidth={2.4} aria-hidden />
-            <span className="truncate text-[20px] font-extrabold tracking-tight">{worker?.full_name}</span>
+            <ChevronLeft className="size-5 shrink-0" strokeWidth={1.9} aria-hidden />
+            <span className="truncate text-[22px] font-semibold tracking-tight">{worker?.full_name}</span>
           </Button>
 
           <ExportButton onClick={() => openExport("reports")} />
@@ -304,7 +305,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
 
   return (
-    <div className="px-4 pb-2">
+    <div className="px-4 pb-2 lg:px-0">
       <div className="flex items-center gap-2">
         <PeriodNavigator
           className="min-w-0 flex-1"
@@ -318,7 +319,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
         />
       </div>
 
-      <p className="tabular mt-3 text-[14px] font-semibold text-text-muted">
+      <p className="tabular mt-3 text-[13px] text-ink-2">
         {fmt(s.team.summary, {
           hours: formatHoursShort(totalMinutes),
           people: fmt(s.team.peopleCount, { n: effectiveRows.length }),
@@ -356,7 +357,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
           </div>
 
           {isSelectMode && (
-            <Button variant="outline" size="sm" className="mt-2 rounded-full text-text-muted" onClick={toggleSelectAll}>
+            <Button variant="outline" size="sm" className="mt-2" onClick={toggleSelectAll}>
               {allVisibleSelected ? s.team.deselectAll : s.team.selectAll}
             </Button>
           )}
@@ -370,11 +371,11 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
                 return (
                   <li key={worker.id}>
-                    <Card
+                    <Ticket
                       asChild
+                      variant="flat"
                       interactive
-                      selected={isChecked}
-                      className="flex w-full items-center gap-3"
+                      className={cn("flex w-full items-center gap-3", isChecked && "border-primary bg-primary-tint")}
                     >
                     <button
                       type="button"
@@ -384,21 +385,21 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
                       {isSelectMode && <CheckMark checked={isChecked} />}
 
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[16px] font-bold">{worker.full_name}</span>
-                        <span className="mt-0.5 block text-[13px] font-medium text-text-muted">
+                        <span className="block truncate text-[14px] font-medium">{worker.full_name}</span>
+                        <span className="tabular mt-0.5 block text-[12px] text-ink-2">
                           {fmt(s.team.weekLine, { hours: formatHoursShort(workerWeekMinutes) })}
                         </span>
                       </span>
 
-                      <span className="tabular shrink-0 text-[16px] font-bold">
+                      <span className="tabular shrink-0 text-[15px] font-semibold">
                         {formatHoursShort(workerMonthMinutes)}
                       </span>
 
                       {!isSelectMode && (
-                        <ChevronRight className="size-5 shrink-0 text-text-dim" strokeWidth={2.2} aria-hidden />
+                        <ChevronRight className="size-4 shrink-0 text-ink-3" strokeWidth={1.9} aria-hidden />
                       )}
                     </button>
-                    </Card>
+                    </Ticket>
                   </li>
                 );
               })}
@@ -409,8 +410,8 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
         <>
           {sites.length > 0 && (
             <SegmentedTabs
-              className="mt-3"
-              size="sm"
+              className="mt-1"
+              variant="chips"
               label={s.feed.filterSiteLabel}
               options={siteOptions}
               value={siteFilter}
@@ -418,14 +419,14 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
             />
           )}
 
-          <p className="tabular mt-3 text-[13px] font-semibold text-text-muted">
+          <p className="tabular mt-3 text-[13px] text-ink-2">
             {fmt(s.team.reportsSummary, { reports: feedReports.length, photos: photosTotal })}
           </p>
 
           {isFeedLoading ? (
             <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} className="h-[140px] rounded-[12px]" />
+                <Skeleton key={index} className="h-[76px] rounded-card" />
               ))}
             </div>
           ) : feedReports.length === 0 ? (
@@ -452,15 +453,15 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 function ExportButton({ onClick, badge = 0 }: { onClick: () => void; badge?: number }) {
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       size="icon"
-      className="relative border-border"
+      className="relative"
       onClick={onClick}
       aria-label={s.export.open}
     >
-      <Share2 className="size-5" strokeWidth={2.2} aria-hidden />
+      <Share2 className="size-5" strokeWidth={1.9} aria-hidden />
       {badge > 0 && (
-        <span className="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-on-accent">
+        <span className="tabular absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-sm bg-primary px-1 text-[12px] font-semibold text-on-primary">
           {badge}
         </span>
       )}

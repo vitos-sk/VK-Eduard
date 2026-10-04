@@ -1,16 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Golos_Text, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 import { t } from "@/lib/i18n";
 import { tokens } from "@/design-system/tokens";
 import { appleStartupImages } from "@/lib/pwa";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700", "800"],
+const golos = Golos_Text({
+  subsets: ["cyrillic", "latin"],
+  variable: "--font-golos",
   display: "swap",
+  weight: ["400", "500", "600"],
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["cyrillic", "latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -39,7 +46,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: tokens.bg,
+  themeColor: tokens.paper,
   viewportFit: "cover",
   width: "device-width",
   initialScale: 1,
@@ -49,7 +56,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="uk" className={`${manrope.variable} h-full antialiased`}>
+    <html lang="uk" className={`${golos.variable} ${jetbrains.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );

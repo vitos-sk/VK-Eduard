@@ -11,7 +11,15 @@ import { t } from "@/lib/i18n";
 import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { breakMinutes } from "@/modules/time/calc";
-import { Card } from "@/components/ui/card";
+import { StampTag } from "@/components/ui/stamp-tag";
+import { Ticket, TicketBody, TicketStub } from "@/components/ui/ticket";
+import {
+  TicketTable,
+  TicketTableCell,
+  TicketTableHead,
+  TicketTableHeader,
+  TicketTableRow,
+} from "@/components/ui/ticket-table";
 import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 50;
@@ -112,7 +120,7 @@ function HorizontalScrollbar({
   return (
     <div
       ref={trackRef}
-      className="relative mt-2 h-[6px] rounded-full bg-surface-2"
+      className="relative mt-2 h-[6px] rounded-sm bg-scale"
       role="scrollbar"
       aria-orientation="horizontal"
       aria-label={t.hours.monthTableScrollHint}
@@ -122,7 +130,7 @@ function HorizontalScrollbar({
       aria-valuemax={Math.round(100 - thumb.widthPct)}
     >
       <div
-        className="absolute inset-y-0 touch-none rounded-full bg-primary"
+        className="absolute inset-y-0 touch-none rounded-sm bg-primary"
         style={{ width: `${thumb.widthPct}%`, left: `${thumb.leftPct}%` }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -176,11 +184,11 @@ export function MonthEntriesTable({
   const totalMinutes = entries.reduce((sum, entry) => sum + (entry.total_minutes ?? 0), 0);
 
   return (
-    <Card asChild><section className={className}>
+    <Ticket asChild variant="flat"><section className={className}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[17px] font-bold">{t.hours.monthTableTitle}</h2>
+        <h2 className="text-[15px] font-semibold">{t.hours.monthTableTitle}</h2>
         {entries.length > 0 && (
-          <p className="tabular shrink-0 text-[13px] font-semibold text-text-muted">
+          <p className="tabular shrink-0 text-[13px] text-ink-2">
             {fmt(s.entriesTotal, { total: formatHoursShort(totalMinutes), n: entries.length })}
           </p>
         )}
@@ -189,16 +197,16 @@ export function MonthEntriesTable({
       {isLoading && entries.length === 0 ? (
         <div className="mt-3 space-y-2" aria-hidden>
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-[52px] rounded-[10px]" />
+            <Skeleton key={index} className="h-[52px] rounded-card" />
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <p className="mt-2 text-[14px] font-medium text-text-muted">
+        <p className="mt-2 text-[14px] text-ink-2">
           {isFiltered ? s.emptyFilteredTitle : t.hours.monthTableEmpty}
         </p>
       ) : (
         <>
-          <ul className="mt-2 divide-y divide-border lg:hidden">
+          <ul className="mt-3 space-y-2 lg:hidden">
             {visibleEntries.map((entry) => (
               <EntryRow key={entry.id} entry={entry} showAuthor={showAuthor} onChanged={onChanged} />
             ))}
@@ -210,17 +218,17 @@ export function MonthEntriesTable({
 
       {entries.length > PAGE_SIZE && (
         <div className="flex flex-col items-center gap-2 pt-3">
-          <p className="text-[12px] font-medium text-text-muted">
+          <p className="text-[12px] text-ink-2">
             {fmt(s.shownCount, { shown: visibleEntries.length, total: entries.length })}
           </p>
           {entries.length > visibleEntries.length && (
-            <Button variant="outline" size="sm" className="rounded-full" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
+            <Button variant="outline" size="sm" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
               {s.loadMore}
             </Button>
           )}
         </div>
       )}
-    </section></Card>
+    </section></Ticket>
   );
 }
 
@@ -238,56 +246,64 @@ function DesktopTable({
   return (
     <div className="mt-3 hidden lg:block">
       <div ref={scrollRef} id="month-entries-scroll" className="no-scrollbar overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-left text-[13px]">
-          <thead>
-            <tr className="text-text-muted">
-              {showAuthor && <th className="pb-2 pr-3 font-medium">{t.hours.monthTableWorkerColumn}</th>}
-              <th className="pb-2 pr-3 font-medium">{t.hours.monthTableDateColumn}</th>
-              <th className="pb-2 pr-3 font-medium">{t.hours.monthTableTimeColumn}</th>
-              <th className="pb-2 pr-3 font-medium">{t.hours.break}</th>
-              <th className="pb-2 pr-3 font-medium">{t.hours.monthTableObjectColumn}</th>
-              <th className="pb-2 pr-3 text-right font-medium">{s.monthTableHoursColumn}</th>
-              <th className="pb-2 pr-3 font-medium">{s.monthTableSourceColumn}</th>
-              <th className="pb-2 font-medium">{s.monthTableDescriptionColumn}</th>
-              <th className="sticky right-0 bg-surface pb-2 pl-2" aria-hidden />
+        <TicketTable className="min-w-[640px]">
+          <TicketTableHeader>
+            <tr>
+              {showAuthor && <TicketTableHead>{t.hours.monthTableWorkerColumn}</TicketTableHead>}
+              <TicketTableHead>{t.hours.monthTableDateColumn}</TicketTableHead>
+              <TicketTableHead>{t.hours.monthTableTimeColumn}</TicketTableHead>
+              <TicketTableHead>{t.hours.break}</TicketTableHead>
+              <TicketTableHead>{t.hours.monthTableObjectColumn}</TicketTableHead>
+              <TicketTableHead numeric>{s.monthTableHoursColumn}</TicketTableHead>
+              <TicketTableHead>{s.monthTableSourceColumn}</TicketTableHead>
+              <TicketTableHead>{s.monthTableDescriptionColumn}</TicketTableHead>
+              <TicketTableHead className="sticky right-0 bg-ticket" aria-hidden />
             </tr>
-          </thead>
+          </TicketTableHeader>
 
           <tbody>
             {entries.map((entry) => {
               const pauseMinutes = breakMinutes(entry.break_start, entry.break_end);
 
               return (
-                <tr key={entry.id} className="border-t border-border">
+                <TicketTableRow key={entry.id}>
                   {showAuthor && (
-                    <td className="max-w-[140px] truncate py-2 pr-3 font-bold">{entry.author_full_name}</td>
+                    <TicketTableCell className="max-w-[140px] truncate font-medium">
+                      {entry.author_full_name}
+                    </TicketTableCell>
                   )}
-                  <td className="tabular py-2 pr-3 text-text-muted">{formatWorkDateShort(entry.work_date)}</td>
-                  <td className="tabular py-2 pr-3 text-text-muted">
+                  <TicketTableCell className="tabular text-ink-2">
+                    {formatWorkDateShort(entry.work_date)}
+                  </TicketTableCell>
+                  <TicketTableCell className="tabular text-ink-2">
                     {formatTimeShort(entry.started_at)}–
-                    {entry.ended_at ? formatTimeShort(entry.ended_at) : t.hours.entryOngoing}
-                  </td>
-                  <td className="tabular py-2 pr-3 text-text-muted">
+                    {entry.ended_at ? formatTimeShort(entry.ended_at) : (
+                      <StampTag>{t.hours.entryOngoing}</StampTag>
+                    )}
+                  </TicketTableCell>
+                  <TicketTableCell className="tabular text-ink-2">
                     {pauseMinutes > 0 ? formatHoursShort(pauseMinutes) : t.common.dash}
-                  </td>
-                  <td className="max-w-[160px] truncate py-2 pr-3">{entry.site_name ?? t.hours.noObject}</td>
-                  <td className="tabular py-2 pr-3 text-right font-bold">
+                  </TicketTableCell>
+                  <TicketTableCell className="max-w-[160px] truncate">
+                    {entry.site_name ?? t.hours.noObject}
+                  </TicketTableCell>
+                  <TicketTableCell numeric className="font-semibold">
                     {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-                  </td>
-                  <td className="py-2 pr-3 text-text-muted">
-                    {entry.source === "timer" ? s.sourceTimer : s.sourceManual}
-                  </td>
-                  <td className="max-w-[160px] truncate py-2 text-text-muted">
+                  </TicketTableCell>
+                  <TicketTableCell className="text-ink-2">
+                    {entry.source === "timer" ? s.sourceTimer : <StampTag>{s.sourceManual}</StampTag>}
+                  </TicketTableCell>
+                  <TicketTableCell className="max-w-[160px] truncate text-ink-2">
                     {entry.description || s.noDescription}
-                  </td>
-                  <td className="sticky right-0 bg-surface py-2 pl-2">
+                  </TicketTableCell>
+                  <TicketTableCell className="sticky right-0 bg-ticket">
                     <EntryActions entry={entry} onChanged={onChanged} />
-                  </td>
-                </tr>
+                  </TicketTableCell>
+                </TicketTableRow>
               );
             })}
           </tbody>
-        </table>
+        </TicketTable>
       </div>
       <HorizontalScrollbar scrollRef={scrollRef} />
     </div>
@@ -310,38 +326,43 @@ function EntryRow({
     .join(" · ");
 
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <div
-        aria-label={formatWorkDateShort(entry.work_date)}
-        className="flex w-12 shrink-0 flex-col items-center rounded-[10px] bg-surface-2 py-1.5"
-      >
-        <span className="tabular text-[16px] leading-none font-extrabold">{entry.work_date.slice(8, 10)}</span>
-        <span className="tabular mt-0.5 text-[11px] leading-none font-semibold text-text-dim">
-          {entry.work_date.slice(5, 7)}
-        </span>
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="tabular flex items-center gap-1.5 text-[14px] font-bold">
-          <span className="truncate">
-            {formatTimeShort(entry.started_at)}–{entry.ended_at ? formatTimeShort(entry.ended_at) : t.hours.entryOngoing}
+    <li>
+      <Ticket compact>
+        <TicketStub className="w-(--ticket-stub)" aria-label={formatWorkDateShort(entry.work_date)}>
+          <span className="tabular text-[18px] leading-none font-semibold">
+            {entry.work_date.slice(8, 10)}
           </span>
-          {isOngoing && <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-success" />}
-          {pauseMinutes > 0 && (
-            <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold text-text-muted">
-              <Pause className="size-2.5 fill-current" aria-hidden />
-              {formatHoursShort(pauseMinutes)}
-            </span>
-          )}
-        </p>
-        <p className="truncate text-[12px] font-medium text-text-muted">{subtitle}</p>
-      </div>
+          <span className="tabular text-[12px] leading-none text-ink-2">
+            {entry.work_date.slice(5, 7)}
+          </span>
+        </TicketStub>
 
-      <p className="tabular shrink-0 text-[15px] font-extrabold">
-        {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-      </p>
+        <TicketBody className="flex items-center gap-2.5 py-2.5">
+          <div className="min-w-0 flex-1">
+            <p className="tabular flex flex-wrap items-center gap-1.5 text-[14px] font-semibold">
+              <span className="truncate">
+                {formatTimeShort(entry.started_at)}–
+                {entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
+              </span>
+              {isOngoing && <StampTag>{t.hours.entryOngoing}</StampTag>}
+              {entry.source === "manual" && <StampTag>{s.sourceManual}</StampTag>}
+              {pauseMinutes > 0 && (
+                <span className="flex shrink-0 items-center gap-0.5 text-[12px] font-medium text-ink-2">
+                  <Pause className="size-3 fill-current" aria-hidden />
+                  {formatHoursShort(pauseMinutes)}
+                </span>
+              )}
+            </p>
+            <p className="truncate text-[12px] text-ink-2">{subtitle}</p>
+          </div>
 
-      <EntryActions entry={entry} onChanged={onChanged} />
+          <p className="tabular shrink-0 text-[15px] font-semibold">
+            {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
+          </p>
+
+          <EntryActions entry={entry} onChanged={onChanged} />
+        </TicketBody>
+      </Ticket>
     </li>
   );
 }
@@ -354,9 +375,9 @@ function EntryActions({ entry, onChanged }: { entry: WorkEntryWithNames; onChang
       <Link
         href={`/time/manual/${entry.id}`}
         aria-label={t.hours.editEntry}
-        className="flex size-8 shrink-0 items-center justify-center rounded-full text-text-muted active:bg-surface-2"
+        className="relative flex size-8 shrink-0 items-center justify-center rounded-md text-ink-2 outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <Pencil className="size-[15px]" strokeWidth={2} aria-hidden />
+        <Pencil className="size-4" strokeWidth={1.9} aria-hidden />
       </Link>
       <DeleteEntryButton entryId={entry.id} onDeleted={onChanged} iconOnly className="size-8" />
     </div>

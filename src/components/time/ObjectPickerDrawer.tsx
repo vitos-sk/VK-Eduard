@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { Thumb } from "@/components/shared/Thumb";
 import {
   Drawer,
   DrawerClose,
@@ -14,13 +13,12 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { t } from "@/lib/i18n";
-import { gradientForId } from "@/lib/siteGradient";
 import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
 import { createSite } from "@/modules/sites/actions";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Ticket } from "@/components/ui/ticket";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 interface ObjectPickerDrawerProps {
   open: boolean;
@@ -73,41 +71,42 @@ export function ObjectPickerDrawer({
       <DrawerContent
         aria-describedby={undefined}
         className={cn(
-          "mx-auto max-w-[430px] border-border bg-surface text-text",
+          "mx-auto max-w-[560px] border-edge bg-ticket text-text",
           // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
-          "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
+          "pb-[calc(84px+env(safe-area-inset-bottom))]",
           "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
         )}
       >
         <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-[20px] font-bold text-text">
+          <DrawerTitle className="text-[20px] font-semibold text-text">
             {t.manualTime.selectObject}
           </DrawerTitle>
         </DrawerHeader>
 
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-1 pb-1">
           {isCreating ? (
-            <div className="flex gap-2">
-              <Input
+            <div className="flex items-end gap-3">
+              <UnderlineField
+                className="flex-1"
                 autoFocus
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
                 placeholder={t.objects.form.namePlaceholder}
                 aria-label={t.objects.form.nameLabel}
               />
-              <Button onClick={handleCreate} disabled={newName.trim() === "" || isPending}>
+              <Button onClick={handleCreate} disabled={newName.trim() === ""} loading={isPending}>
                 {t.objects.form.save}
               </Button>
             </div>
           ) : (
             <Button variant="outline" block onClick={() => setIsCreating(true)}>
-              <Plus className="size-5" strokeWidth={2.4} aria-hidden />
+              <Plus className="size-5" strokeWidth={1.9} aria-hidden />
               {t.objects.addObject}
             </Button>
           )}
 
           {sites.length === 0 && (
-            <p className="px-1 py-3 text-[14px] font-medium text-text-muted">
+            <p className="px-1 py-3 text-[14px] text-ink-2">
               {t.manualTime.noObjects}
             </p>
           )}
@@ -116,14 +115,12 @@ export function ObjectPickerDrawer({
             const isActive = site.id === value;
 
             return (
-              <Card
+              <Ticket
                 key={site.id}
                 asChild
-                tone="muted"
-                padding="sm"
+                variant="flat"
                 interactive
-                selected={isActive}
-                className="flex w-full items-center gap-3"
+                className={cn("flex w-full items-center gap-3 py-2.5", isActive && "border-primary bg-primary-tint")}
               >
                 <button
                   type="button"
@@ -132,35 +129,27 @@ export function ObjectPickerDrawer({
                     onOpenChange(false);
                   }}
                 >
-                <Thumb name={site.name} gradient={gradientForId(site.id)} size="sm" />
-
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold">
-                    {site.name}
+                  <span className="min-w-0 flex-1 text-left">
+                    <span className="block truncate text-[14px] font-medium">{site.name}</span>
+                    <span className="block truncate text-[12px] text-ink-2">
+                      {site.address ?? t.common.dash}
+                    </span>
                   </span>
-                  <span className="mt-0.5 block truncate text-[13px] font-medium text-text-muted">
-                    {site.address ?? t.common.dash}
-                  </span>
-                </span>
 
-                {isActive && (
-                  <Check
-                    className="size-5 shrink-0 text-primary"
-                    strokeWidth={2.6}
-                    aria-hidden
-                  />
-                )}
+                  {isActive && (
+                    <Check className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
+                  )}
                 </button>
-              </Card>
+              </Ticket>
             );
           })}
         </div>
 
         <DrawerClose
           className={cn(
-            "mx-4 mt-4 mb-3 flex h-[56px] items-center justify-center",
-            "rounded-[14px] bg-surface-2 text-[15px] font-bold text-text",
-            "transition-transform duration-150 active:scale-[0.98]",
+            "mx-4 mt-4 mb-3 flex h-ctl-md items-center justify-center",
+            "rounded-ctl border border-primary bg-ticket text-[15px] font-semibold text-primary",
+            "transition-colors hover:bg-primary-tint",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >

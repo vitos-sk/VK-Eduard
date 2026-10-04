@@ -23,7 +23,7 @@ function Field({
       {...props}
     >
       {label && (
-        <span className="text-[13px] font-bold text-text-muted">{label}</span>
+        <span className="text-[13px] font-semibold text-text-muted">{label}</span>
       )}
       {children}
       {error ? (

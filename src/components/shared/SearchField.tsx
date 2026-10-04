@@ -35,7 +35,7 @@ export function SearchField({
       <div className="relative min-w-0 flex-1">
         <Search
           className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-text-dim"
-          strokeWidth={2}
+          strokeWidth={1.9}
           aria-hidden
         />
         <Input
@@ -57,11 +57,11 @@ export function SearchField({
           onClick={onFilterClick}
           aria-label={t.common.filters}
         >
-          <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
+          <SlidersHorizontal className="size-5" strokeWidth={1.9} aria-hidden />
           {filterActive && (
             <span
               aria-hidden
-              className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-surface"
+              className="absolute top-2 right-2 size-2.5 rounded-full bg-primary border-2 border-ticket"
             />
           )}
         </Button>

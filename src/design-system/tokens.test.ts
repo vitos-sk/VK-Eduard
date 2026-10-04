@@ -14,15 +14,27 @@ function cssValue(name: string): string {
 
 describe("tokens.ts совпадает с tokens.css", () => {
   const pairs: [keyof typeof tokens, string][] = [
-    ["bg", "bg"],
-    ["text", "text"],
-    ["textMuted", "text-muted"],
-    ["border", "border"],
-    ["accent", "accent"],
-    ["brandDeep", "brand-deep"],
+    ["paper", "paper"],
+    ["ticket", "ticket"],
+    ["stub", "stub"],
+    ["edge", "edge"],
+    ["perf", "perf"],
+    ["ink", "ink"],
+    ["ink2", "ink-2"],
+    ["ink3", "ink-3"],
+    ["green", "green"],
+    ["yellow", "yellow"],
+    ["warn", "warn"],
+    ["err", "err"],
   ];
 
   it.each(pairs)("%s", (key, cssName) => {
     expect(tokens[key]).toBe(cssValue(cssName));
+  });
+});
+
+describe("tokens.css", () => {
+  it("не содержит теней и градиентов", () => {
+    expect(css).not.toMatch(/gradient\(/);
   });
 });

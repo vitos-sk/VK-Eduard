@@ -89,29 +89,29 @@ export function DayActions({ openEntry, sites, onChanged, className }: DayAction
   const PauseIcon = isOnBreak ? Play : Pause;
 
   return (
-    <div className={cn("space-y-3", className)}>
-      <Button size="xl" block onClick={handleToggleWork} disabled={isPending}>
+    <div className={cn("space-y-2", className)}>
+      <Button block onClick={handleToggleWork} loading={isPending}>
         <MainIcon
           className="size-[18px] fill-current"
-          strokeWidth={2}
+          strokeWidth={1.9}
           aria-hidden
         />
         {isRunning ? t.hours.finishWork : t.hours.startWork}
       </Button>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Button variant="secondary" size="xl" onClick={handleTogglePause} disabled={isPending || !isRunning}>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" onClick={handleTogglePause} disabled={isPending || !isRunning}>
           <PauseIcon
             className="size-[18px] fill-current"
-            strokeWidth={2}
+            strokeWidth={1.9}
             aria-hidden
           />
           {isOnBreak ? t.hours.resume : t.hours.pause}
         </Button>
 
-        <Button asChild variant="secondary" size="xl" className="px-2 text-center text-[13px]">
+        <Button asChild variant="outline" className="px-2 text-center text-[13px]">
           <Link href="/time/manual">
-            <Plus className="size-[18px] shrink-0" strokeWidth={2.4} aria-hidden />
+            <Plus className="size-[18px] shrink-0" strokeWidth={1.9} aria-hidden />
             {t.hours.addManually}
           </Link>
         </Button>

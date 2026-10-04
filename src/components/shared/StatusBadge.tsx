@@ -1,24 +1,12 @@
-import { t } from "@/lib/i18n";
+import { StatusLabel } from "@/components/ui/status-label";
 import type { WorkStatus } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
-
-const statusVariant = {
-  in_progress: "success",
-  not_started: "neutral",
-  completed: "success",
-  paused: "warning",
-} as const satisfies Record<WorkStatus, "success" | "neutral" | "warning">;
 
 interface StatusBadgeProps {
   status: WorkStatus;
   className?: string;
 }
 
-/** Бейдж статуса объекта/смены: цвет берётся из варианта Badge, не локально. */
+/** Статус объекта/смены капсом (12 / 600): цвет зависит от статуса, не от местной раскраски. */
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  return (
-    <Badge variant={statusVariant[status]} dot className={className}>
-      {t.status[status]}
-    </Badge>
-  );
+  return <StatusLabel status={status} className={className} />;
 }

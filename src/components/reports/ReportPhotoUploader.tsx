@@ -101,7 +101,7 @@ export function ReportPhotoUploader({
         {photos.map((photo) => (
           <div
             key={photo.id}
-            className="relative size-20 shrink-0 overflow-hidden rounded-[12px] bg-surface-2"
+            className="relative size-20 shrink-0 overflow-hidden rounded-md border border-edge bg-stub"
           >
             {urls[photo.storage_path] && (
               <Button
@@ -125,7 +125,7 @@ export function ReportPhotoUploader({
                 aria-label={t.reportDetail.removePhoto}
                 className="absolute top-1 right-1"
               >
-                <X className="size-3.5" strokeWidth={2.5} aria-hidden />
+                <X className="size-3.5" strokeWidth={1.9} aria-hidden />
               </Button>
             )}
           </div>
@@ -138,10 +138,10 @@ export function ReportPhotoUploader({
               size="bare"
               onClick={openCamera}
               disabled={isUploading}
-              className="size-20 flex-col justify-center gap-1 rounded-ctl border-dashed text-text-muted"
+              className="size-20 flex-col justify-center gap-1 rounded-md border-dashed border-perf text-ink-2"
             >
-              <Camera className="size-5" strokeWidth={2} aria-hidden />
-              <span className="text-[11px] font-semibold">
+              <Camera className="size-5" strokeWidth={1.9} aria-hidden />
+              <span className="text-[12px] font-medium">
                 {isUploading ? t.reportDetail.uploading : t.reportDetail.takePhoto}
               </span>
             </Button>
@@ -150,17 +150,17 @@ export function ReportPhotoUploader({
               size="bare"
               onClick={openGallery}
               disabled={isUploading}
-              className="size-20 flex-col justify-center gap-1 rounded-ctl border-dashed text-text-muted"
+              className="size-20 flex-col justify-center gap-1 rounded-md border-dashed border-perf text-ink-2"
             >
-              <ImagePlus className="size-5" strokeWidth={2} aria-hidden />
-              <span className="text-[11px] font-semibold">{t.reportDetail.fromGallery}</span>
+              <ImagePlus className="size-5" strokeWidth={1.9} aria-hidden />
+              <span className="text-[12px] font-medium">{t.reportDetail.fromGallery}</span>
             </Button>
           </>
         )}
       </div>
 
       {editable && (
-        <p className="text-[12px] font-medium text-text-dim">
+        <p className="text-[12px] text-ink-2">
           {fmt(t.reportDetail.maxPhotos, { max: MAX_PHOTOS_PER_ENTRY })}
         </p>
       )}

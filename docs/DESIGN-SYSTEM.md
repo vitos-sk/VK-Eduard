@@ -1,32 +1,99 @@
-# Дизайн-система «K group» — вариант B «Дневной свет»
+# Дизайн-система «K group» — маршрут B «Табель»
 
-Светлая тема, единственная. Тёплая бумага, лесной зелёный (Primary), жёлтый маркер (Accent).
-Живая витрина с тремя вариантами, из которых выбран B: [`design-preview.html`](./design-preview.html).
+Тёплая бумага, белые талоны с корешком и перфорацией, лесной зелёный (главное действие), жёлтый — только метка нормы на линейке и риска активной вкладки (≤ 3% площади). Светлая тема единственная. Без теней и без градиентов.
+
+Идея: табельный бланк. Каждая смена — талон с корешком (день и число), часы — линейка с делениями (отработано против нормы), цифры часов моноширинные. Штамп «Подано» — только у реально поданного звіту.
 
 ## Единый источник правды
 
-- `src/design-system/tokens.css` — все цвета, радиусы, тени, высоты контролов. Хекс-коды живут только здесь.
-- `src/design-system/tokens.ts` — зеркало нескольких значений для мест без CSS-переменных (PDF, manifest, `theme-color`). Сверяется с CSS тестом `tokens.test.ts`.
-- Иконки PWA (`scripts/generate-app-icons.mjs`) читают цвета прямо из `tokens.css`.
+- `src/design-system/tokens.css` — все цвета, радиусы, высоты контролов, шрифты. Хекс-коды живут только здесь.
+- `src/design-system/tokens.ts` — зеркало для мест без CSS-переменных (PDF, manifest, `theme-color`). Сверяется с CSS тестом `tokens.test.ts`.
+- Иконки PWA (`npm run icons`, `scripts/generate-app-icons.mjs`) читают цвета из `tokens.css`.
+- Правило: в компонентах только токены, никаких `#hex`, `rgb()`, `text-white`. Новый вариант — в `cva` компонента (и токен, если нужен), затем здесь.
 
-## Токены (Tailwind-классы)
+## Палитра
 
-| Группа | Токены |
+| Токен | Значение | Роль |
+|---|---|---|
+| `--paper` | `#f3ecdc` | фон экрана |
+| `--ticket` | `#fffdf7` | талон, карточка, поле |
+| `--stub` | `#efe5cc` | корешок талона, аватар, скелетон |
+| `--edge` | `#e4d8ba` | рамка талона 1 px |
+| `--perf` | `#cdbf9b` | перфорация, пунктирные разделители |
+| `--scale` | `#d8ccae` | трек линейки, сетка графика |
+| `--ink` | `#1c2716` | основной текст |
+| `--ink-2` | `#5e6049` | вторичный текст, подписи |
+| `--ink-3` | `#6b664c` | плейсхолдеры, неактивное |
+| `--green` | `#1f5a17` | главное действие, активное |
+| `--green-h` / `--green-d` | `#184a12` / `#143d10` | наведение / нажато |
+| `--green-t` | `#e9f0e1` | фон выбранной строки, hover |
+| `--yellow` | `#f5c43c` | метка нормы, риска вкладки (≤ 3%) |
+| `--ok` / `--warn` / `--err` | `#2c7a3a` / `#8a5a00` / `#b3261e` | успех / предупреждение / ошибка |
+| `--danger-edge` | `#e0b8af` | рамка кнопки «Удалить» |
+| `--disabled` | `#e8e1cc` | неактивная кнопка |
+| `--notice` | `#fbf0d3` | офлайн-баннер |
+| `--switch-off` | `#d6ccb0` | выключенный Switch |
+
+Tailwind-классы: `bg-paper`, `bg-ticket`, `bg-stub`, `border-edge`, `border-perf`, `bg-scale`, `text-ink`, `text-ink-2`, `text-ink-3`, `bg-green`, `bg-yellow`, `text-warn`, `text-err`. Семантические алиасы старого API остались и ведут на палитру: `bg-bg` → paper, `bg-surface` → ticket, `bg-surface-2` → stub, `border-border` → edge, `text-text` → ink, `text-text-muted` → ink-2, `text-text-dim` → ink-3, `primary` → green, `accent` → yellow, `success` → ok, `warning` → warn, `danger` → err (+ `-hover`, `on-*`, `primary-tint`, `primary-active`).
+
+Радиусы: `rounded-sm` 4 (штамп, чекбокс), `rounded-md` 6 (чип, степпер), `rounded-ctl` 8 (кнопка, поле), `rounded-card` 10 (талон), `rounded-modal` 12. Теней нет: все `shadow-*` пустые.
+
+### Контраст (WCAG AA)
+
+| Пара | Контраст |
 |---|---|
-| Поверхности | `bg-bg`, `bg-surface`, `bg-surface-2`, `bg-field`, `border-border`, `border-border-strong` |
-| Текст | `text-text`, `text-text-muted`, `text-text-dim` |
-| Главные | `primary` / `secondary` / `accent` + `-hover`, `on-primary`, `on-secondary`, `on-accent` |
-| Статусы | `success`, `warning`, `danger` (заливки) и `success-fg`, `warning-fg`, `danger-fg` (текст на светлом) |
-| Слои | `bg-overlay` (подложка модалок и листов), `bg-scrim` / `text-on-scrim` (поверх фото) |
-| Радиусы | `rounded-sm` 8, `rounded-md` 10, `rounded-ctl` 12, `rounded-card` 16, `rounded-modal` 20 |
-| Тени | `shadow-sm`, `shadow-md`, `shadow-lg`, `shadow-accent` |
-| Высоты | `h-ctl-sm` 36, `h-ctl-md` 44, `h-ctl-lg` 48, `h-ctl-xl` 56, `h-field` 52 |
+| `--ink` на `--paper` | 13.2 : 1 |
+| `--ink-2` на `--paper` / на `--ticket` | 5.5 : 1 / 6.4 : 1 |
+| `--ink-3` на `--ticket` | 5.7 : 1 |
+| `--green` на `--ticket` | 8.2 : 1 |
+| белый на `--green` | 8.3 : 1 |
+| `--warn` на `--ticket` | 5.8 : 1 |
+| `--err` на `--ticket` | 6.4 : 1 |
+| `--ok` на `--ticket` | 5.2 : 1 |
+| `--ink` на `--yellow` | 9.5 : 1 |
+
+Новые пары, использованные в реализации (проверить при изменении палитры): `--ink` на `--stub` (корешок, аватар), `--ink-2` на `--stub`, `--green` на `--green-t` (выбранный ряд), `--warn` на `--notice` (офлайн-баннер), `--ink-3` на `--disabled` (неактивная кнопка, подпись объясняет причину).
+
+## Шрифты
+
+- **Golos Text** (400 / 500 / 600) — весь текст; `font-sans`.
+- **JetBrains Mono** (400 / 500 / 600) — часы, суммы, даты в талоне; `font-mono` и утилита `tabular` (mono + табличные цифры).
+- Подключены через `next/font/google` в `src/app/layout.tsx` (`--font-golos`, `--font-jetbrains`, subsets cyrillic + latin), самохостятся и доступны офлайн. Других шрифтов нет.
+- PDF-табель: `assets/fonts/GolosText-Regular|SemiBold.ttf`, `JetBrainsMono-Medium|SemiBold.ttf` (OFL; Golos нарезан из variable-файла).
+- Формат часов везде **ч:мм** (`formatHoursShort` → `7:45`, `176:30`).
+
+| Роль | Размер / вес |
+|---|---|
+| Заголовок экрана | 22 / 600 (ПК 24) |
+| Заголовок секции | 13 / 500 `ink-2` на телефоне, 20 / 600 на ПК |
+| Заголовок карточки | 15 / 600 |
+| Основной текст | 15 / 500 (ПК 14) |
+| Подписи | 13 / 400 `ink-2` |
+| Капс-статус | 12 / 600, трекинг .04em |
+| Большая цифра (день, KPI) | 30 / 600 mono |
+| Минимум | 12 px (подписи таб-бара 11 px, поле на телефоне 16 px) |
 
 ## Компоненты — `src/components/ui/`
 
-`Button` (primary, secondary, accent, outline, ghost, danger, danger-outline, scrim, field; `loading`, `block`), `Input`, `Textarea`, `Field`, `Select`, `Checkbox` / `CheckMark`, `Radio` / `RadioGroup`, `Toggle`, `Chip`, `Card` (`tone`, `padding`, `interactive`, `selected`), `Badge`, `Modal`, `Drawer`, `Popover`, `Calendar`, `Spinner`, `Skeleton`. Составной `SearchField` лежит в `components/shared/`.
+Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare), `Input` / `Textarea`, `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select`, `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
+
+Талонные:
+
+- `Ticket` — рамка `edge` 1 px, радиус 10, без тени. Варианты: `default` (корешок + тело + футер), `notch` (полукруги на границе корешка, только дневной талон на главной), `flat` (без корешка, отступы 12×14), `sections` (секции `TicketSection` разделены пунктиром); `compact` — корешок 64 px. Части: `TicketStub`, `DateStub` (день недели, число mono, месяц), `TicketBody`, `TicketFoot`, `TicketSection`.
+- `HoursRuler` — линейка 0–10 ч (расширяется до 12/14/16/18 при сумме > 9:30), деления каждые 0.5 ч, зелёная заливка, жёлтая метка нормы. `TimeRangeRuler` — шкала 06–18 с зелёными отметками начала и завершения.
+- `ProgressPips` — три шага (Години · Звіт · Фото), текущий — рамка и жёлтый треугольник.
+- `ObjectTicket`, `WeekMiniTicket`, `KpiTicket`, `TicketTable`, `ChartBars` (текущий день жёлтый).
+
+Навигация: `BottomNav` (84 px, пунктир сверху, жёлтая риска над активной вкладкой, `FabButton` 44 px), `DesktopSidebar` (232 px с подписями, пунктирная перфорация справа). Телефон — колонка; планшет 480–1023 px — та же колонка по центру до 560 px без рамки устройства; ПК от 1024 px — сайдбар и контент до 1240 px.
+
+## Доступность
+
+- Фокус: контур 2 px `--green`, отступ 2 px. У `UnderlineField` фокус — линия 2 px.
+- `prefers-reduced-motion`: анимации и переходы отключены глобально (`globals.css`), спиннер и скелетон не анимируются.
+- Зона нажатия ≥ 44 px у мелких элементов — через `::before`, размер самого элемента не меняется.
+- Неактивная главная кнопка пишет причину в самой подписи («Заповніть «Інше», щоб зберегти»).
 
 ## Осознанные исключения
 
-- `app/(app)/more/page.tsx` — цвет аватара считается из `profile.avatar_hue` (данные пользователя, а не палитра).
-- `Card asChild interactive` оборачивает нативный `<button>` / `<Link>` — так карточка целиком кликабельна.
+- `Card asChild interactive` и `Ticket asChild interactive` оборачивают нативный `<button>` / `<Link>` — карточка целиком кликабельна.
+- Подпись «НОВИЙ ВИД» и табель-сетка на дашборде не введены (нужно подтверждение владельца): «Години по співробітниках» — обычная таблица (Працівник · Години · Дні з записами · Без запису).

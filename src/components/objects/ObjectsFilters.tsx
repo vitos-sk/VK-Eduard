@@ -53,8 +53,8 @@ interface ObjectsFiltersProps {
   workers?: readonly Option[];
 }
 
-const selectTriggerClass = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[14px] font-bold text-text";
-const labelClass = "text-[12px] font-medium text-text-muted";
+const selectTriggerClass = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[14px] font-medium text-text";
+const labelClass = "text-[12px] text-ink-2";
 
 /** Блок фільтрів списку «Об'єкти»: статус, період, конкретний об'єкт, працівник. */
 export function ObjectsFilters({ value, onChange, sites, workers }: ObjectsFiltersProps) {
@@ -103,7 +103,7 @@ export function ObjectsFilters({ value, onChange, sites, workers }: ObjectsFilte
             />
           </label>
         </div>
-        <p className="mt-1.5 text-[12px] text-text-dim">{s.filters.periodHint}</p>
+        <p className="mt-1.5 text-[12px] text-ink-2">{s.filters.periodHint}</p>
       </fieldset>
 
       <div>

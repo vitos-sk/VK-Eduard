@@ -5,7 +5,7 @@ import { categoryLabel, OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/category
 import type { WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
 import { Chip } from "@/components/ui/chip";
-import { Input } from "@/components/ui/input";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 interface WorkCategoryChipsProps {
   categories: readonly WorkCategory[];
@@ -28,10 +28,8 @@ export function isOtherSelected(
 }
 
 /**
- * Ряд чипів «Вид робіт» — мульти-select тапом. Категорія без назви (архівована,
- * якщо колись з'явиться екран архівації) сюди не потрапляє — список приходить
- * уже відфільтрованим `getWorkCategories`. «Інше» відкриває поле, куди
- * працівник вписує, що саме робив.
+ * Ряд чипів «Вид робіт» — мульти-select тапом. «Інше» відкриває поле
+ * (UnderlineField), куди працівник вписує, що саме робив; порожнє — помилка.
  */
 export function WorkCategoryChips({
   categories,
@@ -43,14 +41,15 @@ export function WorkCategoryChips({
   className,
 }: WorkCategoryChipsProps) {
   if (readOnly && value.length === 0) {
-    return <p className={cn("text-[14px] font-medium text-text-muted", className)}>{t.reportDetail.noCategoriesLabel}</p>;
+    return <p className={cn("text-[14px] text-ink-2", className)}>{t.reportDetail.noCategoriesLabel}</p>;
   }
 
   const visible = readOnly ? categories.filter((category) => value.includes(category.id)) : categories;
+  const otherMissing = isOtherSelected(categories, value) && otherText.trim() === "";
 
   return (
     <div className={className}>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {visible.map((category) => {
           const selected = value.includes(category.id);
 
@@ -59,7 +58,7 @@ export function WorkCategoryChips({
               key={category.id}
               selected={selected}
               disabled={readOnly}
-              className={cn(readOnly && "disabled:opacity-100")}
+              className={cn(readOnly && "disabled:text-on-primary")}
               onClick={() => {
                 onChange(selected ? value.filter((id) => id !== category.id) : [...value, category.id]);
               }}
@@ -71,17 +70,15 @@ export function WorkCategoryChips({
       </div>
 
       {!readOnly && isOtherSelected(categories, value) && (
-        <div className="mt-3">
-          <label className="mb-1.5 block text-[13px] font-semibold text-text-muted">
-            {t.reportForm.otherLabel}
-          </label>
-          <Input
-            value={otherText}
-            maxLength={OTHER_TEXT_MAX_LENGTH}
-            placeholder={t.reportForm.otherPlaceholder}
-            onChange={(event) => onOtherTextChange?.(event.target.value)}
-          />
-        </div>
+        <UnderlineField
+          className="mt-3"
+          label={t.reportForm.otherLabel}
+          value={otherText}
+          maxLength={OTHER_TEXT_MAX_LENGTH}
+          placeholder={t.reportForm.otherPlaceholder}
+          error={otherMissing ? t.reportForm.otherRequired : undefined}
+          onChange={(event) => onOtherTextChange?.(event.target.value)}
+        />
       )}
     </div>
   );

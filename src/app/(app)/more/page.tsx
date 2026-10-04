@@ -16,8 +16,7 @@ import { companyStrings } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/modules/auth/actions";
 import { requireProfile } from "@/modules/auth/session";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { Ticket, TicketBody, TicketStub } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
 
 interface SettingsRow {
@@ -62,62 +61,46 @@ export default async function MorePage() {
     <div className="pb-6">
       <BackHeader title={t.profile.title} href="/" />
 
-      <div className="flex flex-col gap-6 px-4 lg:mx-auto lg:max-w-[480px]">
-        <Card tone="muted" className="flex items-center gap-3">
-          <div
-            aria-hidden
-            style={{ backgroundColor: `hsl(${profile.avatar_hue} 45% 26%)` }}
-            className="flex size-14 shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold text-on-scrim"
-          >
-            {initialsOf(profile.full_name)}
-          </div>
+      <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[480px] lg:px-0">
+        <Ticket compact>
+          <TicketStub aria-hidden>
+            <span className="text-[18px] leading-none font-semibold">
+              {initialsOf(profile.full_name)}
+            </span>
+          </TicketStub>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[16px] font-bold">{profile.full_name}</p>
-            {user?.email && (
-              <p className="truncate text-[13px] font-medium text-text-muted">
-                {user.email}
-              </p>
-            )}
-          </div>
-
-          <Link
-            href="/more/profile"
-            className={cn(
-              "shrink-0 rounded-full border border-primary/40 px-3 py-1.5",
-              "text-[13px] font-bold text-primary",
-              "transition-transform duration-150 active:scale-[0.96]",
-            )}
-          >
-            {t.profile.change}
-          </Link>
-        </Card>
-
-        <div className="flex flex-col gap-2">
-          {rows.map((row) => (
-            <Card
-              key={row.href}
-              asChild
-              tone="muted"
-              padding="none"
-              interactive
-              className="flex h-14 items-center gap-3 px-4"
-            >
-              <Link href={row.href}>
-              <row.icon className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
-              <span className="flex-1 text-[15px] font-bold">{row.label}</span>
-              {row.value && (
-                <span className="text-[14px] font-medium text-text-muted">{row.value}</span>
+          <TicketBody className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[15px] font-semibold">{profile.full_name}</p>
+              {user?.email && (
+                <p className="truncate text-[13px] text-ink-2">{user.email}</p>
               )}
-              <ChevronRight className="size-[18px] shrink-0 text-text-dim" strokeWidth={2.4} aria-hidden />
+            </div>
+
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <Link href="/more/profile">{t.profile.change}</Link>
+            </Button>
+          </TicketBody>
+        </Ticket>
+
+        <Ticket variant="sections">
+          {rows.map((row) => (
+            <Link
+              key={row.href}
+              href={row.href}
+              className="flex min-h-12 items-center gap-3 px-3.5 outline-none not-first:border-t not-first:border-dashed not-first:border-perf hover:bg-primary-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+            >
+              <row.icon className="size-5 shrink-0 text-ink-2" strokeWidth={1.9} aria-hidden />
+              <span className="flex-1 text-[14px] font-medium">{row.label}</span>
+              {row.value && <span className="text-[13px] text-ink-2">{row.value}</span>}
+              <ChevronRight className="size-4 shrink-0 text-ink-3" strokeWidth={1.9} aria-hidden />
             </Link>
-            </Card>
           ))}
-        </div>
+        </Ticket>
 
         <form action={signOut}>
-          <Button type="submit" variant="danger-outline" size="xl" block>
-            <LogOut className="size-5" strokeWidth={2} aria-hidden />
+          <Button type="submit" variant="danger" block>
+            <LogOut className="size-[18px]" strokeWidth={1.9} aria-hidden />
             {t.auth.signOut}
           </Button>
         </form>

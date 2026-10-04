@@ -8,7 +8,7 @@ import { signIn, type SignInState } from "@/modules/auth/actions";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 const initialState: SignInState = { error: null };
 
@@ -22,18 +22,18 @@ export function LoginForm() {
   return (
     <form
       action={formAction}
-      className="flex min-h-full flex-col px-6 pt-[calc(env(safe-area-inset-top)+3rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+      className="flex min-h-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+3rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
     >
       <Logo size={30} />
 
-      <h1 className="mt-10 text-[32px]/[1.1] font-extrabold tracking-[-0.02em]">
+      <h1 className="mt-10 text-[24px]/[1.15] font-semibold tracking-[-0.02em]">
         {t.auth.title}
       </h1>
-      <p className="mt-2 text-[15px] font-medium text-text-muted">
+      <p className="mt-1 text-[13px] text-ink-2">
         {t.auth.subtitle}
       </p>
 
-      <div className="mt-8 flex flex-col gap-4">
+      <div className="mt-6 flex flex-col gap-4">
         <Field
           name="email"
           type="email"
@@ -55,7 +55,7 @@ export function LoginForm() {
       <p
         aria-live="polite"
         className={cn(
-          "mt-4 min-h-[20px] text-[14px] font-semibold text-danger-fg",
+          "mt-4 min-h-[20px] text-[13px] text-err",
           !state.error && "sr-only",
         )}
       >
@@ -72,26 +72,14 @@ function Field({
   label,
   ...input
 }: { name: string; label: string } & React.ComponentProps<"input">) {
-  return (
-    <label className="flex flex-col gap-2">
-      <span className="text-[13px] font-bold tracking-wide text-text-muted uppercase">
-        {label}
-      </span>
-      <Input
-        {...input}
-        name={name}
-        required
-        size="lg"
-      />
-    </label>
-  );
+  return <UnderlineField {...input} name={name} label={label} required />;
 }
 
 function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button size="xl" block className="mt-6" type="submit" disabled={pending}>
+    <Button block className="mt-6" type="submit" loading={pending}>
       {pending ? t.auth.submitting : t.auth.submit}
     </Button>
   );

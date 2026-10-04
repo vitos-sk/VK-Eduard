@@ -46,7 +46,7 @@ interface SitePhotoUploaderProps {
 }
 
 /**
- * Аватарка об'єкта на формі редагування: кругле прев'ю, тап відкриває
+ * Фото об'єкта на формі: квадратне прев'ю, тап відкриває
  * камеру/галерею. Нове фото одразу вантажиться і заміняє попереднє —
  * старий файл прибирається з Storage вже після успішного заміщення
  * (`photos.ts`: спочатку новий шлях у базі, потім видалення старого),
@@ -100,7 +100,7 @@ export function SitePhotoUploader({
         onClick={openGallery}
         disabled={isUploading}
         aria-label={path ? t.objects.form.changePhoto : t.objects.form.addPhoto}
-        className="relative size-20 shrink-0 justify-center overflow-hidden rounded-full border-border"
+        className="relative size-20 shrink-0 justify-center overflow-hidden rounded-card border-edge"
       >
         {url && (
           // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
@@ -113,28 +113,28 @@ export function SitePhotoUploader({
             url && "opacity-0 transition-opacity duration-150 hover:opacity-100",
           )}
         >
-          <Camera className="size-5" strokeWidth={2} aria-hidden />
+          <Camera className="size-5" strokeWidth={1.9} aria-hidden />
         </span>
       </Button>
 
       <div>
-        <p className="text-[14px] font-bold">
+        <p className="text-[14px] font-semibold">
           {isUploading
             ? t.objects.form.uploadingPhoto
             : path
               ? t.objects.form.changePhoto
               : t.objects.form.addPhoto}
         </p>
-        <p className="mt-0.5 text-[13px] font-medium text-text-muted">
+        <p className="mt-0.5 text-[13px] text-ink-2">
           {t.objects.form.photoLabel}
         </p>
         <div className="mt-2 flex gap-2">
           <Button variant="outline" size="sm" onClick={openCamera} disabled={isUploading}>
-            <Camera className="size-4" strokeWidth={2} aria-hidden />
+            <Camera className="size-4" strokeWidth={1.9} aria-hidden />
             {t.reportDetail.takePhoto}
           </Button>
           <Button variant="outline" size="sm" onClick={openGallery} disabled={isUploading}>
-            <ImagePlus className="size-4" strokeWidth={2} aria-hidden />
+            <ImagePlus className="size-4" strokeWidth={1.9} aria-hidden />
             {t.reportDetail.fromGallery}
           </Button>
         </div>

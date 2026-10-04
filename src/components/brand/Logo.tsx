@@ -31,13 +31,13 @@ export function LogoMark({
         fill="currentColor"
       />
       {/* Пирамидка в вырезе — единственный жёлтый элемент знака */}
-      <path d="M71.1 69.5 98.4 98.4H46Z" fill="var(--accent)" />
+      <path d="M71.1 69.5 98.4 98.4H46Z" fill="var(--yellow)" />
     </svg>
   );
 }
 
 /**
- * Полный логотип: знак + «work.» с жёлтой точкой.
+ * Полный логотип: знак + «group.» с жёлтой точкой (без пробела).
  *
  * `size` задаёт кегль надписи, знак подстраивается под него.
  */
@@ -49,14 +49,14 @@ export function Logo({
   size?: number;
 }) {
   return (
-    <div className={cn("flex items-center gap-2 text-primary", className)}>
+    <div className={cn("flex items-center gap-2 text-ink", className)}>
       <LogoMark size={size * 1.7} />
       <span
-        className="font-extrabold tracking-tight"
+        className="font-semibold tracking-tight"
         style={{ fontSize: size }}
       >
         {t.common.appWordmark}
-        <span className="text-accent">.</span>
+        <span className="text-yellow">.</span>
       </span>
     </div>
   );

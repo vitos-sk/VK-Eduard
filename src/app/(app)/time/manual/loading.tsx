@@ -8,9 +8,9 @@ export default function Loading() {
       <BackHeader title={t.manualTime.title} href="/" />
 
       <div className="px-4 space-y-4">
-        <Skeleton className="h-11 w-full rounded-[12px]" />
-        <Skeleton className="h-11 w-full rounded-[12px]" />
-        <Skeleton className="h-11 w-full rounded-[12px]" />
+        <Skeleton className="h-11 w-full rounded-ctl" />
+        <Skeleton className="h-11 w-full rounded-ctl" />
+        <Skeleton className="h-11 w-full rounded-ctl" />
       </div>
     </div>
   );

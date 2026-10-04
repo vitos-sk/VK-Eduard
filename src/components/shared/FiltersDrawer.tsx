@@ -45,7 +45,7 @@ export function FiltersDrawer({
         )}
       >
         <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-[20px] font-bold text-text">
+          <DrawerTitle className="text-[20px] font-semibold text-text">
             {t.common.filters}
           </DrawerTitle>
         </DrawerHeader>

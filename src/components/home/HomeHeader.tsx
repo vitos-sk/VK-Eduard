@@ -1,50 +1,37 @@
-import { Bell } from "lucide-react";
+import type { ReactNode } from "react";
 
-import { Logo } from "@/components/brand/Logo";
 import { AvatarLink } from "@/components/layout/AvatarLink";
-import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 /**
- * Шапка главной: логотип «K group.» слева, колокольчик и аватар справа.
- *
- * От `lg` логотип уходит — он уже есть в `DesktopSidebar`, дублировать его
- * в шапке незачем; вместо него — название раздела, как в остальном приложении.
- *
- * `initials` — первая буква имени из профиля. Счётчик непрочитанных убран
- * вместе с моком: экрана уведомлений нет, а рисовать выдуманное число
- * рядом с настоящим именем — врать пользователю.
- *
- * Аватар ведёт в профиль, экрана уведомлений пока нет — колокольчик без действия.
+ * Шапка главной: приветствие 22 / 600, под ним дата 13 px, справа аватар-инициалы.
+ * Логотип и колокольчика нет: логотип в сайдбаре, уведомлений в приложении нет.
  */
 export function HomeHeader({
   initials,
+  title,
+  subtitle,
   className,
 }: {
   initials: string;
+  title: ReactNode;
+  subtitle: string;
   className?: string;
 }) {
   return (
     <header
       className={cn(
-        "flex items-center justify-between gap-3 pt-[calc(env(safe-area-inset-top)+1.25rem)]",
-        "lg:sticky lg:top-0 lg:z-20 lg:-mt-8 lg:bg-bg lg:pt-8",
+        "flex items-start justify-between gap-3 pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-0",
         className,
       )}
     >
-      <Logo size={19} className="lg:hidden" />
-      <p className="hidden text-[15px] font-bold text-text-dim lg:block">
-        {t.nav.home}
-      </p>
-
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" aria-label={t.common.notifications}>
-          <Bell className="size-6" strokeWidth={2} aria-hidden />
-        </Button>
-
-        <AvatarLink initials={initials} />
+      <div className="min-w-0">
+        <h1 className="text-[22px] leading-tight font-semibold tracking-tight lg:text-[24px]">
+          {title}
+        </h1>
+        <p className="mt-0.5 text-[13px] text-ink-2">{subtitle}</p>
       </div>
+      <AvatarLink initials={initials} className="mt-0.5 lg:hidden" />
     </header>
   );
 }

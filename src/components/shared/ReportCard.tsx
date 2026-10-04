@@ -1,16 +1,13 @@
 import Link from "next/link";
-import { Camera } from "lucide-react";
 
-import { MetaRow } from "@/components/shared/MetaRow";
-import { Thumb } from "@/components/shared/Thumb";
-import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
+import { StampTag } from "@/components/ui/stamp-tag";
+import { DateStub, Ticket, TicketBody } from "@/components/ui/ticket";
+import { fmt } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { gradientForId } from "@/lib/siteGradient";
 import { reportState } from "@/modules/reports/reportState";
 import { categoryLabelsOf } from "@/modules/reports/categoryLabels";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 interface ReportCardProps {
   report: SiteReportWithPhotos;
@@ -18,101 +15,39 @@ interface ReportCardProps {
   siteName: string | null;
   /** Категорії компанії — для показу міток по `category_ids`. */
   categories: readonly WorkCategory[];
-  /** Подписанная ссылка на первое фото — `null`, если фото ещё нет. */
-  thumbUrl: string | null;
+  /** Не используется: в дизайне карточка звіту без миниатюры. Оставлено для совместимости вызовов. */
+  thumbUrl?: string | null;
   className?: string;
 }
 
-const MAX_VISIBLE_CATEGORIES = 2;
-
 /**
- * Карточка звіту: дата, об'єкт, до двох міток категорій, дальше — по стану:
- * «Без опису» — плашка й кнопка «Дописати», «Готовий» — текст опису й фото.
+ * Карточка звіту — талон с корешком (день и число). Строка: виды работ
+ * (или текст описания), под ней объект и число фото; справа штамп состояния.
+ * «Подано» — только у звіту, где есть описание или фото.
  */
-export function ReportCard({ report, siteName, categories, thumbUrl, className }: ReportCardProps) {
+export function ReportCard({ report, siteName, categories, className }: ReportCardProps) {
   const state = reportState(report, report.report_photos.length);
-  const dateLabel = formatDayMonth(fromDateKey(report.work_date));
   const name = siteName ?? t.hours.noObject;
-
-  const categoryLabels = categoryLabelsOf(report, categories);
-  const visibleLabels = categoryLabels.slice(0, MAX_VISIBLE_CATEGORIES);
-  const extraCount = categoryLabels.length - visibleLabels.length;
+  const labels = categoryLabelsOf(report, categories);
+  const title = labels.join(", ") || report.description || t.home.lastReport.noDescription;
+  const photos = report.report_photos.length;
 
   return (
-    <Link
-      href={`/reports/${report.id}`}
-      className={cn(
-        "flex w-full items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-left",
-        "transition-transform duration-150 active:scale-[0.98]",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        state === "no_description" && "opacity-80",
-        className,
-      )}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="truncate text-[15px] font-bold">{dateLabel}</p>
-        </div>
-
-        <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">{name}</p>
-
-        {visibleLabels.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {visibleLabels.map((label) => (
-              <span
-                key={label}
-                className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-bold text-text-muted"
-              >
-                {label}
-              </span>
-            ))}
-            {extraCount > 0 && (
-              <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-bold text-text-muted">
-                {`+${extraCount}`}
-              </span>
-            )}
-          </div>
-        )}
-
-        {state === "no_description" && (
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <Badge variant="warning">{t.reports.noDescriptionBadge}</Badge>
-            <span className="text-[13px] font-bold text-primary">
-              {t.reports.addDescription}
+    <Ticket asChild compact interactive className={className}>
+      <Link href={`/reports/${report.id}`}>
+        <DateStub date={report.work_date} compact />
+        <TicketBody className={cn("flex items-center gap-2.5 py-2.5")}>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[14px] leading-snug font-medium">{title}</span>
+            <span className="block truncate text-[12px] text-ink-2">
+              {photos > 0 ? `${name} · ${fmt(t.reports.photosCount, { n: photos })}` : name}
             </span>
-          </div>
-        )}
-
-        {state === "ready" && report.description !== "" && (
-          <p className="mt-2 line-clamp-2 text-[14px] leading-[1.4] font-medium text-text">
-            {report.description}
-          </p>
-        )}
-
-        {report.report_photos.length > 1 && (
-          <MetaRow
-            className="mt-2"
-            items={[
-              {
-                icon: Camera,
-                label: fmt(t.reports.photosCount, { n: report.report_photos.length }),
-              },
-            ]}
-          />
-        )}
-      </div>
-
-      {thumbUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage, не next/image-домен
-        <img
-          src={thumbUrl}
-          alt=""
-          loading="lazy"
-          className="h-[84px] w-[104px] shrink-0 rounded-[12px] object-cover"
-        />
-      ) : (
-        <Thumb name={name} gradient={gradientForId(report.site_id ?? report.id)} size="wide" />
-      )}
-    </Link>
+          </span>
+          <StampTag variant={state === "ready" ? "submitted" : "notSubmitted"}>
+            {state === "ready" ? t.home.dayReport.submitted : t.reports.noDescriptionBadge}
+          </StampTag>
+        </TicketBody>
+      </Link>
+    </Ticket>
   );
 }

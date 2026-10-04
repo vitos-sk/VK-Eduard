@@ -21,7 +21,8 @@ import {
   restoreWorkCategory,
 } from "@/modules/reports/actions";
 import type { WorkCategory } from "@/modules/reports/types";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Ticket } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -135,9 +136,9 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
   };
 
   return (
-    <Card>
-      <p className="text-[16px] font-bold text-text">{s.settings.categoriesTitle}</p>
-      <p className="mt-1 text-[13px] font-medium text-text-muted">
+    <Ticket variant="flat">
+      <p className="text-[15px] font-semibold text-text">{s.settings.categoriesTitle}</p>
+      <p className="mt-1 text-[13px] text-ink-2">
         {s.settings.categoriesDescription}
       </p>
 
@@ -156,16 +157,16 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
           aria-invalid={addError !== null}
                   />
 
-        <Button size="md" onClick={handleAdd} disabled={isAdding || name.trim() === ""}>
-          <Plus className="size-4" strokeWidth={2.5} aria-hidden />
+        <Button onClick={handleAdd} disabled={name.trim() === ""} loading={isAdding}>
+          <Plus className="size-4" strokeWidth={1.9} aria-hidden />
           {s.settings.categoriesAdd}
         </Button>
       </div>
 
-      {addError && <p className="mt-2 text-[12px] font-semibold text-danger-fg">{addError}</p>}
+      {addError && <p className="mt-2 text-[13px] text-err">{addError}</p>}
 
       {categories.length === 0 ? (
-        <p className="mt-4 text-[13px] font-medium text-text-muted">
+        <p className="mt-4 text-[13px] text-ink-2">
           {s.settings.categoriesEmpty}
         </p>
       ) : (
@@ -177,24 +178,22 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
             return (
               <li
                 key={category.id}
-                className="flex items-center justify-between gap-3 rounded-[12px] border border-border bg-surface-2 px-3 py-2.5"
+                className="flex items-center justify-between gap-3 rounded-card border border-edge px-3 py-2"
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="truncate text-[14px] font-bold text-text">
+                  <span className="truncate text-[14px] font-semibold text-text">
                     {category.label}
                   </span>
                   {isArchived && (
-                    <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-text-dim">
-                      {s.settings.categoriesArchivedBadge}
-                    </span>
+                    <Badge className="shrink-0">{s.settings.categoriesArchivedBadge}</Badge>
                   )}
                 </div>
 
                 <Button variant="outline" size="sm" onClick={() => isArchived ? handleRestore(category) : setConfirmTarget(category) } disabled={isRowPending}>
                   {isArchived ? (
-                    <ArchiveRestore className="size-4" strokeWidth={2} aria-hidden />
+                    <ArchiveRestore className="size-4" strokeWidth={1.9} aria-hidden />
                   ) : (
-                    <Archive className="size-4" strokeWidth={2} aria-hidden />
+                    <Archive className="size-4" strokeWidth={1.9} aria-hidden />
                   )}
                   {isArchived
                     ? s.settings.categoriesRestore
@@ -227,6 +226,6 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Card>
+    </Ticket>
   );
 }

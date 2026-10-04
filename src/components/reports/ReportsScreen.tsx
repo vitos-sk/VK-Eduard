@@ -13,7 +13,8 @@ import {
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
 import { t } from "@/lib/i18n";
-import { initialsOf, type Profile } from "@/modules/auth/profile";
+import { initialsOf } from "@/components/shared/Thumb";
+import type { Profile } from "@/modules/auth/profile";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
@@ -49,18 +50,18 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
         title={t.reports.title}
         action={
           <div className="flex items-center gap-2">
-            <Button asChild variant="accent" size="icon" aria-label={t.reports.createReport}>
+            <Button asChild variant="primary" size="icon-sm" aria-label={t.reports.createReport}>
               <Link href="/reports/new">
-              <Plus className="size-6" strokeWidth={2.6} aria-hidden />
+              <Plus className="size-5" strokeWidth={1.9} aria-hidden />
               </Link>
             </Button>
-            <AvatarLink initials={initialsOf(profile)} />
+            <AvatarLink initials={initialsOf(profile.full_name)} />
           </div>
         }
       />
 
       {isBoss && (
-        <div className="px-4">
+        <div className="px-4 lg:px-0">
           <SegmentedTabs
             className="mb-3"
             options={SCREEN_TAB_OPTIONS}

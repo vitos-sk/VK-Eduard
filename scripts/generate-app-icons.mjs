@@ -30,12 +30,12 @@ const token = (name) => {
   if (!match) throw new Error(`Токен --${name} не найден в tokens.css`);
   return match[1].trim();
 };
-const BG = token("primary");
-const BRAND = token("accent");
-const INK = token("on-primary");
+const BG = token("green");
+const BRAND = token("yellow");
+const INK = token("on-green");
 /** Сплэш встречает светлым экраном приложения — тот же фон, что `background_color` манифеста. */
-const SPLASH_BG = token("bg");
-const SPLASH_INK = token("text");
+const SPLASH_BG = token("paper");
+const SPLASH_INK = token("ink");
 
 /**
  * Знак `K` в системе координат 100×100 — те же path, что в `Logo.tsx`,

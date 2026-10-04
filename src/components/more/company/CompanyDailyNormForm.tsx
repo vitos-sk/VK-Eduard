@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { companyStrings as s } from "@/lib/i18n/parts/company";
 import { updateCompanyDailyNorm } from "@/modules/company/actions";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -64,14 +64,14 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
   };
 
   return (
-    <Card>
-      <p className="text-[16px] font-bold text-text">{s.settings.dailyNormTitle}</p>
-      <p className="mt-1 text-[13px] font-medium text-text-muted">
+    <Ticket variant="flat">
+      <p className="text-[15px] font-semibold text-text">{s.settings.dailyNormTitle}</p>
+      <p className="mt-1 text-[13px] text-ink-2">
         {s.settings.dailyNormDescription}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
-        <label className="text-[13px] font-medium text-text-muted" htmlFor="company-daily-norm">
+        <label className="text-[13px] text-ink-2" htmlFor="company-daily-norm">
           {s.settings.dailyNormLabel}
         </label>
 
@@ -89,20 +89,20 @@ export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormPro
           }}
           disabled={isPending}
           aria-invalid={error !== null}
-          className="h-ctl-sm w-20 px-2 text-center text-[14px]"
+          className="tabular h-ctl-sm w-20 px-2 text-center text-[14px]"
         />
-        <span className="text-[13px] font-medium text-text-dim">
+        <span className="text-[13px] text-ink-2">
           {s.settings.dailyNormUnit}
         </span>
 
         {isDirty && (
-          <Button size="sm" onClick={handleSave} disabled={isPending}>
+          <Button size="sm" onClick={handleSave} loading={isPending}>
             {s.settings.dailyNormSave}
           </Button>
         )}
       </div>
 
-      {error && <p className="mt-2 text-[12px] font-semibold text-danger-fg">{error}</p>}
-    </Card>
+      {error && <p className="mt-2 text-[13px] text-err">{error}</p>}
+    </Ticket>
   );
 }

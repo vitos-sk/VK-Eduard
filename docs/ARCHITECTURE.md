@@ -193,7 +193,7 @@ erDiagram
 | Service Worker | **Serwist** | Next 16 сам рекомендует его для офлайн-кэша, есть пример под Turbopack |
 | Индикатор сети | `useOffline` из `next/offline` | встроено в Next 16, флаг `experimental.useOffline` |
 | Стили | Tailwind v4 + shadcn/ui | уже в проекте |
-| Иконки, даты, шрифт | `lucide-react`, `date-fns/uk`, Manrope | уже в проекте |
+| Иконки, даты, шрифт | `lucide-react`, `date-fns/uk`, Golos Text + JetBrains Mono | уже в проекте |
 
 **Чего сознательно НЕ берём:**
 

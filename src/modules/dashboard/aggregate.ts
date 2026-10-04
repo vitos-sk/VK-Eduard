@@ -114,3 +114,61 @@ export function buildTodayOverview(
     totalMinutes: sumTotalMinutes(todayEntries),
   };
 }
+
+export interface WorkerPeriodRow {
+  id: string;
+  name: string;
+  minutes: number;
+  /** Дні періоду, в які є хоч один запис. */
+  daysWithEntries: number;
+  /** Робочі дні (пн–пт) до сьогодні, у які запису немає. */
+  daysWithoutEntries: number;
+}
+
+/**
+ * Таблиця «Години по співробітниках»: години, дні із записами, дні без запису.
+ * Дні без запису — робочі (пн–пт) від початку періоду до `today` включно, коли в людини
+ * не було жодного запису. Усі активні співробітники присутні в таблиці, навіть без годин.
+ * `fromKey`/`toKey` — межі періоду `YYYY-MM-DD`, `todayKey` — сьогодні.
+ */
+export function buildWorkerPeriodRows(
+  entries: readonly WorkEntryWithNames[],
+  workers: readonly { id: string; name: string }[],
+  fromKey: string,
+  toKey: string,
+  todayKey: string,
+): WorkerPeriodRow[] {
+  const lastKey = toKey < todayKey ? toKey : todayKey;
+
+  let workdays = 0;
+  const cursor = new Date(`${fromKey}T00:00:00`);
+  const end = new Date(`${lastKey}T00:00:00`);
+  while (cursor <= end) {
+    const weekday = cursor.getDay();
+    if (weekday !== 0 && weekday !== 6) workdays += 1;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const minutesById = new Map<string, number>();
+  const daysById = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    minutesById.set(entry.author_id, (minutesById.get(entry.author_id) ?? 0) + (entry.total_minutes ?? 0));
+    const days = daysById.get(entry.author_id) ?? new Set<string>();
+    days.add(entry.work_date);
+    daysById.set(entry.author_id, days);
+  }
+
+  return workers
+    .map((worker) => {
+      const daysWithEntries = daysById.get(worker.id)?.size ?? 0;
+
+      return {
+        id: worker.id,
+        name: worker.name,
+        minutes: minutesById.get(worker.id) ?? 0,
+        daysWithEntries,
+        daysWithoutEntries: Math.max(0, workdays - daysWithEntries),
+      };
+    })
+    .sort((a, b) => b.minutes - a.minutes);
+}

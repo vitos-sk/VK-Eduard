@@ -13,7 +13,7 @@ import { objectsStrings as s } from "@/lib/i18n/parts/objects";
 import { cn } from "@/lib/utils";
 import { buildSiteHoursList } from "@/modules/sites/hours";
 import type { Site } from "@/modules/sites/queries";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 
 interface ObjectHoursCardProps {
   companyId: string;
@@ -33,31 +33,31 @@ export function ObjectHoursCard({ companyId, site, className }: ObjectHoursCardP
   const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
 
   return (
-    <Card asChild><section className={cn(isLoading && "opacity-70",
+    <Ticket asChild variant="flat"><section className={cn(isLoading && "opacity-70",
         className,)}>
-      <h2 className="text-[16px] font-bold">{s.detail.periodTitle}</h2>
+      <h2 className="text-[15px] font-semibold">{s.detail.periodTitle}</h2>
 
       <PeriodNavigator
-        className="mt-3 border-0 bg-surface-2"
+        className="mt-3"
         title={monthTitle}
         onPrev={() => setMonth((m) => addMonthsSafe(m, -1))}
         onNext={() => setMonth((m) => addMonthsSafe(m, 1))}
       />
 
-      <dl className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-[12px] bg-surface-2 p-3">
-          <dt className="text-[12px] font-semibold text-text-muted">{s.detail.hours}</dt>
-          <dd className="tabular mt-1 text-[20px] font-bold">
+      <dl className="perf-t mt-3 grid grid-cols-2 gap-3 pt-3">
+        <div>
+          <dt className="text-[12px] text-ink-2">{s.detail.hours}</dt>
+          <dd className="tabular mt-1 text-[20px] font-semibold">
             {loaded ? formatHoursShort(stats.minutes) : t.common.dash}
           </dd>
         </div>
-        <div className="rounded-[12px] bg-surface-2 p-3">
-          <dt className="text-[12px] font-semibold text-text-muted">{s.detail.workers}</dt>
-          <dd className="tabular mt-1 text-[20px] font-bold">
+        <div>
+          <dt className="text-[12px] text-ink-2">{s.detail.workers}</dt>
+          <dd className="tabular mt-1 text-[20px] font-semibold">
             {loaded ? stats.workerCount : t.common.dash}
           </dd>
         </div>
       </dl>
-    </section></Card>
+    </section></Ticket>
   );
 }

@@ -1,127 +1,23 @@
+import { Ticket } from "@/components/ui/ticket";
 import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { dateKeyOf } from "@/modules/time/calc";
 import type { PeriodSummary } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-
-const TODAY_KEY = dateKeyOf(new Date());
 
 interface PeriodViewProps {
   summary: PeriodSummary;
-  /** Показывать подпись под каждым n-м столбцом — для месяца их 31. */
-  labelEvery?: number;
   className?: string;
-  /**
-   * `full` — итог + норма/дні/середнє + графік по днях (для шефа це живе
-   * тільки в дашборді). `totalOnly` — лише загальна сума годин за період,
-   * без статистики та графіка.
-   */
-  variant?: "full" | "totalOnly";
 }
 
-/** Вкладки «Тиждень» и «Місяць»: сводка за период и столбчатая диаграмма по дням. */
-export function PeriodView({
-  summary,
-  labelEvery = 1,
-  className,
-  variant = "full",
-}: PeriodViewProps) {
-  const maxMin = Math.max(...summary.bars.map((bar) => bar.workedMin), 1);
-
-  if (variant === "totalOnly") {
-    return (
-      <Card asChild><section className={className}>
-        <p className="tabular text-[28px] leading-none font-extrabold">
+/** Сумма часов за период: подпись 13 px и крупная цифра mono 30 / 600. */
+export function PeriodView({ summary, className }: PeriodViewProps) {
+  return (
+    <Ticket asChild variant="flat" className={className}>
+      <section>
+        <p className="text-[13px] text-ink-2">{t.hours.workedPeriod}</p>
+        <p className="tabular mt-0.5 text-[30px] leading-tight font-semibold">
           {formatHoursShort(summary.totalMin)}
         </p>
-        <p className="mt-1.5 text-[13px] font-medium text-text-muted">
-          {t.hours.workedPeriod}
-        </p>
-      </section></Card>
-    );
-  }
-
-  return (
-    <div className={cn("space-y-3", className)}>
-      <Card asChild><section>
-        <p className="tabular text-[34px] leading-none font-extrabold">
-          {formatHoursShort(summary.totalMin)}
-        </p>
-        <p className="mt-1.5 text-[13px] font-medium text-text-muted">
-          {t.hours.workedPeriod}
-        </p>
-
-        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
-          <PeriodCell
-            label={t.hours.plan}
-            value={formatHoursShort(summary.planMin)}
-          />
-          <PeriodCell
-            label={t.hours.daysWorked}
-            value={String(summary.daysWorked)}
-          />
-          <PeriodCell
-            label={t.hours.average}
-            value={formatHoursShort(summary.averageMin)}
-          />
-        </div>
-      </section></Card>
-
-      <Card asChild><section>
-        {/* Период уже подписан в навигаторе выше — здесь только столбцы. */}
-        <div aria-hidden className="flex h-[140px] items-end gap-1">
-          {summary.bars.map((bar) => {
-            const isToday = bar.date === TODAY_KEY;
-            const height =
-              bar.workedMin === 0
-                ? 4
-                : Math.max(8, (bar.workedMin / maxMin) * 140);
-
-            return (
-              <div
-                key={bar.date}
-                style={{ height: `${height}px` }}
-                className={cn(
-                  "flex-1 rounded-[4px]",
-                  bar.workedMin === 0
-                    ? "bg-surface-2"
-                    : isToday
-                      ? "bg-primary"
-                      : "bg-primary/45",
-                )}
-              />
-            );
-          })}
-        </div>
-
-        <div className="mt-2 flex gap-1">
-          {summary.bars.map((bar, index) => (
-            <span
-              key={bar.date}
-              className={cn(
-                "tabular flex-1 text-center text-[11px] font-semibold",
-                bar.date === TODAY_KEY ? "text-primary" : "text-text-dim",
-              )}
-            >
-              {index % labelEvery === 0 ? bar.label : ""}
-            </span>
-          ))}
-        </div>
-      </section></Card>
-    </div>
-  );
-}
-
-function PeriodCell({ label, value }: { label: string; value: string }) {
-  return (
-    // min-h у подписи держит значения на одной линии: «У середньому за день»
-    // занимает две строки, остальные подписи — одну.
-    <div className="flex h-full flex-col">
-      <p className="min-h-[2.6em] text-[13px] leading-[1.3] font-medium text-text-muted">
-        {label}
-      </p>
-      <p className="tabular mt-1 text-[15px] font-bold">{value}</p>
-    </div>
+      </section>
+    </Ticket>
   );
 }

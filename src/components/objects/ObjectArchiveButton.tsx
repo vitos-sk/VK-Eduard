@@ -46,7 +46,7 @@ export function ObjectArchiveButton({
       loading={isPending}
       className={className}
     >
-      <Icon className="size-[18px]" strokeWidth={2} aria-hidden />
+      <Icon className="size-[18px]" strokeWidth={1.9} aria-hidden />
       {isArchived ? t.objects.detail.restore : t.objects.detail.archive}
     </Button>
   );

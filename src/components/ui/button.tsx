@@ -6,33 +6,36 @@ import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/spinner"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-ctl border border-transparent font-bold whitespace-nowrap transition-[background-color,border-color,transform] duration-150 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-busy:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px]",
+  "relative inline-flex shrink-0 items-center justify-center gap-2 rounded-ctl border border-transparent font-semibold whitespace-nowrap transition-colors duration-150 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:cursor-not-allowed aria-busy:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px]",
   {
     variants: {
       variant: {
-        primary: "bg-primary text-on-primary hover:bg-primary-hover",
-        secondary: "bg-secondary text-on-secondary hover:bg-secondary-hover",
-        accent: "bg-accent text-on-accent shadow-accent hover:bg-accent-hover",
+        primary:
+          "bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-active aria-busy:bg-primary-hover disabled:bg-disabled disabled:text-text-dim",
         outline:
-          "border-border-strong bg-transparent text-text hover:bg-surface-2",
-        ghost: "bg-transparent text-text hover:bg-surface-2",
-        danger: "bg-danger text-on-danger hover:bg-danger-hover",
-        "danger-outline":
-          "border-danger/40 bg-transparent text-danger-fg hover:bg-danger/10",
+          "border-primary bg-surface text-primary hover:bg-primary-tint active:bg-primary-tint disabled:border-edge disabled:bg-disabled disabled:text-text-dim",
+        ghost:
+          "bg-transparent text-primary hover:bg-primary-tint active:bg-primary-tint disabled:text-text-dim",
+        danger:
+          "border-danger-edge bg-surface text-danger-fg hover:bg-surface-2 active:bg-surface-2 disabled:border-edge disabled:bg-disabled disabled:text-text-dim",
+        secondary:
+          "bg-secondary text-on-secondary hover:bg-secondary-hover active:bg-secondary-hover disabled:text-text-dim",
         scrim: "bg-scrim text-on-scrim hover:bg-scrim-strong",
         field:
-          "border-border-strong bg-field font-semibold text-text hover:border-text-dim",
-        bare: "bg-transparent font-normal text-inherit active:scale-100",
+          "border-border-strong bg-field text-text hover:border-text-dim disabled:text-text-dim",
+        bare: "bg-transparent font-normal text-inherit",
       },
       size: {
-        sm: "h-ctl-sm rounded-sm px-3 text-[13px]",
-        md: "h-ctl-md px-4 text-[14px]",
+        sm: "h-8 rounded-ctl px-3 text-[13px] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']",
+        md: "h-ctl-md px-4 text-[15px]",
         lg: "h-ctl-lg px-5 text-[15px]",
-        xl: "h-ctl-xl px-6 text-[17px]",
-        "icon-sm": "size-ctl-sm rounded-full p-0",
-        icon: "size-ctl-md rounded-full p-0",
-        "icon-xs": "size-6 rounded-full p-0 [&_svg:not([class*='size-'])]:size-3.5",
-        "icon-lg": "size-15 rounded-full p-0",
+        xl: "h-ctl-md px-6 text-[15px]",
+        "icon-sm":
+          "size-8 p-0 before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
+        icon: "size-ctl-md p-0",
+        "icon-xs":
+          "size-6 p-0 before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] [&_svg:not([class*='size-'])]:size-3.5",
+        "icon-lg": "size-ctl-md p-0",
         field: "h-field w-full justify-start px-4 text-[16px]",
         bare: "h-auto justify-start gap-0 rounded-none p-0 text-left",
       },
@@ -63,6 +66,7 @@ function Button({
   disabled,
   children,
   type,
+  onClick,
   ...props
 }: ButtonProps) {
   const classes = cn(buttonVariants({ variant, size, block }), className)
@@ -81,8 +85,17 @@ function Button({
       data-slot="button"
       data-variant={variant ?? "primary"}
       className={classes}
-      disabled={disabled || loading}
+      disabled={disabled}
       aria-busy={loading || undefined}
+      // loading не ставит `disabled`: иначе кнопка серела бы вместо «зелёная + спиннер».
+      // Повторное нажатие блокируем здесь (мышь и клавиатура).
+      onClick={(event) => {
+        if (loading) {
+          event.preventDefault()
+          return
+        }
+        onClick?.(event)
+      }}
       {...props}
     >
       {loading && <Spinner aria-hidden />}

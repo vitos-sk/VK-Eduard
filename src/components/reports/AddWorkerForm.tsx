@@ -9,9 +9,9 @@ import {
 } from "@/components/shared/SegmentedTabs";
 import { t } from "@/lib/i18n";
 import { createWorker } from "@/modules/team/actions";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 type Role = "worker" | "boss";
 
@@ -63,19 +63,19 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
 
   if (result) {
     return (
-      <Card className={className}>
-        <p className="text-[16px] font-bold">{t.reports.team.form.createdTitle}</p>
+      <Ticket variant="flat" className={className}>
+        <p className="text-[15px] font-semibold">{t.reports.team.form.createdTitle}</p>
 
         <dl className="mt-3 flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-4">
-            <dt className="text-[13px] font-medium text-text-muted">
+            <dt className="text-[13px] text-ink-2">
               {t.reports.team.form.emailLabel}
             </dt>
-            <dd className="tabular text-[14px] font-bold">{result.email}</dd>
+            <dd className="tabular text-[14px] font-semibold">{result.email}</dd>
           </div>
         </dl>
 
-        <p className="mt-3 text-[13px] leading-[1.4] font-medium text-text-muted">
+        <p className="mt-3 text-[13px] leading-[1.4] text-ink-2">
           {t.reports.team.form.createdHint}
         </p>
 
@@ -84,15 +84,15 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
             {t.reports.team.form.close}
           </Button>
         </div>
-      </Card>
+      </Ticket>
     );
   }
 
   return (
-    <Card className={className}>
+    <Ticket variant="flat" className={className}>
       <div className="flex items-center justify-between gap-3">
-        <p className="flex items-center gap-2 text-[16px] font-bold">
-          <UserPlus className="size-5 text-primary" strokeWidth={2} aria-hidden />
+        <p className="flex items-center gap-2 text-[15px] font-semibold">
+          <UserPlus className="size-5 text-primary" strokeWidth={1.9} aria-hidden />
           {t.reports.team.form.title}
         </p>
 
@@ -101,50 +101,50 @@ export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormPr
           size="icon-sm"
           onClick={onClose}
           aria-label={t.reports.team.form.cancel}
-          className="text-text-muted"
         >
-          <X className="size-5" strokeWidth={2} aria-hidden />
+          <X className="size-5" strokeWidth={1.9} aria-hidden />
         </Button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3">
-        <Input
+      <div className="mt-3 flex flex-col gap-2">
+        <UnderlineField
+          label={t.reports.team.form.nameLabel}
           value={fullName}
           onChange={(event) => setFullName(event.target.value)}
           placeholder={t.reports.team.form.namePlaceholder}
-          aria-label={t.reports.team.form.nameLabel}
-                  />
+        />
 
-        <Input
+        <UnderlineField
           type="email"
+          label={t.reports.team.form.emailLabel}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder={t.reports.team.form.emailPlaceholder}
-          aria-label={t.reports.team.form.emailLabel}
-                  />
+        />
 
-        <Input
+        <UnderlineField
           type="password"
+          label={t.reports.team.form.passwordLabel}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder={t.reports.team.form.passwordPlaceholder}
-          aria-label={t.reports.team.form.passwordLabel}
           autoComplete="new-password"
-                  />
+        />
 
         <SegmentedTabs
+          className="mt-1"
           options={ROLE_OPTIONS}
           value={role}
           onChange={setRole}
           label={t.reports.team.form.roleLabel}
         />
 
-        {error && <p className="text-[13px] font-semibold text-danger-fg">{error}</p>}
+        {error && <p className="text-[13px] text-err">{error}</p>}
 
         <Button block onClick={handleSubmit} disabled={!isValid || isPending}>
           {t.reports.team.form.save}
         </Button>
       </div>
-    </Card>
+    </Ticket>
   );
 }

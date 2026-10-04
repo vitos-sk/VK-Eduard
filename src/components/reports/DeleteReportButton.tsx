@@ -49,14 +49,14 @@ export function DeleteReportButton({ reportId, onDeleted, iconOnly, className }:
   return (
     <>
       <Button
-        variant={iconOnly ? "ghost" : "danger-outline"}
+        variant={iconOnly ? "ghost" : "danger"}
         size={iconOnly ? "icon-sm" : "lg"}
         block={!iconOnly}
         onClick={() => setOpen(true)}
         aria-label={t.reportDetail.deleteEntry}
         className={cn(iconOnly && "text-danger-fg", className)}
       >
-        <Trash2 className="size-[18px]" strokeWidth={2} aria-hidden />
+        <Trash2 className="size-[18px]" strokeWidth={1.9} aria-hidden />
         {!iconOnly && t.reportDetail.deleteEntry}
       </Button>
 

@@ -5,6 +5,7 @@ import {
   buildTodayOverview,
   buildTopSites,
   buildTopWorkers,
+  buildWorkerPeriodRows,
 } from "./aggregate";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 
@@ -128,5 +129,41 @@ describe("buildTodayOverview", () => {
       withoutEntries: workers,
       totalMinutes: 0,
     });
+  });
+});
+
+describe("buildWorkerPeriodRows", () => {
+  it("считает часы, дни с записями и рабочие дни без записи до сегодня", () => {
+    // Чт 1 — Пт 2 — Пн 5 — Вт 6 жовтня 2026: четыре рабочих дня до «сегодня» 6-го.
+    const entries = [
+      makeEntry({ author_id: "a1", work_date: "2026-10-01", total_minutes: 480 }),
+      makeEntry({ author_id: "a1", work_date: "2026-10-01", total_minutes: 60 }),
+      makeEntry({ author_id: "a1", work_date: "2026-10-02", total_minutes: 480 }),
+      makeEntry({ author_id: "a2", work_date: "2026-10-05", total_minutes: 300 }),
+    ];
+
+    const rows = buildWorkerPeriodRows(
+      entries,
+      [
+        { id: "a1", name: "Олег" },
+        { id: "a2", name: "Андрій" },
+        { id: "a3", name: "Марко" },
+      ],
+      "2026-10-01",
+      "2026-10-31",
+      "2026-10-06",
+    );
+
+    expect(rows).toEqual([
+      { id: "a1", name: "Олег", minutes: 1020, daysWithEntries: 2, daysWithoutEntries: 2 },
+      { id: "a2", name: "Андрій", minutes: 300, daysWithEntries: 1, daysWithoutEntries: 3 },
+      { id: "a3", name: "Марко", minutes: 0, daysWithEntries: 0, daysWithoutEntries: 4 },
+    ]);
+  });
+
+  it("не рахує дні після кінця періоду", () => {
+    const rows = buildWorkerPeriodRows([], [{ id: "a1", name: "Олег" }], "2026-10-01", "2026-10-02", "2026-12-01");
+
+    expect(rows[0].daysWithoutEntries).toBe(2);
   });
 });

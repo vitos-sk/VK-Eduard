@@ -1,25 +1,16 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  LayoutDashboard,
-} from "lucide-react";
+import { ChevronRight, FileText, LayoutDashboard } from "lucide-react";
 
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Ticket } from "@/components/ui/ticket";
 import { t } from "@/lib/i18n";
 import { quickActions } from "@/lib/mock/quick";
 import type { QuickAction, QuickActionId } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 
 /** Иконки не хранятся в моке — сопоставляем их по id пункта. */
 const icons: Record<QuickActionId, LucideIcon> = {
@@ -35,109 +26,100 @@ interface QuickActionSheetProps {
 }
 
 /**
- * Нижний лист по кнопке «+»: быстрые действия.
- * Закрывают свайп вниз, стрелка «назад», тап вне листа и повторный тап по FAB;
- * таб-бар остаётся видимым под листом.
+ * Меню кнопки «+» на телефоне. Не перетягиваемый лист, а простая плашка,
+ * которая выезжает из таб-бара снизу вверх: затемнение заканчивается над баром,
+ * сам бар остаётся на месте и рабочим.
+ *
+ * Закрывается: повторный тап по «+», тап по затемнению, Escape,
+ * выбор пункта или переход на другую вкладку.
+ * Рендерится внутри колонки (`PhoneFrame`), поэтому позиционируется относительно неё.
  */
 export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionSheetProps) {
+  const pathname = usePathname();
+  const lastPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (lastPathname.current !== pathname) {
+      lastPathname.current = pathname;
+      onOpenChange(false);
+    }
+  }, [pathname, onOpenChange]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(false);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onOpenChange]);
+
   const visibleActions = isBoss
     ? quickActions
     : quickActions.filter((action) => action.id !== "dashboard");
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent
-        aria-describedby={undefined}
+    <div
+      inert={!open}
+      className={cn(
+        // Заканчивается над таб-баром (84 px) — бар не затемняется
+        "absolute inset-x-0 top-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 overflow-hidden",
+        !open && "pointer-events-none",
+      )}
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={t.common.close}
+        onClick={() => onOpenChange(false)}
         className={cn(
-          "mx-auto max-w-[430px] border-0 bg-transparent",
-          // Сам контейнер листа кликов не ловит: тап по прозрачной зоне снизу
-          // (таб-бар и жёлтый FAB) уходит на подложку и закрывает лист.
-          // `!` обязателен: vaul проставляет pointer-events инлайном.
-          "pointer-events-none!",
-          // Встроенную «ручку» vaul прячем — своя нарисована внутри панели.
-          "[&>div:first-child]:hidden",
-          // Прозрачный отступ снизу под таб-бар: он остаётся видимым под листом.
-          // В «телефоне по центру» под баром ещё 24px рамки — учитываем их.
-          "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
-          // Лист высокий: при нехватке места скроллится список пунктов,
-          // заголовок остаётся на месте.
-          "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
+          "absolute inset-0 bg-overlay transition-opacity duration-200",
+          open ? "opacity-100" : "opacity-0",
+        )}
+      />
+
+      <div
+        role="dialog"
+        aria-label={t.quick.title}
+        className={cn(
+          "absolute inset-x-0 bottom-0 rounded-t-modal border border-b-0 border-edge bg-ticket px-4 pt-4 pb-4 transition-transform duration-200 ease-out",
+          open ? "translate-y-0" : "translate-y-full",
         )}
       >
-        <div
-          className={cn(
-            "pointer-events-auto flex min-h-0 flex-1 flex-col",
-            "rounded-t-[20px] border-t border-border bg-surface text-text",
-          )}
-        >
-          <div
-            aria-hidden
-            className="mx-auto mt-3 h-1 w-[100px] shrink-0 rounded-full bg-border"
-          />
+        <p className="text-[15px] font-semibold">{t.quick.title}</p>
 
-          <div className="flex items-center gap-1 px-2 pt-3 pb-1">
-            <DrawerClose
-              aria-label={t.common.back}
-              className={cn(
-                "flex size-11 shrink-0 items-center justify-center rounded-full text-text",
-                "transition-colors duration-150 active:bg-surface-2",
-                "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-              )}
-            >
-              <ChevronLeft className="size-6" strokeWidth={2.4} aria-hidden />
-            </DrawerClose>
-
-            <DrawerTitle className="text-[20px] font-bold text-text">
-              {t.quick.title}
-            </DrawerTitle>
-          </div>
-
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-2 pb-4">
-            {visibleActions.map((action) => (
-              <QuickActionRow
-                key={action.id}
-                action={action}
-                onSelect={() => onOpenChange(false)}
-              />
-            ))}
-          </div>
+        <div className="mt-3 space-y-2">
+          {visibleActions.map((action) => (
+            <QuickActionRow key={action.id} action={action} onSelect={() => onOpenChange(false)} />
+          ))}
         </div>
-      </DrawerContent>
-    </Drawer>
+      </div>
+    </div>
   );
 }
 
-function QuickActionRow({
-  action,
-  onSelect,
-}: {
-  action: QuickAction;
-  onSelect: () => void;
-}) {
+function QuickActionRow({ action, onSelect }: { action: QuickAction; onSelect: () => void }) {
   const Icon = icons[action.id];
 
   const content = (
     <>
       <span
         aria-hidden
-        style={{ color: action.accent, backgroundColor: `color-mix(in srgb, ${action.accent} 12%, transparent)` }}
-        className="flex size-11 shrink-0 items-center justify-center rounded-[12px]"
+        className="flex size-11 shrink-0 items-center justify-center rounded-md border border-edge bg-stub text-primary"
       >
-        <Icon className="size-5" strokeWidth={2.2} />
+        <Icon className="size-5" strokeWidth={1.9} />
       </span>
 
-      <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-bold">{action.title}</span>
-        <span className="mt-0.5 block text-[13px] leading-[1.35] font-medium text-text-muted">
+      <span className="min-w-0 flex-1 text-left">
+        <span className="block text-[15px] font-semibold">{action.title}</span>
+        <span className="mt-0.5 block text-[13px] leading-[1.35] text-text-muted">
           {action.description}
         </span>
       </span>
 
-      <ChevronRight
-        className="size-5 shrink-0 text-text-dim"
-        strokeWidth={2.4}
-        aria-hidden
-      />
+      <ChevronRight className="size-4 shrink-0 text-text-dim" strokeWidth={1.9} aria-hidden />
     </>
   );
 
@@ -145,19 +127,19 @@ function QuickActionRow({
 
   if (action.href) {
     return (
-      <Card asChild tone="muted" padding="sm" interactive className={className}>
+      <Ticket asChild variant="flat" interactive className={className}>
         <Link href={action.href} onClick={onSelect}>
           {content}
         </Link>
-      </Card>
+      </Ticket>
     );
   }
 
   return (
-    <Card asChild tone="muted" padding="sm" interactive className={className}>
+    <Ticket asChild variant="flat" interactive className={className}>
       <button type="button" onClick={onSelect}>
         {content}
       </button>
-    </Card>
+    </Ticket>
   );
 }

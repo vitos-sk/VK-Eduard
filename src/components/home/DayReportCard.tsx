@@ -1,55 +1,80 @@
 import Link from "next/link";
-import { CalendarDays, ChevronRight, FileText, Plus } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { HoursRuler } from "@/components/ui/hours-ruler";
+import { ProgressPips } from "@/components/ui/progress-pips";
+import { StampTag } from "@/components/ui/stamp-tag";
+import { DateStub, Ticket, TicketBody, TicketFoot } from "@/components/ui/ticket";
+import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface DayReportCardProps {
-  /** Id сьогоднішнього звіту, якщо він уже поданий; інакше `null`. */
+  /** Сегодня. */
+  date: Date;
+  /** Отработано сегодня, минуты. */
+  minutes: number;
+  /** Норма на день, минуты (`profile.daily_norm_minutes`). */
+  normMinutes: number;
+  /** Объект сегодняшней смены, если он есть. */
+  siteName: string | null;
+  /** Id сегодняшнего звіту, якщо він уже поданий; інакше `null`. */
   reportId: string | null;
+  /** У поданого звіту є фото. */
+  hasPhotos: boolean;
   className?: string;
 }
 
-/** Головна дія дня: подати звіт за сьогодні (або переглянути вже поданий). */
-export function DayReportCard({ reportId, className }: DayReportCardProps) {
+/** Первый невыполненный шаг дня: Години → Звіт → Фото (3 — всё сделано). */
+function currentStep(minutes: number, reportId: string | null, hasPhotos: boolean): number {
+  if (minutes <= 0) return 0;
+  if (!reportId) return 1;
+  if (!hasPhotos) return 2;
+  return 3;
+}
+
+/** Талон дня: часы с линейкой нормы, три шага и главное действие (создать/посмотреть звіт). */
+export function DayReportCard({
+  date,
+  minutes,
+  normMinutes,
+  siteName,
+  reportId,
+  hasPhotos,
+  className,
+}: DayReportCardProps) {
   const copy = t.home.dayReport;
   const isSubmitted = reportId !== null;
+  const steps = [t.home.progress.hours, t.home.progress.report, t.home.progress.photo];
 
   return (
-    <Card elevated padding="lg" className={cn("flex flex-col gap-4", className)}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 text-[14px] font-semibold text-text-muted">
-          <CalendarDays className="size-5 text-primary" strokeWidth={2} aria-hidden />
-          {copy.today}
+    <Ticket variant="notch" className={cn(className)}>
+      <DateStub date={date} />
+      <TicketBody>
+        <p className="text-[13px] text-ink-2">{t.hours.workedToday}</p>
+        <div className="mt-0.5 flex items-baseline justify-between gap-2">
+          <span className="tabular text-[30px] leading-tight font-semibold">
+            {formatHoursShort(minutes)}
+          </span>
+          {siteName && <span className="truncate text-[13px] text-ink-2">{siteName}</span>}
         </div>
-        <Badge variant={isSubmitted ? "success" : "danger"} dot>
-          {isSubmitted ? copy.submitted : copy.notSubmitted}
-        </Badge>
-      </div>
+        <HoursRuler minutes={minutes} normMinutes={normMinutes} />
+      </TicketBody>
 
-      <div className="flex items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[22px] leading-tight font-extrabold">{copy.title}</h2>
-          <p className="mt-1 text-[14px] font-medium text-text-muted">{copy.hint}</p>
+      <TicketFoot>
+        <ProgressPips steps={steps} current={currentStep(minutes, reportId, hasPhotos)} />
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[13px] text-ink-2">{copy.title}</span>
+          <StampTag variant={isSubmitted ? "submitted" : "notSubmitted"}>
+            {isSubmitted ? copy.submitted : copy.notSubmitted}
+          </StampTag>
         </div>
-        <span
-          aria-hidden
-          className="flex size-14 shrink-0 items-center justify-center rounded-card bg-surface-2 text-primary"
-        >
-          <FileText className="size-7" strokeWidth={2} />
-        </span>
-      </div>
-
-      <Button asChild size="xl" block>
-        <Link href={isSubmitted ? `/reports/${reportId}` : "/reports/new"}>
-          {!isSubmitted && <Plus className="size-5" strokeWidth={2.6} aria-hidden />}
-          <span className="flex-1 text-center">{isSubmitted ? copy.view : copy.create}</span>
-          <ChevronRight className="size-5" strokeWidth={2.4} aria-hidden />
-        </Link>
-      </Button>
-    </Card>
+        <Button asChild block>
+          <Link href={isSubmitted ? `/reports/${reportId}` : "/reports/new"}>
+            {isSubmitted ? copy.view : copy.create}
+          </Link>
+        </Button>
+      </TicketFoot>
+    </Ticket>
   );
 }

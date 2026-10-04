@@ -67,7 +67,7 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <label
-          className="text-[13px] font-medium text-text-muted"
+          className="text-[13px] text-ink-2"
           htmlFor={`daily-norm-${workerId}`}
         >
           {s.team.dailyNorm}
@@ -86,22 +86,18 @@ export function DailyNormEditor({ workerId, initialMinutes }: DailyNormEditorPro
             setError(null);
           }}
           disabled={isPending}
-          className="h-ctl-sm w-20 px-2 text-center text-[14px]"
+          className="tabular h-ctl-sm w-20 px-2 text-center text-[14px]"
         />
-        <span className="text-[13px] font-medium text-text-dim">{s.team.dailyNormUnit}</span>
+        <span className="text-[13px] text-ink-2">{s.team.dailyNormUnit}</span>
 
         {isDirty && (
-          <Button size="sm" onClick={handleSave} disabled={isPending}>
+          <Button size="sm" onClick={handleSave} loading={isPending}>
             {s.team.dailyNormSave}
           </Button>
         )}
       </div>
 
-      {/* Рядок рендериться на bg-surface-2 (картка воркера в AdminTeamScreen),
-          де токен --danger дає лише 3.86:1 — нижче порога 4.5:1 для звичайного
-          тексту. Локальний світліший відтінок замість зміни глобального
-          токена (він використовується по всьому застосунку). */}
-      {error && <p className="text-[12px] font-semibold text-danger-fg">{error}</p>}
+      {error && <p className="text-[12px] text-err">{error}</p>}
     </div>
   );
 }

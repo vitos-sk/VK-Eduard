@@ -17,14 +17,11 @@ const cardVariants = cva("rounded-card border border-border text-text", {
       md: "p-4",
       lg: "p-5",
     },
-    elevated: {
-      true: "shadow-sm",
-    },
     selected: {
-      true: "border-primary bg-primary/10",
+      true: "border-primary bg-primary-tint",
     },
     interactive: {
-      true: "cursor-pointer text-left transition-[background-color,border-color,transform] duration-150 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.99]",
+      true: "cursor-pointer text-left transition-colors duration-150 outline-none hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
     },
   },
   defaultVariants: { tone: "surface", padding: "md" },
@@ -34,7 +31,6 @@ function Card({
   className,
   tone,
   padding,
-  elevated,
   interactive,
   selected,
   asChild = false,
@@ -46,7 +42,7 @@ function Card({
   return (
     <Comp
       data-slot="card"
-      className={cn(cardVariants({ tone, padding, elevated, interactive, selected }), className)}
+      className={cn(cardVariants({ tone, padding, interactive, selected }), className)}
       {...props}
     />
   )
@@ -56,7 +52,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
       data-slot="card-title"
-      className={cn("text-[17px] leading-snug font-bold", className)}
+      className={cn("text-[15px] leading-snug font-semibold", className)}
       {...props}
     />
   )
@@ -66,7 +62,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="card-description"
-      className={cn("text-[13.5px] font-medium text-text-muted", className)}
+      className={cn("text-[13px] text-text-muted", className)}
       {...props}
     />
   )

@@ -1,47 +1,49 @@
-// src/components/dashboard/TopList.tsx
+import { Ticket } from "@/components/ui/ticket";
 import { formatHoursShort } from "@/lib/format";
 import type { RankedItem } from "@/modules/dashboard/aggregate";
-import { Card } from "@/components/ui/card";
 
 interface TopListProps {
   title: string;
   items: readonly RankedItem[];
   emptyLabel: string;
+  /** Подпись под списком, например «Без об'єкта: 6:00». */
+  footer?: string;
   className?: string;
 }
 
-/**
- * Ранжований список з прогрес-баром відносно лідера — та сама вёрстка, що
- * раніше жила тільки в `CompanyDashboard.topWorkers`, тепер спільна для
- * «Топ-об'єкти» і «Години по співробітниках» на повній сторінці дашборда.
- */
-export function TopList({ title, items, emptyLabel, className }: TopListProps) {
+/** Ранжированный список: название, часы mono, трек-полоска доли относительно лидера. */
+export function TopList({ title, items, emptyLabel, footer, className }: TopListProps) {
   const maxMinutes = items[0]?.minutes ?? 0;
 
   return (
-    <Card asChild padding="lg"><section className={className}>
-      <h3 className="text-[17px] font-bold">{title}</h3>
+    <Ticket asChild variant="flat" className={className}>
+      <section>
+        <h3 className="text-[15px] font-semibold">{title}</h3>
 
-      {items.length === 0 ? (
-        <p className="mt-2 text-[14px] font-medium text-text-muted">{emptyLabel}</p>
-      ) : (
-        <ul className="mt-4 flex flex-col gap-3">
-          {items.map((item) => (
-            <li key={item.id} className="flex items-center gap-3">
-              <p className="min-w-0 flex-1 truncate text-[14px] font-bold">{item.name}</p>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${maxMinutes === 0 ? 0 : (item.minutes / maxMinutes) * 100}%` }}
-                />
-              </div>
-              <p className="tabular w-16 shrink-0 text-right text-[14px] font-bold">
-                {formatHoursShort(item.minutes)}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section></Card>
+        {items.length === 0 ? (
+          <p className="mt-2 text-[14px] text-ink-2">{emptyLabel}</p>
+        ) : (
+          <ul className="mt-3 flex flex-col">
+            {items.map((item) => (
+              <li
+                key={item.id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 py-2 not-first:border-t not-first:border-dashed not-first:border-perf first:pt-0"
+              >
+                <p className="truncate text-[14px] font-medium">{item.name}</p>
+                <p className="tabular text-[14px] font-semibold">{formatHoursShort(item.minutes)}</p>
+                <div className="relative col-span-2 h-2 rounded-xs bg-scale">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-xs bg-primary"
+                    style={{ width: `${maxMinutes === 0 ? 0 : (item.minutes / maxMinutes) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {footer && <p className="mt-2 text-[13px] text-ink-2">{footer}</p>}
+      </section>
+    </Ticket>
   );
 }

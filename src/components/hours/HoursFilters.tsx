@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 
 export const ALL_FILTER = "all";
 
-const triggerClassName = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[13px] font-bold text-text";
+const triggerClassName = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[13px] font-medium text-text";
 
 interface Option {
   id: string;
@@ -48,7 +48,7 @@ export function HoursFilters({
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[12px] font-medium text-text-muted">
+          <label className="text-[12px] text-ink-2">
             {s.filterWorkerLabel}
           </label>
           <Select value={workerId} onValueChange={onWorkerChange}>
@@ -67,7 +67,7 @@ export function HoursFilters({
         </div>
 
         <div>
-          <label className="text-[12px] font-medium text-text-muted">
+          <label className="text-[12px] text-ink-2">
             {s.filterSiteLabel}
           </label>
           <Select value={siteId} onValueChange={onSiteChange}>
@@ -90,13 +90,13 @@ export function HoursFilters({
         <Button
           variant="outline"
           size="sm"
-          className="w-fit rounded-full text-text-muted"
+          className="w-fit"
           onClick={() => {
             onWorkerChange(ALL_FILTER);
             onSiteChange(ALL_FILTER);
           }}
         >
-          <X className="size-3.5" strokeWidth={2.2} aria-hidden />
+          <X className="size-3.5" strokeWidth={1.9} aria-hidden />
           {s.resetFilters}
         </Button>
       )}

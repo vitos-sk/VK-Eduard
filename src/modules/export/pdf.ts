@@ -8,14 +8,21 @@ import { t } from "@/lib/i18n";
 import type { ExportMeta, ExportRow } from "./types";
 
 /**
- * PT Sans замість штатних шрифтів pdfkit (Helvetica та інші): вони не мають
- * кирилічних гліфів, українські підписи вийшли б порожніми прямокутниками.
- * Статичні `.ttf` лежать у репозиторії (`assets/fonts`) — Manrope з сайту
- * доступний лише як variable font, pdfkit з такими працює ненадійно.
+ * Golos Text (текст) і JetBrains Mono (години, дати, час) замість штатних шрифтів
+ * pdfkit (Helvetica та інші): вони не мають кирилічних гліфів, українські підписи
+ * вийшли б порожніми прямокутниками. Статичні `.ttf` (ліцензія OFL) лежать
+ * у репозиторії (`assets/fonts`): Golos Text у Google Fonts лише variable font,
+ * з яким pdfkit працює ненадійно, тому ваги 400 і 600 нарізані з нього окремо.
  */
 const FONTS_DIR = join(process.cwd(), "assets", "fonts");
-const REGULAR_FONT = readFileSync(join(FONTS_DIR, "PTSans-Regular.ttf"));
-const BOLD_FONT = readFileSync(join(FONTS_DIR, "PTSans-Bold.ttf"));
+const FONT_TEXT = "GolosText";
+const FONT_TEXT_BOLD = "GolosText-SemiBold";
+const FONT_MONO = "JetBrainsMono";
+const FONT_MONO_BOLD = "JetBrainsMono-SemiBold";
+const REGULAR_FONT = readFileSync(join(FONTS_DIR, "GolosText-Regular.ttf"));
+const BOLD_FONT = readFileSync(join(FONTS_DIR, "GolosText-SemiBold.ttf"));
+const MONO_FONT = readFileSync(join(FONTS_DIR, "JetBrainsMono-Medium.ttf"));
+const MONO_BOLD_FONT = readFileSync(join(FONTS_DIR, "JetBrainsMono-SemiBold.ttf"));
 
 const PAGE_MARGIN = 36;
 
@@ -31,6 +38,8 @@ const COLUMNS = [
 
 const TABLE_WIDTH = COLUMNS.reduce((sum, column) => sum + column.width, 0);
 const ROW_HEIGHT = 20;
+/** Колонки з числами — моноширинним шрифтом, щоб години стояли стовпчиком. */
+const MONO_COLUMNS = new Set<string>(["date", "time", "worked", "overtime"]);
 
 /**
  * PDF-табель за період — альбомна A4, компанія і період у шапці, підсумок
@@ -48,9 +57,11 @@ export async function buildPdf(
     bufferPages: true,
   });
 
-  doc.registerFont("PTSans", REGULAR_FONT);
-  doc.registerFont("PTSans-Bold", BOLD_FONT);
-  doc.font("PTSans");
+  doc.registerFont(FONT_TEXT, REGULAR_FONT);
+  doc.registerFont(FONT_TEXT_BOLD, BOLD_FONT);
+  doc.registerFont(FONT_MONO, MONO_FONT);
+  doc.registerFont(FONT_MONO_BOLD, MONO_BOLD_FONT);
+  doc.font(FONT_TEXT);
 
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -75,13 +86,11 @@ export async function buildPdf(
   }
 
   doc
-    .font("PTSans-Bold")
+    .font(FONT_TEXT_BOLD)
     .fontSize(10)
-    .text(
-      `${t.export.monthHours}: ${formatHoursShort(totalWorkedMinutes)}`,
-      PAGE_MARGIN,
-      y + 10,
-    );
+    .text(`${t.export.monthHours}: `, PAGE_MARGIN, y + 10, { continued: true })
+    .font(FONT_MONO_BOLD)
+    .text(formatHoursShort(totalWorkedMinutes));
 
   doc.end();
   return done;
@@ -89,20 +98,20 @@ export async function buildPdf(
 
 function drawHeader(doc: PDFKit.PDFDocument, meta: ExportMeta) {
   doc
-    .font("PTSans-Bold")
+    .font(FONT_TEXT_BOLD)
     .fontSize(16)
     .text(meta.companyName || "K work", PAGE_MARGIN, PAGE_MARGIN);
 
   doc
-    .font("PTSans")
+    .font(FONT_TEXT)
     .fontSize(11)
-    .fillColor(tokens.textMuted)
+    .fillColor(tokens.ink2)
     .text(meta.periodTitle, PAGE_MARGIN, doc.y + 2)
-    .fillColor(tokens.text);
+    .fillColor(tokens.ink);
 }
 
 function drawTableHeader(doc: PDFKit.PDFDocument, y: number): number {
-  doc.font("PTSans-Bold").fontSize(9);
+  doc.font(FONT_TEXT_BOLD).fontSize(9);
 
   let x = PAGE_MARGIN;
   for (const column of COLUMNS) {
@@ -113,14 +122,14 @@ function drawTableHeader(doc: PDFKit.PDFDocument, y: number): number {
   doc
     .moveTo(PAGE_MARGIN, y + 14)
     .lineTo(PAGE_MARGIN + TABLE_WIDTH, y + 14)
-    .strokeColor(tokens.border)
+    .strokeColor(tokens.edge)
     .stroke();
 
   return y + 20;
 }
 
 function drawRow(doc: PDFKit.PDFDocument, y: number, row: ExportRow): number {
-  doc.font("PTSans").fontSize(9);
+  doc.font(FONT_TEXT).fontSize(9);
 
   const cells: Record<(typeof COLUMNS)[number]["key"], string> = {
     date: row.date,
@@ -134,7 +143,10 @@ function drawRow(doc: PDFKit.PDFDocument, y: number, row: ExportRow): number {
 
   let x = PAGE_MARGIN;
   for (const column of COLUMNS) {
-    doc.text(cells[column.key], x, y, { width: column.width - 6, height: ROW_HEIGHT });
+    doc
+      .font(MONO_COLUMNS.has(column.key) ? FONT_MONO : FONT_TEXT)
+      .fontSize(9)
+      .text(cells[column.key], x, y, { width: column.width - 6, height: ROW_HEIGHT });
     x += column.width;
   }
 

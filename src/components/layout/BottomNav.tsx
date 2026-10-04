@@ -36,7 +36,9 @@ interface BottomNavProps {
 }
 
 /**
- * Нижний таб-бар: 4 вкладки и FAB по центру.
+ * Нижний таб-бар (TabBar): высота 84 px, фон `ticket`, сверху пунктир.
+ * Пять пунктов: Головна · Об'єкти · [+] · Години · Звіти.
+ * Активный — зелёный, подпись 600, над иконкой жёлтая риска 16×2.
  * Последний flex-элемент `PhoneFrame` — всегда у его низа.
  *
  * `z-60` — выше подложки нижних листов (z-50): по макету таб-бар
@@ -48,19 +50,15 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   return (
     <nav
       aria-label={t.common.appName}
-      className="relative z-60 shrink-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="perf-t relative z-60 shrink-0 bg-ticket pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="flex h-14 items-stretch">
+      <div className="grid min-h-[84px] grid-cols-5 items-start px-1 pt-2.5">
         {leftItems.map((item) => (
           <NavTab key={item.href} item={item} pathname={pathname} />
         ))}
 
-        <div className="relative flex w-[76px] shrink-0 justify-center">
-          <FabButton
-            onClick={onFabClick}
-            expanded={fabExpanded}
-            className="absolute -top-[16px]"
-          />
+        <div className="flex justify-center">
+          <FabButton onClick={onFabClick} expanded={fabExpanded} />
         </div>
 
         {rightItems.map((item) => (
@@ -81,14 +79,17 @@ function NavTab({ item, pathname }: { item: NavItem; pathname: string }) {
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex flex-1 flex-col items-center justify-center gap-0.5",
-        "transition-colors duration-150",
-        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-        isActive ? "text-primary" : "text-text-dim",
+        // зона нажатия ≥44 px: ссылка на всю ширину ячейки и 44+ по высоте
+        "relative flex min-h-11 flex-col items-center gap-1 text-[11px] outline-none",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        isActive ? "font-semibold text-primary" : "font-medium text-ink-2",
       )}
     >
-      <Icon className="size-[22px]" strokeWidth={isActive ? 2.4 : 2} aria-hidden />
-      <span className="text-[10px] font-semibold">{item.label}</span>
+      {isActive && (
+        <span aria-hidden className="absolute -top-2.5 left-1/2 h-0.5 w-4 -translate-x-1/2 bg-yellow" />
+      )}
+      <Icon className="size-[22px]" strokeWidth={1.9} aria-hidden />
+      <span>{item.label}</span>
     </Link>
   );
 }

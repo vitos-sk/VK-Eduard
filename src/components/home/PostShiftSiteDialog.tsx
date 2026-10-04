@@ -116,12 +116,12 @@ export function PostShiftSiteDialog({
           ) : (
             <div className="flex flex-col gap-2">
               <Button variant="secondary" className="gap-3" onClick={() => setIsPickerOpen(true)}>
-                <Building2 className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
+                <Building2 className="size-5 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
                 {t.home.postShift.pickAction}
               </Button>
 
               <Button variant="secondary" className="gap-3" onClick={() => setIsWriting(true)}>
-                <PenLine className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
+                <PenLine className="size-5 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
                 {t.home.postShift.writeAction}
               </Button>
 

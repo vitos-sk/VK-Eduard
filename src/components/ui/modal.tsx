@@ -56,7 +56,7 @@ function ModalContent({
         data-slot="modal-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 -translate-y-1/2 gap-5",
-          "rounded-modal border border-border bg-surface p-5 text-text shadow-lg outline-none duration-100",
+          "rounded-modal border border-edge bg-ticket p-5 text-text outline-none duration-100",
           "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
@@ -71,7 +71,7 @@ function ModalContent({
               aria-label="Закрити"
               className="absolute top-3 right-3 text-text-muted"
             >
-              <XIcon className="size-5" strokeWidth={2} aria-hidden />
+              <XIcon className="size-5" strokeWidth={1.9} aria-hidden />
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -108,7 +108,7 @@ function ModalTitle({
     <DialogPrimitive.Title
       data-slot="modal-title"
       className={cn(
-        "text-[20px] leading-tight font-extrabold tracking-tight text-text",
+        "text-[20px] leading-tight font-semibold tracking-tight text-text",
         className
       )}
       {...props}

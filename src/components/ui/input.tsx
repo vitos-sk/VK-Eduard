@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 /** 16px и больше — иначе iOS зумит страницу при фокусе в поле. */
 const fieldVariants = cva(
-  "w-full min-w-0 rounded-ctl border border-border-strong bg-field text-[16px] font-semibold text-text transition-[border-color,box-shadow] outline-none placeholder:font-medium placeholder:text-text-dim hover:border-text-dim focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-55 aria-invalid:border-danger-fg aria-invalid:ring-3 aria-invalid:ring-danger/20",
+  "w-full min-w-0 rounded-ctl border border-border-strong bg-field text-[16px] font-medium text-text transition-colors outline-none placeholder:text-text-dim hover:border-text-dim focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring disabled:cursor-not-allowed disabled:border-perf disabled:bg-surface-2 disabled:text-text-dim aria-invalid:border-danger-fg aria-invalid:outline-2 aria-invalid:outline-offset-0 aria-invalid:outline-danger-fg",
   {
     variants: {
       size: {

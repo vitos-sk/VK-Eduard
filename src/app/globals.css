@@ -18,6 +18,16 @@
     @apply font-sans;
   }
 
+  :focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+
   body {
     background: var(--bg-outer);
     color: var(--text);
@@ -27,16 +37,10 @@
   }
 }
 
-/* Меш-фон экрана: тёплая бумага с двумя едва заметными пятнами — жёлтым и зелёным.
-   Живёт отдельным классом (не в `body`), потому что `PhoneFrame` рендерит экран
-   во внутреннем контейнере поверх body. */
+/* Фон экрана: тёплая бумага, без градиентов. Отдельным классом (не в `body`),
+   потому что `PhoneFrame` рендерит экран во внутреннем контейнере поверх body. */
 .app-bg {
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(55% 40% at 12% 8%, color-mix(in oklab, var(--accent) 16%, transparent) 0%, transparent 78%),
-    radial-gradient(60% 44% at 92% 40%, color-mix(in oklab, var(--primary) 6%, transparent) 0%, transparent 80%),
-    radial-gradient(60% 46% at 10% 90%, color-mix(in oklab, var(--accent) 10%, transparent) 0%, transparent 82%);
-  background-attachment: fixed;
+  background-color: var(--paper);
 }
 
 /* Подложка нижних листов: дефолтные 10% почти не видны */
@@ -44,9 +48,24 @@
   background-color: var(--overlay);
 }
 
-/* Моноширинные цифры для таймера и метрик */
+/* Моноширинные цифры для часов, сумм и дат: JetBrains Mono, табличные цифры */
 @utility tabular {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+/* Пунктир перфорации: тонкий, только между блоками, не под текстом */
+@utility perf-t {
+  border-top: 1px dashed var(--perf);
+}
+@utility perf-b {
+  border-bottom: 1px dashed var(--perf);
+}
+@utility perf-l {
+  border-left: 1px dashed var(--perf);
+}
+@utility perf-r {
+  border-right: 1px dashed var(--perf);
 }
 
 /* Горизонтальный скролл без видимого скроллбара (SegmentedTabs) */
@@ -56,5 +75,17 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Без анимации при `prefers-reduced-motion`: спиннер, скелетоны, переходы */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

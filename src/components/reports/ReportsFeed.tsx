@@ -16,7 +16,7 @@ import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf } from "@/modules/time/calc";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 
 type ReportFilter = "all" | "no_description" | "with_photo";
 
@@ -42,7 +42,8 @@ interface ReportsFeedProps {
   reports: readonly SiteReportWithPhotos[];
   sites: readonly Site[];
   categories: readonly WorkCategory[];
-  thumbUrls: Readonly<Record<string, string>>;
+  /** Не используется: карточка звіту без миниатюры. */
+  thumbUrls?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -55,7 +56,7 @@ interface ReportsFeedProps {
  * і на вкладці «Мої», і на вкладці «Команда» для одного обраного
  * співробітника (`TeamTab`) — без дублювання розмітки й логіки фільтрів.
  */
-export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFeedProps) {
+export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
   const [filter, setFilter] = useState<ReportFilter>("all");
   const [query, setQuery] = useState("");
 
@@ -121,7 +122,7 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFe
         : t.reports.emptyFilterHint;
 
   return (
-    <div className="px-4">
+    <div className="px-4 lg:px-0">
       <div className="lg:flex lg:items-center lg:gap-4">
         <SearchField
           value={query}
@@ -131,7 +132,8 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFe
         />
 
         <SegmentedTabs
-          className="mt-3 lg:mt-0 lg:shrink-0"
+          variant="chips"
+          className="mt-1 lg:mt-0 lg:shrink-0"
           options={FILTER_OPTIONS}
           value={filter}
           onChange={setFilter}
@@ -140,42 +142,37 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls }: ReportsFe
       </div>
 
       {visible.length > 0 && (
-        <Card padding="none" className="mt-4 flex items-baseline justify-between px-4 py-3">
-          <p className="text-[13px] font-medium text-text-muted">
+        <Ticket variant="flat" className="mt-2 flex items-baseline justify-between py-2.5">
+          <p className="tabular text-[13px] text-ink-2">
             {fmt(t.reports.reportsSummaryCount, { n: visible.length })}
           </p>
           {dominantCategory && (
-            <p className="text-[13px] font-bold text-text-muted">
+            <p className="truncate text-[13px] text-ink-2">
               {fmt(t.reports.reportsSummaryDominant, { label: dominantCategory.label })}
             </p>
           )}
-        </Card>
+        </Ticket>
       )}
 
       {groups.length > 0 ? (
         groups.map((group) => (
-          <section key={group.date} className="mt-6 first:mt-5">
+          <section key={group.date} className="mt-[18px]">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="min-w-0 truncate text-[20px] font-bold">
+              <h2 className="min-w-0 truncate text-[13px] font-medium text-ink-2 lg:text-[20px] lg:font-semibold lg:text-ink">
                 {group.title}
               </h2>
-              <span className="shrink-0 text-[13px] font-medium text-text-muted">
+              <span className="shrink-0 text-[13px] text-ink-2">
                 {fmt(t.reports.reportsCount, { n: group.reports.length })}
               </span>
             </div>
 
-            <div className="mt-3 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+            <div className="mt-2 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
               {group.reports.map((report) => (
                 <ReportCard
                   key={report.id}
                   report={report}
                   siteName={report.site_id ? (siteNameById.get(report.site_id) ?? null) : null}
                   categories={categories}
-                  thumbUrl={
-                    report.report_photos[0]
-                      ? (thumbUrls[report.report_photos[0].storage_path] ?? null)
-                      : null
-                  }
                 />
               ))}
             </div>

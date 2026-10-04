@@ -11,8 +11,8 @@ export default function Loading() {
       <div className="flex items-center justify-between gap-3 pt-[calc(env(safe-area-inset-top)+1.25rem)]">
         <Skeleton className="h-5 w-24" />
         <div className="flex items-center gap-2">
-          <Skeleton className="size-11 rounded-full" />
-          <Skeleton className="size-11 rounded-full" />
+          <Skeleton className="size-8 rounded-md" />
+          <Skeleton className="size-8 rounded-md" />
         </div>
       </div>
 
@@ -21,7 +21,7 @@ export default function Loading() {
         <Skeleton className="mt-2 h-4 w-1/2" />
       </div>
 
-      <Skeleton className="mt-5 h-[132px] w-full rounded-[16px]" />
+      <Skeleton className="mt-5 h-[132px] w-full rounded-card" />
 
       <div className="mt-6 flex items-center justify-between">
         <Skeleton className="h-6 w-32" />
@@ -30,7 +30,7 @@ export default function Loading() {
 
       <div className="mt-3 space-y-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="h-[96px] w-full rounded-[16px]" />
+          <Skeleton key={index} className="h-[96px] w-full rounded-card" />
         ))}
       </div>
     </div>

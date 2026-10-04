@@ -1,24 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays, ChevronRight, History, Info } from "lucide-react";
 import { toast } from "sonner";
 
-import { BackHeader } from "@/components/layout/ScreenHeader";
+import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
-import { Thumb } from "@/components/shared/Thumb";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { Toggle } from "@/components/ui/toggle";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatDateShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { gradientForId } from "@/lib/siteGradient";
 import { createReport } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
@@ -30,8 +22,8 @@ import {
   totalMinutes,
 } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/input";
+import { Ticket, TicketSection } from "@/components/ui/ticket";
+import { UnderlineTextarea } from "@/components/ui/underline-field";
 
 interface ReportFormProps {
   companyId: string;
@@ -60,7 +52,6 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const [endAt, setEndAt] = useState("16:00");
   const [breakMin, setBreakMin] = useState(0);
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [createdReportId, setCreatedReportId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<ReportPhoto[]>([]);
@@ -73,6 +64,11 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const isDurationOk = isDurationValid(durationMin);
   const isOtherMissing = isOtherSelected(categories, categoryIds) && otherText.trim() === "";
   const canSubmit = (!withTime || isDurationOk) && !isOtherMissing;
+  const submitLabel = isOtherMissing
+    ? t.reportForm.fillOther
+    : withTime && !isDurationOk
+      ? t.reportForm.fixTime
+      : t.reportForm.submit;
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
@@ -110,16 +106,11 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   if (createdReportId) {
     return (
       <div className="pb-6">
-        <BackHeader title={t.reportForm.title} href={`/reports/${createdReportId}`} />
+        <FormTopBar title={t.reportForm.photosStepTitle} onBack={() => router.push(`/reports/${createdReportId}`)}>
+          <p className="mt-0.5 text-[13px] text-ink-2">{t.reportForm.photosStepHint}</p>
+        </FormTopBar>
 
-        <div className="space-y-4 px-4 lg:mx-auto lg:max-w-[640px]">
-          <div>
-            <h2 className="text-[17px] font-bold">{t.reportForm.photosStepTitle}</h2>
-            <p className="mt-1 text-[13px] font-medium text-text-muted">
-              {t.reportForm.photosStepHint}
-            </p>
-          </div>
-
+        <div className="mt-4 space-y-4 px-4 lg:mx-auto lg:max-w-[640px] lg:px-0">
           <ReportPhotoUploader
             companyId={companyId}
             reportId={createdReportId}
@@ -129,117 +120,78 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
             onUrlsChange={(patch) => setPhotoUrls((current) => ({ ...current, ...patch }))}
             editable
           />
+        </div>
 
-          <Button size="xl" block onClick={() => router.push(`/reports/${createdReportId}`)}>
+        <StickyActionBar>
+          <Button block onClick={() => router.push(`/reports/${createdReportId}`)}>
             {t.reportForm.done}
           </Button>
-        </div>
+        </StickyActionBar>
       </div>
     );
   }
 
   return (
-    <div className="pb-6">
-      <BackHeader title={t.reportForm.title} onBack={() => router.back()} />
-
-      <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
-        {lastReport && (
-          <Card asChild interactive className="flex w-full items-center gap-3">
-          <button type="button" onClick={applyRepeatLast}>
-            <History className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
-            <span className="text-[14px] font-bold text-text">
+    <div className="pb-2 lg:mx-auto lg:max-w-[640px]">
+      <FormTopBar
+        title={t.reportForm.title}
+        onBack={() => router.back()}
+        action={
+          lastReport ? (
+            <Button variant="ghost" size="sm" className="-mr-2 px-2" onClick={applyRepeatLast}>
               {t.reportForm.repeatYesterday}
-            </span>
-          </button>
-          </Card>
-        )}
+            </Button>
+          ) : null
+        }
+      >
+        <DatePickLink date={date} onChange={setDate} />
+      </FormTopBar>
 
-        <Field label={t.manualTime.objectLabel}>
-          <Card asChild padding="sm" interactive className="flex min-h-[68px] w-full items-center gap-3">
-          <button type="button" onClick={() => setIsObjectPickerOpen(true)}>
-            {selectedSite ? (
-              <>
-                <Thumb name={selectedSite.name} gradient={gradientForId(selectedSite.id)} size="sm" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold">
-                    {selectedSite.name}
-                  </span>
-                  <span className="mt-0.5 block truncate text-[13px] font-medium text-text-muted">
-                    {selectedSite.address ?? t.common.dash}
-                  </span>
-                </span>
-              </>
-            ) : (
-              <span className="min-w-0 flex-1 px-1 text-[15px] font-medium text-text-muted">
-                {t.manualTime.objectPlaceholder}
-              </span>
-            )}
-
-            <ChevronRight className="size-5 shrink-0 text-text-dim" strokeWidth={2.4} aria-hidden />
-          </button>
-          </Card>
-        </Field>
-
-        <Field label={t.manualTime.date}>
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="field" size="field" className="gap-2 px-3 text-[15px]">
-                <CalendarDays className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
-                <span className="tabular truncate">{formatDateShort(date)}</span>
-              </Button>
-            </PopoverTrigger>
-
-            <PopoverContent align="start" className="w-auto border border-border bg-surface p-2">
-              <Calendar
-                mode="single"
-                selected={date}
-                defaultMonth={date}
-                onSelect={(next) => {
-                  if (next) {
-                    setDate(next);
-                    setIsCalendarOpen(false);
-                  }
-                }}
-                locale={ukLocale}
-              />
-            </PopoverContent>
-          </Popover>
-        </Field>
-
-        {categories.length > 0 && (
-          <Field label={t.reportForm.categoriesLabel}>
-            <WorkCategoryChips
-              categories={categories}
-              value={categoryIds}
-              onChange={setCategoryIds}
-              otherText={otherText}
-              onOtherTextChange={setOtherText}
-            />
-          </Field>
-        )}
-
-        <Field label={t.manualTime.description}>
-          <Textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows={4}
-            placeholder={t.manualTime.descriptionPlaceholder}
+      <div className="mt-3 space-y-3.5 px-4 lg:px-0">
+        <Ticket variant="sections">
+          <PickerRow
+            label={t.manualTime.objectLabel}
+            value={selectedSite?.name ?? null}
+            placeholder={t.manualTime.objectPlaceholder}
+            onClick={() => setIsObjectPickerOpen(true)}
           />
-        </Field>
 
-        <Card padding="sm" className="space-y-4">
-          <label className="flex cursor-pointer items-center justify-between gap-3">
-            <span className="min-w-0">
-              <span className="block text-[15px] font-bold">{t.reportForm.addHours}</span>
-              <span className="mt-0.5 block text-[13px] font-medium text-text-muted">
-                {t.reportForm.addHoursHint}
-              </span>
-            </span>
+          {categories.length > 0 && (
+            <TicketSection>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-[12px] text-ink-2">{t.reportForm.categoriesLabel}</span>
+                <span className="text-[12px] text-ink-2">{t.reportForm.categoriesHint}</span>
+              </div>
+              <WorkCategoryChips
+                categories={categories}
+                value={categoryIds}
+                onChange={setCategoryIds}
+                otherText={otherText}
+                onOtherTextChange={setOtherText}
+              />
+            </TicketSection>
+          )}
+
+          <TicketSection>
+            <UnderlineTextarea
+              label={t.manualTime.description}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={2}
+              placeholder={t.manualTime.descriptionPlaceholder}
+            />
+          </TicketSection>
+        </Ticket>
+
+        <Ticket variant="sections">
+          <label className="flex cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5">
+            <span className="text-[14px] font-medium">{t.reportForm.addHours}</span>
             <Toggle checked={withTime} onCheckedChange={setWithTime} />
           </label>
 
           {withTime && (
             <WorkTimeFields
+              className="perf-t"
               startAt={startAt}
               endAt={endAt}
               breakMin={breakMin}
@@ -250,17 +202,14 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
               isDurationOk={isDurationOk}
             />
           )}
-        </Card>
-
-        <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
-          <Info className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
-          {t.reportForm.hint}
-        </p>
-
-        <Button size="xl" block onClick={handleSubmit} disabled={isPending || !canSubmit}>
-          {t.reportForm.submit}
-        </Button>
+        </Ticket>
       </div>
+
+      <StickyActionBar>
+        <Button block onClick={handleSubmit} disabled={!canSubmit} loading={isPending}>
+          {submitLabel}
+        </Button>
+      </StickyActionBar>
 
       <ObjectPickerDrawer
         open={isObjectPickerOpen}
@@ -269,15 +218,6 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         value={siteId}
         onSelect={setSiteId}
       />
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <p className="mb-2 text-[13px] font-semibold text-text-muted">{label}</p>
-      {children}
     </div>
   );
 }

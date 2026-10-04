@@ -54,7 +54,7 @@
 | Компоненты | shadcn/ui (Radix под капотом) |
 | Иконки | `lucide-react` |
 | Даты | `date-fns` + локаль `uk` |
-| Шрифт | Manrope через `next/font/google` (есть кириллица) |
+| Шрифт | Golos Text (текст) и JetBrains Mono (часы, суммы) через `next/font/google` (есть кириллица) |
 | Анимации | CSS/Tailwind + встроенные в Radix. Внешние библиотеки анимаций не ставим |
 
 Ничего сверх этого. Никаких zustand/redux/react-query/framer-motion — на заглушках они не нужны.
@@ -88,7 +88,7 @@
 
 ### 3.2 Типографика
 
-Manrope. Размеры (mobile):
+Golos Text и JetBrains Mono. Размеры (mobile):
 
 | Роль | Размер / начертание | Пример |
 |---|---|---|
@@ -193,12 +193,12 @@ src/
 - [x] Создать Next.js-приложение в текущей директории: TypeScript, Tailwind, App Router, ESLint, `src/`, алиас `@/*`. Флаг `--yes`, интерактивных вопросов быть не должно.
 - [x] Инициализировать shadcn/ui с дефолтами (`npx shadcn@latest init -d`), базовый цвет — neutral.
 - [x] Установить `date-fns`.
-- [x] Подключить шрифт Manrope через `next/font/google` (веса 500, 600, 700, 800) в корневом `layout.tsx`, повесить CSS-переменную на `<html>`.
+- [x] Подключить шрифты Golos Text и JetBrains Mono через `next/font/google` (веса 400, 500, 600) в корневом `layout.tsx`, повесить CSS-переменную на `<html>`.
 - [x] В `app/layout.tsx` задать `metadata` (title «K group», description) и `viewport` с `themeColor: '#0A0A0C'` и `viewportFit: 'cover'`.
 - [x] В `globals.css` прописать все токены из раздела 3.1 и подключить их к Tailwind. Задать `background: var(--bg)`, `color: var(--text)`, `-webkit-font-smoothing: antialiased`, `overscroll-behavior-y: none` на `body`.
 - [x] Удалить дефолтный контент стартовой страницы Next.js.
 
-**Определение готовности:** `npm run dev` открывает пустую тёмную страницу цвета `#0A0A0C` с текстом, набранным Manrope. `npm run build` проходит.
+**Определение готовности:** `npm run dev` открывает пустую тёмную страницу цвета `#0A0A0C` с текстом, набранным Golos Text и JetBrains Mono. `npm run build` проходит.
 
 ---
 
@@ -408,7 +408,7 @@ src/
 
 ```
 Шаг 1 — готово. Next.js 16.3 + React 19 + Tailwind v4 + TS strict, shadcn/ui (radix/nova, neutral),
-date-fns 4, шрифт Manrope (500–800, latin+cyrillic), metadata «K group» + viewport
+date-fns 4, шрифты Golos Text и JetBrains Mono (400–600, latin+cyrillic), metadata «K group» + viewport
 (themeColor #0A0A0C, viewportFit cover), токены темы в globals.css, дефолтная страница удалена.
 Шаг 2 — готово. Словарь i18n/uk.ts (13 секций, все тексты интерфейса), i18n/index.ts с `t` и типом
 `Dict`, функция `fmt()` для плейсхолдеров вида {name} в format.ts.

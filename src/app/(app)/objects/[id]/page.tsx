@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
@@ -9,7 +9,10 @@ import { ObjectHoursCard } from "@/components/objects/ObjectHoursCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Thumb } from "@/components/shared/Thumb";
+import { Badge } from "@/components/ui/badge";
 import { fmt } from "@/lib/format";
+import { sceneForId } from "@/lib/siteScene";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getGoogleMapsDirectionsUrl } from "@/lib/utils";
@@ -18,7 +21,7 @@ import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { getReportsFeed, getSiteReportsFeed, getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 
 /**
  * Объект: адрес, вид робіт, статус, мої звіти по ньому і статистика
@@ -51,257 +54,116 @@ export default async function ObjectDetailPage({
   const reports = isBoss ? allReports : allReports.filter((report) => report.site_id === id);
   const categoryStats = aggregateCategoryStats(reports, categories);
 
-  const firstPhotoPaths = reports
-    .map((report) => report.report_photos[0]?.storage_path)
-    .filter((path): path is string => Boolean(path));
-  const [thumbUrls, coverPhotoUrls] = await Promise.all([
-    getSignedPhotoUrls(supabase, firstPhotoPaths),
-    site.photo_path
-      ? getSignedPhotoUrls(supabase, [site.photo_path], "site-photos")
-      : Promise.resolve(new Map<string, string>()),
-  ]);
-  const coverPhotoUrl = site.photo_path ? coverPhotoUrls.get(site.photo_path) : null;
+  const coverPhotoUrls = site.photo_path
+    ? await getSignedPhotoUrls(supabase, [site.photo_path], "site-photos")
+    : new Map<string, string>();
+  const coverPhotoUrl = site.photo_path ? (coverPhotoUrls.get(site.photo_path) ?? null) : null;
 
   return (
     <div className="pb-6">
       <BackHeader
-        title={site.name}
+        title={t.objects.title}
         href="/objects"
         action={
           canEdit && (
             <Link
               href={`/objects/${site.id}/edit`}
               aria-label={t.objects.detail.edit}
-              className="flex size-11 items-center justify-center rounded-full text-text transition-colors duration-150 active:bg-surface-2"
+              className="relative flex size-8 items-center justify-center rounded-md text-text outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-ring"
             >
-              <Pencil className="size-5" strokeWidth={2} aria-hidden />
+              <Pencil className="size-5" strokeWidth={1.9} aria-hidden />
             </Link>
           )
         }
       />
 
-      <div className="px-4 lg:hidden">
-        <Card asChild><section>
-          {coverPhotoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
-            <img
-              src={coverPhotoUrl}
-              alt=""
-              className="mb-4 h-[160px] w-full rounded-[12px] object-cover"
-            />
-          )}
+      <div className="px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8 lg:px-0">
+        <div className="flex flex-col gap-3">
+          <Thumb
+            scene={sceneForId(site.id)}
+            photoUrl={coverPhotoUrl}
+            size="cover"
+            className="h-40 lg:h-[280px]"
+          />
 
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[20px] font-bold">{site.name}</p>
-              {site.address ? (
+          <Ticket asChild variant="flat">
+            <section>
+              <div className="flex items-start justify-between gap-3">
+                <h1 className="min-w-0 text-[22px] leading-tight font-semibold">{site.name}</h1>
+                {site.archived_at ? (
+                  <span className="shrink-0 pt-1 text-[12px] font-semibold tracking-[0.04em] text-ink-2 uppercase">
+                    {t.objects.archivedBadge}
+                  </span>
+                ) : (
+                  <StatusBadge status={site.status} className="shrink-0 pt-1" />
+                )}
+              </div>
+
+              <dl className="perf-t mt-3 flex flex-col gap-2.5 pt-3 text-[14px]">
+                {site.kind && (
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-ink-2">{t.objects.detail.kind}</dt>
+                    <dd className="font-medium">{site.kind}</dd>
+                  </div>
+                )}
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-ink-2">{t.objects.detail.address}</dt>
+                  <dd className="min-w-0 text-right font-medium">{site.address || t.common.dash}</dd>
+                </div>
+              </dl>
+
+              {site.address && (
                 <a
                   href={getGoogleMapsDirectionsUrl(site.address)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
+                  className="relative mt-3 inline-block text-[13px] font-semibold text-primary outline-none before:absolute before:-inset-y-3 before:-inset-x-2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
-                  <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
-                  {site.address}
+                  {t.objects.detail.openInMaps}
                 </a>
-              ) : (
-                <p className="mt-1 text-[14px] font-medium text-text-muted">{t.common.dash}</p>
               )}
-            </div>
-            {site.archived_at ? (
-              <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">
-                {t.objects.archivedBadge}
-              </span>
-            ) : (
-              <StatusBadge status={site.status} />
-            )}
-          </div>
+            </section>
+          </Ticket>
 
-          <dl className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
-            {site.kind && (
-              <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-[14px] font-medium text-text-muted">
-                  {t.objects.detail.kind}
-                </dt>
-                <dd className="text-[14px] font-bold">{site.kind}</dd>
-              </div>
-            )}
-          </dl>
-        </section></Card>
-
-        {isBoss && (
-          <ObjectHoursCard companyId={profile.company_id} site={site} className="mt-3" />
-        )}
-
-        {isBoss && (
-          <div className="mt-3 flex flex-col gap-2">
-            <ObjectArchiveButton siteId={site.id} isArchived={site.archived_at !== null} />
-            <ObjectDeleteButton siteId={site.id} />
-          </div>
-        )}
-
-        <div className="mt-6 flex items-baseline justify-between gap-3">
-          <h2 className="text-[20px] font-bold">
-            {isBoss ? t.objects.detail.reportsTitle : t.objects.detail.myReports}
-          </h2>
-          <span className="shrink-0 text-[13px] font-medium text-text-muted">
-            {fmt(t.objects.reportsCount, { n: reports.length })}
-          </span>
-        </div>
-
-        {categoryStats.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {categoryStats.map((stat) => (
-              <span
-                key={stat.id}
-                className="rounded-full bg-surface-2 px-3 py-1 text-[12px] font-bold text-text-muted"
-              >
-                {`${stat.label} · ${stat.count}`}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-3 text-[13px] font-medium text-text-dim">
-            {t.objects.detail.categoryStatsEmpty}
-          </p>
-        )}
-
-        {reports.length > 0 ? (
-          <div className="mt-3 space-y-3">
-            {reports.map((report) => (
-              <ReportCard
-                key={report.id}
-                report={report}
-                siteName={site.name}
-                categories={categories}
-                thumbUrl={
-                  report.report_photos[0]
-                    ? (thumbUrls.get(report.report_photos[0].storage_path) ?? null)
-                    : null
-                }
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            className="mt-4"
-            title={isBoss ? t.objects.detail.emptyTitleAll : t.objects.detail.emptyTitle}
-            description={isBoss ? undefined : t.objects.detail.emptyHint}
-          />
-        )}
-      </div>
-
-      {/* Desktop: фото/карта зліва, деталі + звіти справа — паралельна гілка, мобільна розмітка вище лишається без змін. */}
-      <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8">
-        <div className="flex flex-col gap-4">
-          <Card asChild><section>
-            {coverPhotoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
-              <img
-                src={coverPhotoUrl}
-                alt=""
-                className="h-[280px] w-full rounded-[12px] object-cover"
-              />
-            ) : (
-              <div className="flex h-[280px] w-full items-center justify-center rounded-[12px] bg-surface-2 text-[14px] font-medium text-text-dim">
-                {t.common.dash}
-              </div>
-            )}
-          </section></Card>
-
-          {site.address && (
-            <a
-              href={getGoogleMapsDirectionsUrl(site.address)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-text-muted underline-offset-2 hover:underline"
-            >
-              <MapPin className="size-[14px] shrink-0" strokeWidth={2} aria-hidden />
-              {site.address}
-            </a>
-          )}
-        </div>
-
-        <div className="flex flex-col">
-          <Card asChild><section>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-[20px] font-bold">{site.name}</p>
-                {!site.address && (
-                  <p className="mt-1 text-[14px] font-medium text-text-muted">{t.common.dash}</p>
-                )}
-              </div>
-              {site.archived_at ? (
-                <span className="inline-flex shrink-0 items-center rounded-[8px] bg-surface-2 px-2 py-1 text-[11px] font-bold tracking-[0.06em] text-text-dim uppercase whitespace-nowrap">
-                  {t.objects.archivedBadge}
-                </span>
-              ) : (
-                <StatusBadge status={site.status} />
-              )}
-            </div>
-
-            <dl className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
-              {site.kind && (
-                <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-[14px] font-medium text-text-muted">
-                    {t.objects.detail.kind}
-                  </dt>
-                  <dd className="text-[14px] font-bold">{site.kind}</dd>
-                </div>
-              )}
-            </dl>
-          </section></Card>
+          {isBoss && <ObjectHoursCard companyId={profile.company_id} site={site} />}
 
           {isBoss && (
-            <ObjectHoursCard companyId={profile.company_id} site={site} className="mt-3" />
-          )}
-
-          {isBoss && (
-            <div className="mt-3 flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <ObjectArchiveButton siteId={site.id} isArchived={site.archived_at !== null} />
               <ObjectDeleteButton siteId={site.id} />
             </div>
           )}
+        </div>
 
-          <div className="mt-6 flex items-baseline justify-between gap-3">
-            <h2 className="text-[20px] font-bold">
+        <div className="mt-[18px] lg:mt-0">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-[13px] font-medium text-ink-2 lg:text-[20px] lg:font-semibold lg:text-ink">
               {isBoss ? t.objects.detail.reportsTitle : t.objects.detail.myReports}
             </h2>
-            <span className="shrink-0 text-[13px] font-medium text-text-muted">
+            <span className="tabular shrink-0 text-[13px] text-ink-2">
               {fmt(t.objects.reportsCount, { n: reports.length })}
             </span>
           </div>
 
           {categoryStats.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {categoryStats.map((stat) => (
-                <span
-                  key={stat.id}
-                  className="rounded-full bg-surface-2 px-3 py-1 text-[12px] font-bold text-text-muted"
-                >
-                  {`${stat.label} · ${stat.count}`}
-                </span>
+                <Badge key={stat.id}>{`${stat.label} · ${stat.count}`}</Badge>
               ))}
             </div>
           ) : (
-            <p className="mt-3 text-[13px] font-medium text-text-dim">
-              {t.objects.detail.categoryStatsEmpty}
-            </p>
+            <p className="mt-2 text-[13px] text-ink-2">{t.objects.detail.categoryStatsEmpty}</p>
           )}
 
           {reports.length > 0 ? (
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 space-y-2">
               {reports.map((report) => (
                 <ReportCard
                   key={report.id}
                   report={report}
                   siteName={site.name}
                   categories={categories}
-                  thumbUrl={
-                    report.report_photos[0]
-                      ? (thumbUrls.get(report.report_photos[0].storage_path) ?? null)
-                      : null
-                  }
+                  thumbUrl={null}
                 />
               ))}
             </div>

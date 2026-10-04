@@ -3,17 +3,18 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/** Прямоугольный бейдж: рамка 1 px, радиус 4. Для состояний отчёта см. `StampTag`. */
 const badgeVariants = cva(
-  "inline-flex h-[26px] w-fit shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[12.5px] font-bold whitespace-nowrap [&_svg]:size-3.5",
+  "inline-flex h-5 w-fit shrink-0 items-center gap-1.5 rounded-sm border px-1.5 text-[12px] font-semibold whitespace-nowrap [&_svg]:size-3.5",
   {
     variants: {
       variant: {
-        neutral: "bg-surface-2 text-text-muted",
-        success: "bg-success/15 text-success-fg",
-        warning: "bg-warning/20 text-warning-fg",
-        danger: "bg-danger/15 text-danger-fg",
-        accent: "bg-accent text-on-accent",
-        primary: "bg-primary text-on-primary",
+        neutral: "border-ink-3 text-ink-2",
+        success: "border-primary text-primary",
+        warning: "border-warn text-warn",
+        danger: "border-err text-err",
+        accent: "border-yellow bg-yellow text-ink",
+        primary: "border-primary bg-primary text-on-primary",
       },
     },
     defaultVariants: { variant: "neutral" },

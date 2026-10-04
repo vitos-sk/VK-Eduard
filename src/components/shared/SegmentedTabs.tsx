@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -15,13 +15,16 @@ interface SegmentedTabsProps<T extends string> {
   /** Подпись группы для скринридера, например «Об'єкти». */
   label?: string;
   className?: string;
-  /** "sm" — компактные пилюли для тесных шапок. */
-  size?: "md" | "sm";
+  /**
+   * `segment` — единый блок с пунктирными разделителями (День · Тиждень · Місяць);
+   * `chips` — ряд чипов, скроллится по горизонтали (фильтры списков).
+   */
+  variant?: "segment" | "chips";
 }
 
 /**
- * Ряд пилюль-фильтров. Активная — жёлтая с тёмным текстом.
- * Если не влезают по ширине — горизонтальный скролл без видимого скроллбара.
+ * Переключатель вкладок. Активный сегмент — зелёный, остальные на `ticket`.
+ * Чипы, если не влезают по ширине, скроллятся без видимого скроллбара.
  */
 export function SegmentedTabs<T extends string>({
   options,
@@ -29,14 +32,36 @@ export function SegmentedTabs<T extends string>({
   onChange,
   label,
   className,
-  size = "md",
+  variant = "segment",
 }: SegmentedTabsProps<T>) {
+  if (variant === "chips") {
+    return (
+      <div
+        role="tablist"
+        aria-label={label}
+        className={cn("no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 py-2", className)}
+      >
+        {options.map((option) => (
+          <Chip
+            key={option.value}
+            role="tab"
+            aria-selected={option.value === value}
+            selected={option.value === value}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </Chip>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       role="tablist"
       aria-label={label}
       className={cn(
-        "no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4",
+        "flex overflow-hidden rounded-ctl border border-edge bg-ticket",
         className,
       )}
     >
@@ -44,17 +69,20 @@ export function SegmentedTabs<T extends string>({
         const isActive = option.value === value;
 
         return (
-          <Button
+          <button
             key={option.value}
+            type="button"
             role="tab"
             aria-selected={isActive}
-            variant={isActive ? "primary" : "secondary"}
-            size={size === "sm" ? "sm" : "md"}
-            className={cn("rounded-full", !isActive && "text-text-muted")}
             onClick={() => onChange(option.value)}
+            className={cn(
+              "relative h-[34px] min-w-0 flex-1 px-3 text-[13px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+              "not-first:border-l not-first:border-dashed not-first:border-perf",
+              isActive ? "bg-primary text-on-primary" : "text-ink-2 hover:bg-primary-tint",
+            )}
           >
             {option.label}
-          </Button>
+          </button>
         );
       })}
     </div>

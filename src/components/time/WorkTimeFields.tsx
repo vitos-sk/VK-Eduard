@@ -1,51 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
-import { Input } from "@/components/ui/input";
+import { TimeRangeRuler } from "@/components/ui/hours-ruler";
+import { Stepper } from "@/components/ui/stepper";
+import { UnderlineField } from "@/components/ui/underline-field";
+import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { minutesToTime, timeToMinutes } from "@/modules/time/calc";
 
-/** Шаг стрілок часу — 15 хв; точне значення вводиться в самому полі. */
+/** Шаг стрелок «раніше / пізніше» — 15 хв; точное значение вводится в самом поле. */
 const TIME_STEP_MIN = 15;
 
-/** Швидкі кнопки тривалості перерви. */
-const BREAK_OPTIONS_MIN = [15, 30, 45, 60] as const;
+/** Быстрые варианты перерыва: «Без», 0:30, 1:00 и «Інша тривалість перерви». */
+const BREAK_PRESETS_MIN = [30, 60] as const;
 
-/** Верхня межа перерви: довша за зміну (18 год) вона бути не може. */
+/** Верхняя граница перерыва: дольше смены (18 ч) он быть не может. */
 const MAX_BREAK_MIN = 600;
 
-/** Підпис поля формы над содержимым. */
+/** Подпись поля формы над содержимым: 12 px, вторичный текст. */
 export function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <p className="mb-2 text-[13px] font-semibold text-text-muted">{children}</p>;
+  return <p className="text-[12px] text-ink-2">{children}</p>;
 }
 
 /**
- * Поле часу: нативний `<input type="time">` посередині — точні години й
- * хвилини вручну (на телефоні відкривається системне «колесо»), стрілки по
- * боках — швидкий крок {@link TIME_STEP_MIN} хв. `minutesToTime` заводить
- * значення в 0..1439, тож стрілка на 23:45 йде на 00:00 (нічна зміна).
+ * Поле времени: нативный `<input type="time">` (на телефоне открывает системное «колесо»)
+ * с цифрами mono 16 / 600 и парой стрелок по бокам: влево — «Раніше», вправо — «Пізніше».
+ * Видимого текста у стрелок нет, название — в `aria-label` и тултипе.
+ * `minutesToTime` заворачивает значение в 0..1439, поэтому стрелка на 23:45 даёт 00:00 (ночная смена).
  *
- * Нативне поле тримає чернетку окремо: у процесі набору значення буває
- * неповним (порожнім), і піднімати його нагору не можна — інакше керований
- * інпут скидає введене на попереднє.
+ * Нативное поле держит черновик отдельно: в процессе набора значение бывает неполным,
+ * и поднимать его наверх нельзя — управляемый инпут сбросил бы введённое.
  */
 export function TimeField({
+  label,
   value,
   onChange,
   invalid,
-  ariaLabel,
 }: {
+  label: string;
   value: string;
   onChange: (value: string) => void;
   invalid: boolean;
-  ariaLabel: string;
 }) {
-  // `null` — чернетки нема, показуємо значення зі стану форми.
   const [draft, setDraft] = useState<string | null>(null);
 
   const shift = (deltaMin: number) => {
@@ -54,48 +53,40 @@ export function TimeField({
   };
 
   return (
-    <div
-      className={cn(
-        "flex h-field w-full items-center justify-between rounded-ctl border bg-field px-1",
-        invalid ? "border-danger-fg" : "border-border-strong",
-      )}
-    >
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="rounded-md text-text-muted"
-        onClick={() => shift(-TIME_STEP_MIN)}
-        aria-label={t.manualTime.decreaseTime}
-      >
-        <ChevronLeft className="size-5" strokeWidth={2.4} aria-hidden />
-      </Button>
-
-      <input
-        type="time"
-        step={60}
-        value={draft ?? value}
-        aria-label={ariaLabel}
-        onChange={(event) => {
-          if (/^\d{2}:\d{2}$/.test(event.target.value)) {
-            setDraft(null);
-            onChange(event.target.value);
-          } else {
-            setDraft(event.target.value);
-          }
-        }}
-        onBlur={() => setDraft(null)}
-        className="tabular min-w-0 flex-1 bg-transparent text-center text-[16px] font-bold text-text outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-      />
-
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="rounded-md text-text-muted"
-        onClick={() => shift(TIME_STEP_MIN)}
-        aria-label={t.manualTime.increaseTime}
-      >
-        <ChevronRight className="size-5" strokeWidth={2.4} aria-hidden />
-      </Button>
+    <div className="min-w-0">
+      <FieldLabel>{label}</FieldLabel>
+      <div className="mt-1 flex items-center gap-1">
+        <Stepper
+          direction="earlier"
+          label={t.manualTime.decreaseTime}
+          onClick={() => shift(-TIME_STEP_MIN)}
+        />
+        <input
+          type="time"
+          step={60}
+          value={draft ?? value}
+          aria-label={label}
+          aria-invalid={invalid || undefined}
+          onChange={(event) => {
+            if (/^\d{2}:\d{2}$/.test(event.target.value)) {
+              setDraft(null);
+              onChange(event.target.value);
+            } else {
+              setDraft(event.target.value);
+            }
+          }}
+          onBlur={() => setDraft(null)}
+          className={cn(
+            "tabular min-w-0 flex-1 bg-transparent text-center text-[16px] font-semibold text-text outline-none focus-visible:underline [&::-webkit-calendar-picker-indicator]:hidden",
+            invalid && "text-err"
+          )}
+        />
+        <Stepper
+          direction="later"
+          label={t.manualTime.increaseTime}
+          onClick={() => shift(TIME_STEP_MIN)}
+        />
+      </div>
     </div>
   );
 }
@@ -107,14 +98,16 @@ interface WorkTimeFieldsProps {
   onStartChange: (value: string) => void;
   onEndChange: (value: string) => void;
   onBreakChange: (minutes: number) => void;
-  /** Тривалість у хвилинах за вже врахованою перервою. */
+  /** Длительность в минутах с учётом перерыва. */
   durationMin: number;
   isDurationOk: boolean;
+  className?: string;
 }
 
 /**
- * Блок «початок / завершення / перерва / тривалість» — спільний для екрана
- * «Додати час вручну» і форми звіту, щоб час вводився однаково скрізь.
+ * Блок «початок / завершення / перерва / тривалість» — общий для экрана
+ * «Додати час вручну» и формы звіту, чтобы время вводилось одинаково везде.
+ * Часть талона: секции разделены пунктиром снаружи (`TicketSection`).
  */
 export function WorkTimeFields({
   startAt,
@@ -125,86 +118,98 @@ export function WorkTimeFields({
   onBreakChange,
   durationMin,
   isDurationOk,
+  className,
 }: WorkTimeFieldsProps) {
-  const durationLabel = isDurationOk
-    ? `${Math.floor(durationMin / 60)} ${t.units.hoursShort} ${durationMin % 60} ${t.units.minutesShort}`
-    : t.common.dash;
+  const [isCustomBreak, setIsCustomBreak] = useState(
+    breakMin > 0 && !BREAK_PRESETS_MIN.some((minutes) => minutes === breakMin),
+  );
+  const customActive = isCustomBreak;
+  const startMinutes = timeToMinutes(startAt);
+  const endMinutes = timeToMinutes(endAt);
 
   return (
-    <div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <FieldLabel>{t.manualTime.start}</FieldLabel>
+    <div className={className}>
+      <div className="px-3.5 pt-2 pb-1">
+        <div className="grid grid-cols-2 gap-3">
           <TimeField
+            label={t.manualTime.start}
             value={startAt}
             onChange={onStartChange}
             invalid={!isDurationOk}
-            ariaLabel={t.manualTime.start}
           />
-        </div>
-
-        <div>
-          <FieldLabel>{t.manualTime.finish}</FieldLabel>
           <TimeField
+            label={t.manualTime.finish}
             value={endAt}
             onChange={onEndChange}
             invalid={!isDurationOk}
-            ariaLabel={t.manualTime.finish}
           />
         </div>
+        <TimeRangeRuler startMinutes={startMinutes} endMinutes={endMinutes} />
       </div>
 
-      <p className="mt-4 mb-2 text-[13px] font-semibold text-text-muted">{t.hours.break}</p>
-      <div className="grid grid-cols-5 gap-2">
-        {BREAK_OPTIONS_MIN.map((minutes) => (
+      <div className="perf-t px-3.5 pt-2.5 pb-3">
+        <div className="flex items-center justify-between gap-2 text-[13px]">
+          <span className="text-ink-2">{t.hours.break}</span>
+          <span className="tabular font-semibold">
+            <span className="font-sans text-[13px] font-medium text-ink-2">
+              {t.manualTime.duration}{" "}
+            </span>
+            {isDurationOk ? formatHoursShort(durationMin) : t.common.dash}
+          </span>
+        </div>
+
+        <div className="mt-2 flex flex-wrap gap-1.5">
           <Chip
-            key={minutes}
-            selected={breakMin === minutes}
-            onClick={() => onBreakChange(breakMin === minutes ? 0 : minutes)}
-            className="w-full px-0"
+            selected={breakMin === 0 && !customActive}
+            onClick={() => {
+              setIsCustomBreak(false);
+              onBreakChange(0);
+            }}
           >
-            {minutes < 60 ? `${minutes} ${t.units.minutesShort}` : `1 ${t.units.hoursShort}`}
+            {t.manualTime.noBreak}
           </Chip>
-        ))}
-        <Chip
-          selected={breakMin === 0}
-          onClick={() => onBreakChange(0)}
-          className="w-full px-0"
-        >
-          {t.manualTime.noBreak}
-        </Chip>
+          {BREAK_PRESETS_MIN.map((minutes) => (
+            <Chip
+              key={minutes}
+              selected={breakMin === minutes && !customActive}
+              onClick={() => {
+                setIsCustomBreak(false);
+                onBreakChange(minutes);
+              }}
+              className="tabular"
+            >
+              {formatHoursShort(minutes)}
+            </Chip>
+          ))}
+          <Chip selected={customActive} onClick={() => setIsCustomBreak(true)}>
+            {t.manualTime.customBreak}
+          </Chip>
+        </div>
+
+        {customActive && (
+          <UnderlineField
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={MAX_BREAK_MIN}
+            value={breakMin === 0 ? "" : breakMin}
+            placeholder={`${t.units.minutesShort}`}
+            aria-label={t.manualTime.customBreak}
+            onChange={(event) => {
+              const next = Math.floor(Number(event.target.value));
+
+              onBreakChange(
+                Number.isFinite(next) ? Math.min(Math.max(next, 0), MAX_BREAK_MIN) : 0
+              );
+            }}
+            className="tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+        )}
+
+        {!isDurationOk && (
+          <p className="mt-2 text-[13px] text-err">{t.manualTime.errorDuration}</p>
+        )}
       </div>
-
-      <div className="relative mt-2">
-        <Input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={MAX_BREAK_MIN}
-          value={breakMin === 0 ? "" : breakMin}
-          placeholder={t.manualTime.customBreak}
-          aria-label={t.manualTime.customBreak}
-          onChange={(event) => {
-            const next = Math.floor(Number(event.target.value));
-
-            onBreakChange(Number.isFinite(next) ? Math.min(Math.max(next, 0), MAX_BREAK_MIN) : 0);
-          }}
-          className="tabular pr-12 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
-        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[14px] font-semibold text-text-muted">
-          {t.units.minutesShort}
-        </span>
-      </div>
-
-      <div className="mt-3 flex items-center gap-2 text-[14px] font-bold text-text">
-        <Clock className="size-5 shrink-0 text-text-muted" strokeWidth={2} aria-hidden />
-        <span className="text-text-muted">{t.manualTime.duration}:</span>
-        <span className="tabular">{durationLabel}</span>
-      </div>
-
-      {!isDurationOk && (
-        <p className="mt-2 text-[13px] font-medium text-danger-fg">{t.manualTime.errorDuration}</p>
-      )}
     </div>
   );
 }

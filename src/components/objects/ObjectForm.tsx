@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { BackHeader } from "@/components/layout/ScreenHeader";
+import { FormTopBar, StickyActionBar } from "@/components/shared/FormParts";
 import { SitePhotoUploader } from "@/components/objects/SitePhotoUploader";
 import {
   SegmentedTabs,
@@ -16,7 +15,8 @@ import type { WorkStatus } from "@/lib/types";
 import { createSite, updateSite } from "@/modules/sites/actions";
 import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Ticket, TicketSection } from "@/components/ui/ticket";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
   { value: "not_started", label: t.status.not_started },
@@ -78,91 +78,92 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
 
   if (createdSiteId) {
     return (
-      <div className="pb-6">
-        <BackHeader title={t.objects.form.createTitle} onBack={() => router.push(`/objects/${createdSiteId}`)} />
+      <div className="pb-2 lg:mx-auto lg:max-w-[640px]">
+        <FormTopBar
+          title={t.objects.form.createdTitle}
+          onBack={() => router.push(`/objects/${createdSiteId}`)}
+        >
+          <p className="mt-0.5 text-[13px] text-ink-2">{t.objects.form.createdHint}</p>
+        </FormTopBar>
 
-        <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[640px]">
-          <div>
-            <p className="text-[17px] font-bold">{t.objects.form.createdTitle}</p>
-            <p className="mt-1 text-[14px] font-medium text-text-muted">{t.objects.form.createdHint}</p>
-          </div>
+        <div className="mt-4 px-4 lg:px-0">
+          <Ticket variant="flat">
+            <SitePhotoUploader companyId={companyId} siteId={createdSiteId} photoPath={null} photoUrl={null} />
+          </Ticket>
+        </div>
 
-          <SitePhotoUploader companyId={companyId} siteId={createdSiteId} photoPath={null} photoUrl={null} />
-
-          <Button size="xl" block className="mt-2" onClick={() => router.push(`/objects/${createdSiteId}`)}>
+        <StickyActionBar>
+          <Button block onClick={() => router.push(`/objects/${createdSiteId}`)}>
             {t.objects.form.done}
           </Button>
-        </div>
+        </StickyActionBar>
       </div>
     );
   }
 
   return (
-    <div className="pb-6">
-      <BackHeader
+    <div className="pb-2 lg:mx-auto lg:max-w-[640px]">
+      <FormTopBar
         title={site ? t.objects.form.editTitle : t.objects.form.createTitle}
         onBack={() => router.back()}
       />
 
-      <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[640px]">
+      <div className="mt-3 space-y-3.5 px-4 lg:px-0">
         {site && (
-          <SitePhotoUploader
-            companyId={companyId}
-            siteId={site.id}
-            photoPath={site.photo_path}
-            photoUrl={photoUrl}
-          />
+          <Ticket variant="flat">
+            <SitePhotoUploader
+              companyId={companyId}
+              siteId={site.id}
+              photoPath={site.photo_path}
+              photoUrl={photoUrl}
+            />
+          </Ticket>
         )}
 
-        <Field label={t.objects.form.nameLabel}>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={t.objects.form.namePlaceholder}
-            aria-invalid={!isValid}
-                      />
-        </Field>
-
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4">
-          <Field label={t.objects.form.kindLabel}>
-            <Input
+        <Ticket variant="sections">
+          <TicketSection>
+            <UnderlineField
+              label={t.objects.form.nameLabel}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={t.objects.form.namePlaceholder}
+            />
+          </TicketSection>
+          <TicketSection>
+            <UnderlineField
+              label={t.objects.form.kindLabel}
               value={kind}
               onChange={(event) => setKind(event.target.value)}
               placeholder={t.objects.form.kindPlaceholder}
-                          />
-          </Field>
-
-          <Field label={t.objects.form.addressLabel}>
-            <Input
+            />
+          </TicketSection>
+          <TicketSection>
+            <UnderlineField
+              label={t.objects.form.addressLabel}
               value={address}
               onChange={(event) => setAddress(event.target.value)}
               placeholder={t.objects.form.addressPlaceholder}
-                          />
-          </Field>
-        </div>
-
-        <Field label={t.objects.form.statusLabel}>
-          <SegmentedTabs
-            options={STATUS_OPTIONS}
-            value={status}
-            onChange={setStatus}
-            label={t.objects.form.statusLabel}
-          />
-        </Field>
-
-        <Button size="xl" block className="mt-2" onClick={handleSave} disabled={!isValid || isPending}>
-          {t.objects.form.save}
-        </Button>
+            />
+          </TicketSection>
+          <TicketSection>
+            <p className="text-[12px] text-ink-2">{t.objects.form.statusLabel}</p>
+            <SegmentedTabs
+              variant="chips"
+              options={STATUS_OPTIONS}
+              value={status}
+              onChange={setStatus}
+              label={t.objects.form.statusLabel}
+              className="px-0 mx-0 flex-wrap overflow-visible"
+            />
+          </TicketSection>
+        </Ticket>
       </div>
-    </div>
-  );
-}
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <p className="mb-2 text-[13px] font-semibold text-text-muted">{label}</p>
-      {children}
+      <StickyActionBar>
+        <Button block onClick={handleSave} disabled={!isValid} loading={isPending}>
+          {isValid ? t.objects.form.save : t.objects.form.nameRequired}
+        </Button>
+      </StickyActionBar>
     </div>
   );
 }

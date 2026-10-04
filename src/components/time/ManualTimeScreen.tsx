@@ -1,25 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { uk as ukLocale } from "date-fns/locale";
-import { CalendarDays, ChevronRight, Info } from "lucide-react";
 import { toast } from "sonner";
 
-import { BackHeader } from "@/components/layout/ScreenHeader";
-import { Thumb } from "@/components/shared/Thumb";
+import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
-import { FieldLabel, WorkTimeFields } from "@/components/time/WorkTimeFields";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { formatDateShort } from "@/lib/format";
+import { WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { t } from "@/lib/i18n";
-import { gradientForId } from "@/lib/siteGradient";
 import { createManualEntry, updateEntry } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
@@ -32,8 +20,8 @@ import {
   dateKeyOf,
 } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/input";
+import { Ticket, TicketSection } from "@/components/ui/ticket";
+import { UnderlineTextarea } from "@/components/ui/underline-field";
 
 /** Значения по умолчанию — те же, что на макете. */
 const DEFAULT_START = "07:00";
@@ -69,7 +57,6 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
   );
   const [description, setDescription] = useState(entry?.description ?? "");
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
@@ -86,6 +73,13 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
   // без описания непонятно, где вообще отработаны эти часы.
   const hasSiteOrDescription = siteId !== null || description.trim() !== "";
   const isValid = isDurationOk && hasSiteOrDescription;
+  const submitLabel = !isDurationOk
+    ? t.manualTime.fixTime
+    : !hasSiteOrDescription
+      ? t.manualTime.fillSiteOrDescription
+      : entry
+        ? t.manualTime.saveChanges
+        : t.manualTime.submit;
 
   const handleSubmit = () => {
     startTransition(async () => {
@@ -115,121 +109,52 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
   };
 
   return (
-    <div className="pb-6">
-      <BackHeader
+    <div className="pb-2 lg:mx-auto lg:max-w-[640px]">
+      <FormTopBar
         title={entry ? t.manualTime.editTitle : t.manualTime.title}
         onBack={() => router.back()}
-      />
+      >
+        <DatePickLink date={date} onChange={setDate} />
+      </FormTopBar>
 
-      <div className="space-y-6 px-4 lg:mx-auto lg:max-w-[640px]">
-        {!entry && (
-          <p className="flex items-start gap-3 rounded-[16px] border border-border bg-surface p-4 text-[13px] leading-[1.4] font-medium text-text-muted">
-            <Info className="size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
-            {t.manualTime.hint}
-          </p>
-        )}
-
-        <Field label={t.manualTime.objectLabel}>
-          <Card asChild padding="sm" interactive className="flex min-h-[68px] w-full items-center gap-3">
-          <button type="button" onClick={() => setIsObjectPickerOpen(true)}>
-            {selectedSite ? (
-              <>
-                <Thumb
-                  name={selectedSite.name}
-                  gradient={gradientForId(selectedSite.id)}
-                  size="sm"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold">
-                    {selectedSite.name}
-                  </span>
-                  <span className="mt-0.5 block truncate text-[13px] font-medium text-text-muted">
-                    {selectedSite.address ?? t.common.dash}
-                  </span>
-                </span>
-              </>
-            ) : (
-              <span className="min-w-0 flex-1 px-1 text-[15px] font-medium text-text-muted">
-                {t.manualTime.objectPlaceholder}
-              </span>
-            )}
-
-            <ChevronRight
-              className="size-5 shrink-0 text-text-dim"
-              strokeWidth={2.4}
-              aria-hidden
-            />
-          </button>
-          </Card>
-        </Field>
-
-        <Field label={t.manualTime.date}>
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="field" size="field" className="gap-2 px-3 text-[15px]">
-                <CalendarDays
-                  className="size-5 shrink-0 text-text-muted"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-                <span className="tabular truncate">
-                  {formatDateShort(date)}
-                </span>
-              </Button>
-            </PopoverTrigger>
-
-            <PopoverContent
-              align="start"
-              className="w-auto border border-border bg-surface p-2"
-            >
-              <Calendar
-                mode="single"
-                selected={date}
-                defaultMonth={date}
-                onSelect={(next) => {
-                  if (next) {
-                    setDate(next);
-                    setIsCalendarOpen(false);
-                  }
-                }}
-                locale={ukLocale}
-              />
-            </PopoverContent>
-          </Popover>
-        </Field>
-
-        <WorkTimeFields
-          startAt={startAt}
-          endAt={endAt}
-          breakMin={breakMin}
-          onStartChange={setStartAt}
-          onEndChange={setEndAt}
-          onBreakChange={setBreakMin}
-          durationMin={durationMin}
-          isDurationOk={isDurationOk}
-        />
-
-        <div>
-          <Field label={t.manualTime.description}>
-            <Textarea
+      <div className="mt-3 space-y-3.5 px-4 lg:px-0">
+        <Ticket variant="sections">
+          <PickerRow
+            label={t.manualTime.objectLabel}
+            value={selectedSite?.name ?? null}
+            placeholder={t.manualTime.objectPlaceholder}
+            onClick={() => setIsObjectPickerOpen(true)}
+          />
+          <TicketSection>
+            <UnderlineTextarea
+              label={t.manualTime.description}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              rows={3}
+              rows={2}
               placeholder={t.manualTime.descriptionPlaceholder}
             />
-          </Field>
+          </TicketSection>
+        </Ticket>
 
-          {!hasSiteOrDescription && (
-            <p className="mt-2 text-[13px] font-medium text-text-muted">
-              {t.manualTime.errorSiteOrDescription}
-            </p>
-          )}
-        </div>
-
-        <Button size="xl" block onClick={handleSubmit} disabled={!isValid || isPending}>
-          {entry ? t.manualTime.saveChanges : t.manualTime.submit}
-        </Button>
+        <Ticket variant="sections">
+          <WorkTimeFields
+            startAt={startAt}
+            endAt={endAt}
+            breakMin={breakMin}
+            onStartChange={setStartAt}
+            onEndChange={setEndAt}
+            onBreakChange={setBreakMin}
+            durationMin={durationMin}
+            isDurationOk={isDurationOk}
+          />
+        </Ticket>
       </div>
+
+      <StickyActionBar>
+        <Button block onClick={handleSubmit} disabled={!isValid} loading={isPending}>
+          {submitLabel}
+        </Button>
+      </StickyActionBar>
 
       <ObjectPickerDrawer
         open={isObjectPickerOpen}
@@ -238,15 +163,6 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
         value={siteId}
         onSelect={setSiteId}
       />
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <FieldLabel>{label}</FieldLabel>
-      {children}
     </div>
   );
 }

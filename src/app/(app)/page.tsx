@@ -1,20 +1,22 @@
-import { startOfWeek } from "date-fns";
+import { eachDayOfInterval, startOfWeek } from "date-fns";
 
 import { DayReportCard } from "@/components/home/DayReportCard";
 import { Greeting } from "@/components/home/Greeting";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeObjectCard } from "@/components/home/HomeObjectCard";
 import { LastReportCard } from "@/components/home/LastReportCard";
-import { WeekStats } from "@/components/home/WeekStats";
+import { WeekStats, type WeekDay } from "@/components/home/WeekStats";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { formatDateFull } from "@/lib/format";
+import { formatDateLong, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
-import { initialsOf, requireProfile } from "@/modules/auth/session";
+import { initialsOf } from "@/components/shared/Thumb";
+import { requireProfile } from "@/modules/auth/session";
 import { getEntriesFeed } from "@/modules/entries/queries";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
-import { getCompanyReportsWithPhotos } from "@/modules/reports/queries";
+import { categoryLabelsOf } from "@/modules/reports/categoryLabels";
+import { getCompanyReportsWithPhotos, getWorkCategories } from "@/modules/reports/queries";
 import { reportState } from "@/modules/reports/reportState";
 import { aggregateSiteStats } from "@/modules/reports/siteStats";
 import { toSiteObject } from "@/modules/sites/present";
@@ -32,10 +34,11 @@ export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [entries, companyReports, sites] = await Promise.all([
+  const [entries, companyReports, sites, categories] = await Promise.all([
     getEntriesFeed(supabase, profile.id),
     getCompanyReportsWithPhotos(supabase, profile.company_id),
     getActiveSites(supabase),
+    getWorkCategories(supabase, profile.company_id),
   ]);
 
   const now = new Date();
@@ -70,23 +73,13 @@ export default async function HomePage() {
 
   // Тиждень: з понеділка по сьогодні.
   const weekEntries = entries.filter((entry) => entry.work_date >= weekStartKey);
-  const weekReports = myReports.filter(
-    (report) => report.work_date >= weekStartKey && isReady(report),
-  );
-  const weekSiteIds = new Set(
-    weekEntries.map((entry) => entry.site_id).filter((id): id is string => Boolean(id)),
-  );
 
   const lastReportSite = lastReport ? sites.find((site) => site.id === lastReport.site_id) : null;
 
   const objectPhotoPaths = orderedSites
     .map((site) => site.photo_path)
     .filter((path): path is string => Boolean(path));
-  const lastReportPhotoPath = lastReport?.report_photos[0]?.storage_path;
-  const [objectPhotoUrls, reportPhotoUrls] = await Promise.all([
-    getSignedPhotoUrls(supabase, objectPhotoPaths, "site-photos"),
-    getSignedPhotoUrls(supabase, lastReportPhotoPath ? [lastReportPhotoPath] : []),
-  ]);
+  const objectPhotoUrls = await getSignedPhotoUrls(supabase, objectPhotoPaths, "site-photos");
 
   const homeObjects = orderedSites.map((site) =>
     toSiteObject(
@@ -100,31 +93,75 @@ export default async function HomePage() {
     ? sumTotalMinutes(entries.filter((entry) => entry.work_date === lastReport.work_date))
     : 0;
 
+  // Талон дня: сьогоднішні години, об'єкт останнього запису дня.
+  const todayEntries = entries.filter((entry) => entry.work_date === todayKey);
+  const todayMinutes = sumTotalMinutes(todayEntries);
+  const todaySiteId = [...todayEntries].reverse().find((entry) => entry.site_id)?.site_id ?? null;
+  const todaySiteName = todaySiteId
+    ? (sites.find((site) => site.id === todaySiteId)?.name ?? null)
+    : null;
+
+  // Міні-талони тижня: з понеділка по сьогодні, у ряд лишаються останні чотири дні.
+  const weekDays: WeekDay[] = eachDayOfInterval({
+    start: startOfWeek(now, { weekStartsOn: 1 }),
+    end: now,
+  })
+    .slice(-4)
+    .map((date) => {
+      const key = dateKeyOf(date);
+      const dayMinutes = sumTotalMinutes(entries.filter((entry) => entry.work_date === key));
+      const hasReport = myReports.some((report) => report.work_date === key && isReady(report));
+
+      return {
+        key,
+        weekday: t.weekdays.short[date.getDay()],
+        day: date.getDate(),
+        hours: dayMinutes > 0 ? formatHoursShort(dayMinutes) : null,
+        report: hasReport ? "submitted" : dayMinutes > 0 ? "notSubmitted" : null,
+      };
+    });
+
   return (
     <div className="mx-auto max-w-[640px] px-4 pb-6 lg:px-0">
-      <HomeHeader initials={initialsOf(profile)} />
+      <HomeHeader
+        initials={initialsOf(profile.full_name)}
+        title={<Greeting name={profile.full_name} />}
+        subtitle={formatDateLong(now)}
+      />
 
-      <div className="mt-6">
-        <h1 className="text-[26px] leading-tight font-extrabold tracking-tight">
-          <Greeting name={profile.full_name} />
-        </h1>
-        <p className="mt-1 text-[15px] font-medium text-text-muted">{formatDateFull(now)}</p>
-      </div>
-
-      <DayReportCard className="mt-5" reportId={todayReport?.id ?? null} />
+      <DayReportCard
+        className="mt-[18px]"
+        date={now}
+        minutes={todayMinutes}
+        normMinutes={profile.daily_norm_minutes}
+        siteName={todaySiteName}
+        reportId={todayReport?.id ?? null}
+        hasPhotos={(todayReport?.report_photos.length ?? 0) > 0}
+      />
 
       <SectionHeader
-        className="mt-6"
+        className="mt-[18px]"
+        title={t.home.week.title}
+        trailing={
+          <span className="tabular ml-auto text-[13px] text-ink-2">
+            {formatHoursShort(sumTotalMinutes(weekEntries))}
+          </span>
+        }
+      />
+      <WeekStats className="mt-2" days={weekDays} />
+
+      <SectionHeader
+        className="mt-[18px]"
         title={t.home.myObjects}
         action={{ label: t.home.viewAll, href: "/objects" }}
       />
       {homeObjects.length > 0 ? (
-        <div className="-mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
+        <div className="no-scrollbar -mx-4 mt-2 flex snap-x gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
           {homeObjects.map((object) => (
             <HomeObjectCard
               key={object.id}
               object={object}
-              className="w-[190px] shrink-0 snap-start"
+              className="w-[140px] shrink-0 snap-start"
             />
           ))}
         </div>
@@ -136,33 +173,24 @@ export default async function HomePage() {
         />
       )}
 
-      <SectionHeader className="mt-6" title={t.home.week.title} />
-      <WeekStats
-        className="mt-2"
-        minutes={sumTotalMinutes(weekEntries)}
-        reportsCount={weekReports.length}
-        objectsCount={weekSiteIds.size}
-      />
-
       {lastReport && (
         <>
           <SectionHeader
-            className="mt-6"
+            className="mt-[18px]"
             title={t.home.lastReport.title}
             action={{ label: t.home.lastReport.open, href: `/reports/${lastReport.id}` }}
           />
-          <LastReportCard
-            reportId={lastReport.id}
-            workDate={lastReport.work_date}
-            siteId={lastReport.site_id}
-            siteName={lastReportSite?.name ?? t.hours.noObject}
-            siteAddress={lastReportSite?.address ?? ""}
-            thumbUrl={lastReportPhotoPath ? (reportPhotoUrls.get(lastReportPhotoPath) ?? null) : null}
-            minutes={lastReportMinutes}
-            photosCount={lastReport.report_photos.length}
-            worksCount={lastReport.category_ids.length}
-            isReady={isReady(lastReport)}
-          />
+          <div className="mt-2">
+            <LastReportCard
+              reportId={lastReport.id}
+              workDate={lastReport.work_date}
+              siteName={lastReportSite?.name ?? t.hours.noObject}
+              worksLabel={categoryLabelsOf(lastReport, categories).join(", ")}
+              minutes={lastReportMinutes}
+              photosCount={lastReport.report_photos.length}
+              isReady={isReady(lastReport)}
+            />
+          </div>
         </>
       )}
     </div>

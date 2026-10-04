@@ -1,35 +1,39 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
 interface SectionHeaderProps {
   title: string;
-  /** Ссылка справа, например «Дивитися всі ›». */
+  /** Ссылка справа, например «Дивитися всі». */
   action?: {
     label: string;
     href: string;
   };
+  /** Значение справа вместо ссылки, например сумма недели (mono). */
+  trailing?: ReactNode;
   className?: string;
 }
 
-/** Заголовок секции внутри экрана + необязательная ссылка справа. */
-export function SectionHeader({ title, action, className }: SectionHeaderProps) {
+/** Заголовок секции внутри экрана + необязательная ссылка или значение справа. */
+export function SectionHeader({ title, action, trailing, className }: SectionHeaderProps) {
   return (
     <div className={cn("flex items-center justify-between gap-3", className)}>
-      <h2 className="text-[20px] font-bold">{title}</h2>
+      <h2 className="text-[13px] font-medium text-ink-2 lg:text-[20px] lg:font-semibold lg:text-ink">
+        {title}
+      </h2>
+
+      {trailing}
 
       {action && (
         <Link
           href={action.href}
           className={cn(
-            "flex shrink-0 items-center gap-0.5 py-2 text-[13px] font-semibold text-primary",
-            "transition-opacity duration-150 active:opacity-70",
+            "relative shrink-0 text-[13px] font-semibold text-primary outline-none before:absolute before:-inset-y-3 before:-inset-x-2 before:content-['']",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
           )}
         >
           {action.label}
-          <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
         </Link>
       )}
     </div>

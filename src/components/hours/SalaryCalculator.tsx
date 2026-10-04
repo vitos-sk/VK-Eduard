@@ -18,9 +18,9 @@ import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { sumTotalMinutes } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
 import { ALL_FILTER } from "@/components/hours/HoursFilters";
-import { Card } from "@/components/ui/card";
+import { Ticket } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 const ALL_WORKERS_ID = ALL_FILTER;
 
@@ -96,19 +96,19 @@ export function SalaryCalculator({
   };
 
   return (
-    <Card asChild padding="none"><section className={cn("p-3.5", className)}>
-      <h2 className="text-[15px] font-bold">{t.hours.salaryCalcTitle}</h2>
+    <Ticket asChild variant="flat"><section className={cn(className)}>
+      <h2 className="text-[15px] font-semibold">{t.hours.salaryCalcTitle}</h2>
 
       <div className="mt-2.5 flex flex-col gap-2.5">
         <div className={cn("grid gap-2", isBoss ? "grid-cols-2" : "grid-cols-1")}>
           {isBoss && (
             <div>
-              <label className="text-[12px] font-medium text-text-muted">
+              <label className="text-[12px] text-ink-2">
                 {t.hours.salaryCalcWorkerLabel}
               </label>
               <Select value={workerId} onValueChange={onWorkerChange}>
                 <SelectTrigger
-                  className="mt-1 h-ctl-sm w-full rounded-md px-2.5 text-[13px] font-bold text-text"
+                  className="mt-1 h-ctl-sm w-full rounded-md px-2.5 text-[13px] font-medium text-text"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -128,10 +128,8 @@ export function SalaryCalculator({
           )}
 
           <div>
-            <label htmlFor="salary-rate" className="text-[12px] font-medium text-text-muted">
-              {t.hours.salaryCalcRateLabel}
-            </label>
-            <Input
+            <UnderlineField
+              label={t.hours.salaryCalcRateLabel}
               id="salary-rate"
               type="number"
               inputMode="decimal"
@@ -140,36 +138,35 @@ export function SalaryCalculator({
               placeholder={t.hours.salaryCalcRatePlaceholder}
               value={rate}
               onChange={(event) => setRate(event.target.value)}
-              className="mt-1 h-ctl-sm px-2.5 text-[13px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         </div>
 
-        <div className="flex items-baseline justify-between border-t border-border pt-2.5">
-          <span className="text-[13px] font-medium text-text-muted">
+        <div className="perf-t flex items-center justify-between gap-2 pt-2.5">
+          <span className="min-w-0 text-[13px] text-ink-2">
             {t.hours.salaryCalcAmount}
           </span>
-          <div className="flex items-baseline gap-2">
-            <span className="tabular text-[18px] font-extrabold">
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="tabular text-[18px] font-semibold whitespace-nowrap">
               {formatCurrency(amount)}
             </span>
             <Button
               variant="outline"
-              size="icon-sm"
-              className="rounded-md"
+              size="sm"
               onClick={handleCopy}
               disabled={!hasValidRate}
-              aria-label={isCopied ? t.hours.salaryCalcCopied : t.hours.salaryCalcCopy}
             >
               {isCopied ? (
-                <Check className="size-4" strokeWidth={2} aria-hidden />
+                <Check className="size-4" strokeWidth={1.9} aria-hidden />
               ) : (
-                <Copy className="size-4" strokeWidth={2} aria-hidden />
+                <Copy className="size-4" strokeWidth={1.9} aria-hidden />
               )}
+              {isCopied ? t.hours.salaryCalcCopied : t.hours.salaryCalcCopy}
             </Button>
           </div>
         </div>
       </div>
-    </section></Card>
+    </section></Ticket>
   );
 }

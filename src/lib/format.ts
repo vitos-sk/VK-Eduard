@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 /**
  * Подставляет значения в плейсхолдеры вида `{name}`.
  *
- * @example fmt(t.home.greetingMorning, { name: "Віталік" }) // «Доброго ранку, Віталік 👋»
+ * @example fmt(t.home.greetingMorning, { name: "Віталік" }) // «Доброго ранку, Віталік»
  */
 export function fmt(
   template: string,
@@ -36,21 +36,13 @@ export function formatDuration(totalSec: number): string {
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
-/** Минуты → `5 год 42 хв`. Ровные часы отдаются без минут: `8 год`. */
+/** Минуты → `5:42`. Формат «ч:мм» везде в интерфейсе: `0:30`, `8:00`, `176:30`. */
 export function formatHoursShort(totalMin: number): string {
   const safe = Math.max(0, Math.trunc(totalMin));
   const hours = Math.floor(safe / 60);
   const minutes = safe % 60;
 
-  if (hours === 0) {
-    return `${minutes} ${t.units.minutesShort}`;
-  }
-
-  if (minutes === 0) {
-    return `${hours} ${t.units.hoursShort}`;
-  }
-
-  return `${hours} ${t.units.hoursShort} ${minutes} ${t.units.minutesShort}`;
+  return `${hours}:${pad(minutes)}`;
 }
 
 /** Число → `25 200,50 €`. Калькулятор зарплати на екрані «Години». */

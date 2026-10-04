@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { addMonths, eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { uk as ukLocale } from "date-fns/locale";
 import { useRouter } from "next/navigation";
-import { CalendarDays, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { CalendarDays, Share2 } from "lucide-react";
 
 import { DayActions } from "@/components/hours/DayActions";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
@@ -28,13 +28,14 @@ import { hoursStrings as s } from "@/lib/i18n/parts/hours";
 import { createClient } from "@/lib/supabase/client";
 import { getActiveSites, getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
-import { initialsOf, type Profile } from "@/modules/auth/profile";
+import { initialsOf } from "@/components/shared/Thumb";
+import type { Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { dateKeyOf } from "@/modules/time/calc";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Stepper } from "@/components/ui/stepper";
 
 /** Заголовок навигатора: месяц з роком. */
 function getMonthTitle(date: Date): string {
@@ -192,74 +193,54 @@ export function HoursScreen({
     <div className="pb-6">
       <ScreenHeader
         title={t.hours.title}
-        action={<AvatarLink initials={initialsOf(profile)} />}
+        action={<AvatarLink initials={initialsOf(profile.full_name)} />}
       />
 
-      <div className="px-4 pb-4">
-        <div
-          className={cn(
-            "flex items-center gap-0.5 rounded-full border border-border",
-            "bg-surface-2 p-1",
-          )}
-        >
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => shiftMonth(-1)}
-            aria-label={t.hours.prevPeriod}
-          >
-            <ChevronLeft className="size-4" strokeWidth={2.4} aria-hidden />
-          </Button>
+      <div className="flex items-center gap-1.5 px-4 pb-3 lg:px-0">
+        <Stepper
+          direction="earlier"
+          label={t.hours.prevPeriod}
+          onClick={() => shiftMonth(-1)}
+        />
 
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label={t.hours.pickDate}
-                className="flex-1 rounded-full border-transparent bg-surface hover:bg-surface"
-              >
-                <CalendarDays
-                  className="size-4 shrink-0 text-primary"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-                <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
-              </Button>
-            </PopoverTrigger>
-
-            <PopoverContent
-              align="center"
-              className="w-auto border border-border bg-surface p-2"
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="field"
+              size="sm"
+              aria-label={t.hours.pickDate}
+              className="flex-1 border-edge"
             >
-              <Calendar
-                mode="single"
-                selected={date}
-                defaultMonth={date}
-                onSelect={(next) => {
-                  if (next) {
-                    setDate(next);
-                    setIsCalendarOpen(false);
-                  }
-                }}
-                locale={ukLocale}
-              />
-            </PopoverContent>
-          </Popover>
+              <CalendarDays className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
+              <span className="whitespace-nowrap">{getMonthTitle(date)}</span>
+            </Button>
+          </PopoverTrigger>
 
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => shiftMonth(1)}
-            aria-label={t.hours.nextPeriod}
-          >
-            <ChevronRight className="size-4" strokeWidth={2.4} aria-hidden />
-          </Button>
-        </div>
+          <PopoverContent align="center" className="w-auto border border-edge bg-ticket p-2">
+            <Calendar
+              mode="single"
+              selected={date}
+              defaultMonth={date}
+              onSelect={(next) => {
+                if (next) {
+                  setDate(next);
+                  setIsCalendarOpen(false);
+                }
+              }}
+              locale={ukLocale}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Stepper
+          direction="later"
+          label={t.hours.nextPeriod}
+          onClick={() => shiftMonth(1)}
+        />
       </div>
 
       {isBoss && (
-        <div className="flex flex-col gap-3 px-4 pb-4 lg:flex-row lg:items-end lg:gap-4">
+        <div className="flex flex-col gap-3 px-4 pb-3 lg:flex-row lg:items-end lg:gap-4 lg:px-0">
           <SegmentedTabs
             label={s.scopeLabel}
             value={scope}
@@ -268,7 +249,7 @@ export function HoursScreen({
               { value: "team", label: s.scopeTeam },
               { value: "self", label: s.scopeSelf },
             ]}
-            className="lg:mx-0 lg:overflow-visible lg:px-0"
+            className="lg:w-[260px]"
           />
 
           {isTeamView && (
@@ -283,7 +264,7 @@ export function HoursScreen({
                 onSiteChange={setSiteFilter}
               />
               <Button variant="outline" size="sm" className="lg:ml-auto" onClick={() => { setExportIds(workerFilter !== ALL_FILTER ? [workerFilter] : []); setIsExportOpen(true); }}>
-                <Share2 className="size-4" strokeWidth={2.2} aria-hidden />
+                <Share2 className="size-4" strokeWidth={1.9} aria-hidden />
                 {t.export.label}
               </Button>
             </>
@@ -317,7 +298,7 @@ export function HoursScreen({
 
         {/* Тільки сума годин рабочего; норма/дні/графік — у дашборді шефа. */}
         {monthSummary && (
-          <PeriodView className="mt-3" summary={monthSummary} variant="totalOnly" />
+          <PeriodView className="mt-3" summary={monthSummary} />
         )}
 
         <SalaryCalculator
@@ -342,9 +323,17 @@ export function HoursScreen({
         />
       </div>
 
-      {/* Десктоп: керування вузькою колонкою зліва (кнопки не розтягуються
-          на всю ширину), таблиця змін — ширшою колонкою справа. */}
-      <div className="hidden px-4 lg:grid lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-6">
+      {/* Десктоп: таблиця змін — на всю ширину зліва, праворуч панель 320 px
+          з діями дня, сумою та калькулятором. */}
+      <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+        <MonthEntriesTable
+          entries={visibleEntries}
+          showAuthor={isTeamView}
+          isFiltered={isFiltered}
+          isLoading={isEntriesLoading}
+          onChanged={handleChanged}
+        />
+
         <div className="flex flex-col gap-3">
           {isToday && (
             <DayActions
@@ -354,7 +343,7 @@ export function HoursScreen({
             />
           )}
 
-          {monthSummary && <PeriodView summary={monthSummary} variant="totalOnly" />}
+          {monthSummary && <PeriodView summary={monthSummary} />}
 
           <SalaryCalculator
             key={String(isTeamView)}
@@ -367,14 +356,6 @@ export function HoursScreen({
             onWorkerChange={setWorkerFilter}
           />
         </div>
-
-        <MonthEntriesTable
-          entries={visibleEntries}
-          showAuthor={isTeamView}
-          isFiltered={isFiltered}
-          isLoading={isEntriesLoading}
-          onChanged={handleChanged}
-        />
       </div>
     </div>
   );

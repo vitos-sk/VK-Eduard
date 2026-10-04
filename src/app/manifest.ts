@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 /**
  * Манифест PWA. Next генерирует его сам — отдельный `public/manifest.json` не нужен.
  *
- * `background_color` обязан совпадать с токеном `bg`: иначе при запуске
+ * `background_color` обязан совпадать с токеном `paper`: иначе при запуске
  * с домашнего экрана на секунду вспыхивает белый фон — самая заметная примета
  * «это сайт, а не приложение».
  *
@@ -25,8 +25,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: tokens.bg,
-    theme_color: tokens.bg,
+    background_color: tokens.paper,
+    theme_color: tokens.paper,
     categories: ["business", "productivity"],
     /**
      * `any` и `maskable` — разные картинки, а не одна с двумя целями:

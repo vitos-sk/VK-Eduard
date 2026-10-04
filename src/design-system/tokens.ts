@@ -4,19 +4,16 @@
  * Соответствие проверяет `tokens.test.ts` — значения нельзя менять только здесь.
  */
 export const tokens = {
-  bg: "#f6f3ea",
-  text: "#14210f",
-  textMuted: "#55624d",
-  border: "#ddd7c3",
-  accent: "#f5c43c",
-  brandDeep: "#0d2b08",
+  paper: "#f3ecdc",
+  ticket: "#fffdf7",
+  stub: "#efe5cc",
+  edge: "#e4d8ba",
+  perf: "#cdbf9b",
+  ink: "#1c2716",
+  ink2: "#5e6049",
+  ink3: "#6b664c",
+  green: "#1f5a17",
+  yellow: "#f5c43c",
+  warn: "#8a5a00",
+  err: "#b3261e",
 } as const;
-
-/** Пары «от → до» для миниатюр объектов — имена CSS-переменных из `tokens.css`. */
-export const SITE_GRADIENT_VARS: readonly (readonly [string, string])[] = [
-  ["var(--site-1-from)", "var(--site-1-to)"],
-  ["var(--site-2-from)", "var(--site-2-to)"],
-  ["var(--site-3-from)", "var(--site-3-to)"],
-  ["var(--site-4-from)", "var(--site-4-to)"],
-  ["var(--site-5-from)", "var(--site-5-to)"],
-];

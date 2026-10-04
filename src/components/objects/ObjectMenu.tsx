@@ -79,14 +79,14 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
             disabled={isArchivePending}
             className={cn("text-text-muted", className)}
           >
-            <MoreVertical className="size-[18px]" strokeWidth={2} aria-hidden />
+            <MoreVertical className="size-[18px]" strokeWidth={1.9} aria-hidden />
           </Button>
         </PopoverTrigger>
 
         <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
           <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
             <Link href={`/objects/${siteId}/edit`} onClick={() => setMenuOpen(false)}>
-              <Pencil className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+              <Pencil className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
               {s.menu.edit}
             </Link>
           </Button>
@@ -99,9 +99,9 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
             onClick={handleArchiveToggle}
           >
             {isArchived ? (
-              <ArchiveRestore className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+              <ArchiveRestore className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
             ) : (
-              <Archive className="size-[16px] text-text-muted" strokeWidth={2} aria-hidden />
+              <Archive className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
             )}
             {isArchived ? s.menu.restore : s.menu.archive}
           </Button>
@@ -116,7 +116,7 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
               setDeleteOpen(true);
             }}
           >
-            <Trash2 className="size-[16px]" strokeWidth={2} aria-hidden />
+            <Trash2 className="size-[16px]" strokeWidth={1.9} aria-hidden />
             {s.menu.delete}
           </Button>
         </PopoverContent>

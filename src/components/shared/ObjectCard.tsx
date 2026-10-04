@@ -1,105 +1,61 @@
-import Link from "next/link";
-import { Camera, ChevronRight, Clock, FileText, Users } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
-import { MetaRow } from "@/components/shared/MetaRow";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Thumb } from "@/components/shared/Thumb";
+import { ObjectTicket } from "@/components/ui/object-ticket";
+import { Ticket } from "@/components/ui/ticket";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { objectsStrings } from "@/lib/i18n/parts/objects";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface ObjectCardProps {
   object: SiteObject;
-  /** Стрелка «›» справа — для списка на экране «Об'єкти». */
-  showChevron?: boolean;
-  /** Години й людей за період — boss (метрики з адмінки). */
+  /** Годин и людей за период — boss. */
   stats?: { minutes: number; workerCount: number };
   className?: string;
 }
 
-/** Карточка стройплощадки: миниатюра, название, адрес, мета-строка и статус. */
-export function ObjectCard({
-  object,
-  showChevron = false,
-  stats,
-  className,
-}: ObjectCardProps) {
+/**
+ * Строка списка «Об'єкти»: плоский талон — название, вид работ («демо» или вид),
+ * статус капсом, шеврон справа. Архивный объект помечен «Архів» вместо статуса.
+ */
+export function ObjectCard({ object, stats, className }: ObjectCardProps) {
+  const caption = [
+    object.kind || object.address,
+    stats
+      ? `${formatHoursShort(stats.minutes)} · ${fmt(objectsStrings.workersCount, { n: stats.workerCount })}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  if (object.archivedAt) {
+    return (
+      <Ticket asChild variant="flat" interactive className={cn("flex items-center gap-3", className)}>
+        <Link href={`/objects/${object.id}`}>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[14px] leading-snug font-medium">{object.name}</span>
+            {caption && <span className="block truncate text-[12px] text-ink-2">{caption}</span>}
+            <span className="mt-1 block text-[12px] font-semibold tracking-[0.04em] text-ink-2 uppercase">
+              {t.objects.archivedBadge}
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-ink-3" strokeWidth={1.9} aria-hidden />
+        </Link>
+      </Ticket>
+    );
+  }
+
   return (
-    <Card
-      asChild
-      interactive
-      elevated
-      className={cn(
-        "flex w-full items-stretch gap-3",
-        "lg:flex-col lg:items-stretch lg:gap-0 lg:overflow-hidden lg:p-0",
-        "lg:hover:-translate-y-0.5 lg:hover:border-border-strong lg:hover:shadow-md lg:active:scale-100",
-        object.archivedAt && "opacity-60",
-        className,
-      )}
-    >
-    <Link href={`/objects/${object.id}`}>
-      <Thumb
-        name={object.name}
-        gradient={object.gradient}
-        photoUrl={object.photoUrl}
-        size="md"
-        className="h-auto w-32 self-stretch lg:h-[150px] lg:w-full lg:self-auto lg:rounded-none"
-      />
-
-      <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5 lg:block lg:p-4">
-        <div>
-          <p className="truncate text-[17px] font-bold">{object.name}</p>
-          <p className="mt-0.5 truncate text-[13px] font-medium text-text-muted">
-            {object.address || t.common.dash}
-          </p>
-        </div>
-
-        {/* Статус — в нижней строке: рядом с названием бейдж не оставляет
-            ему читаемой ширины на 390px. Если не влезает и здесь —
-            переносится на свою строку, ничего не обрезая. */}
-        <div className="mt-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 lg:mt-2">
-          <MetaRow
-            className={stats ? "flex-wrap gap-y-0.5" : "shrink-0"}
-            items={[
-              {
-                icon: Camera,
-                label: fmt(t.objects.photosCount, { n: object.photosCount }),
-              },
-              {
-                icon: FileText,
-                label: fmt(t.objects.reportsCount, { n: object.reportsCount }),
-              },
-              ...(stats
-                ? [
-                    { icon: Clock, label: formatHoursShort(stats.minutes) },
-                    {
-                      icon: Users,
-                      label: fmt(objectsStrings.workersCount, { n: stats.workerCount }),
-                    },
-                  ]
-                : []),
-            ]}
-          />
-          {object.archivedAt ? (
-            <Badge>{t.objects.archivedBadge}</Badge>
-          ) : (
-            <StatusBadge status={object.status} />
-          )}
-        </div>
-      </div>
-
-      {showChevron && (
-        <ChevronRight
-          className="my-auto size-5 shrink-0 text-text-dim lg:hidden"
-          strokeWidth={2.4}
-          aria-hidden
-        />
-      )}
-    </Link>
-    </Card>
+    <ObjectTicket
+      href={`/objects/${object.id}`}
+      name={object.name}
+      caption={caption}
+      status={object.status}
+      className={className}
+      trailing={<ChevronRight className="size-4 shrink-0 text-ink-3" strokeWidth={1.9} aria-hidden />}
+    />
   );
 }
+

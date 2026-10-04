@@ -25,7 +25,8 @@ import { t } from "@/lib/i18n";
 import { objectsStrings as s } from "@/lib/i18n/parts/objects";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { initialsOf, type Profile } from "@/modules/auth/profile";
+import { initialsOf } from "@/components/shared/Thumb";
+import type { Profile } from "@/modules/auth/profile";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
@@ -166,18 +167,19 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
         title={t.objects.title}
         action={
           <div className="flex items-center gap-2">
-            <Button asChild variant="accent" size="icon" aria-label={t.objects.addObject}>
+            <Button asChild variant="primary" size="icon-sm" aria-label={t.objects.addObject}>
               <Link href="/objects/new">
-                <Plus className="size-6" strokeWidth={2.6} aria-hidden />
+                <Plus className="size-5" strokeWidth={1.9} aria-hidden />
               </Link>
             </Button>
-            <AvatarLink initials={initialsOf(profile)} />
+            <AvatarLink initials={initialsOf(profile.full_name)} />
           </div>
         }
       />
 
-      <div className="px-4">
+      <div className="px-4 lg:px-0">
         <SegmentedTabs
+          variant="chips"
           options={FILTER_OPTIONS}
           value={filter}
           onChange={setFilter}
@@ -185,16 +187,13 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
         />
 
         {isBoss && (
-          <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <SegmentedTabs
-              options={ARCHIVE_OPTIONS}
-              value={archiveFilter}
-              onChange={setArchiveFilter}
-              label={s.archiveTabsLabel}
-              size="sm"
-              className="lg:mx-0 lg:px-0"
-            />
-          </div>
+          <SegmentedTabs
+            variant="chips"
+            options={ARCHIVE_OPTIONS}
+            value={archiveFilter}
+            onChange={setArchiveFilter}
+            label={s.archiveTabsLabel}
+          />
         )}
 
         <SearchField
@@ -207,32 +206,28 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
         />
 
         {isEntriesLoading ? (
-          <p className="mt-6 text-center text-[14px] font-medium text-text-muted">
+          <p className="mt-6 text-center text-[14px] text-ink-2">
             {t.common.loading}
           </p>
         ) : visibleObjects.length > 0 ? (
           <div
             className={cn(
-              "mt-4 space-y-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0",
+              "mt-3 space-y-2 lg:grid lg:grid-cols-3 lg:gap-3 lg:space-y-0",
             )}
           >
             {visibleObjects.map((object) =>
               isBoss ? (
                 <div key={object.id} className="relative">
-                  <ObjectCard
-                    object={object}
-                    showChevron
-                    className="h-full pr-12 lg:pr-0"
-                  />
+                  <ObjectCard object={object} className="h-full pr-12" />
                   <ObjectMenu
                     siteId={object.id}
                     siteName={object.name}
                     isArchived={object.archivedAt !== null}
-                    className="absolute top-2 right-2 lg:bg-surface/90 lg:backdrop-blur-sm"
+                    className="absolute top-1/2 right-2 -translate-y-1/2"
                   />
                 </div>
               ) : (
-                <ObjectCard key={object.id} object={object} showChevron />
+                <ObjectCard key={object.id} object={object} />
               ),
             )}
           </div>

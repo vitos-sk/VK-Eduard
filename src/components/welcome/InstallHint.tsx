@@ -74,7 +74,7 @@ export function InstallHint() {
   if (promptEvent) {
     return (
       <Button variant="outline" block className="mt-3" onClick={() => { void promptEvent.prompt(); setPromptEvent(null); }}>
-        <Download className="size-[18px]" strokeWidth={2} aria-hidden />
+        <Download className="size-[18px]" strokeWidth={1.9} aria-hidden />
         {t.welcome.install}
       </Button>
     );
@@ -82,8 +82,8 @@ export function InstallHint() {
 
   if (platform === "ios") {
     return (
-      <p className="mt-4 flex items-start gap-2 text-[13px] font-medium text-text-muted">
-        <Share className="mt-px size-4 shrink-0" strokeWidth={2} aria-hidden />
+      <p className="mt-4 flex items-start gap-2 text-[13px] text-ink-2">
+        <Share className="mt-px size-4 shrink-0" strokeWidth={1.9} aria-hidden />
         {t.welcome.installIos}
       </p>
     );

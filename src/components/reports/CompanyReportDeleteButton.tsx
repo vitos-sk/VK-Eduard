@@ -62,7 +62,7 @@ export function CompanyReportDeleteButton({ reportId, onDeleted, className }: Co
         aria-label={s.feed.deleteReport}
         className={cn("text-danger-fg", className)}
       >
-        <Trash2 className="size-[18px]" strokeWidth={2} aria-hidden />
+        <Trash2 className="size-[18px]" strokeWidth={1.9} aria-hidden />
       </Button>
 
       <Modal open={open} onOpenChange={setOpen}>
