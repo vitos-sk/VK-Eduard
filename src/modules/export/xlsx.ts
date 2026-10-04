@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 
 import { t } from "@/lib/i18n";
-import type { ExportMeta, ExportRow } from "./types";
+import { EXPORT_BRAND, type ExportMeta, type ExportRow } from "./types";
 
 const COLUMNS = [
   { header: "Дата", key: "date", width: 12 },
@@ -28,7 +28,7 @@ export async function buildXlsx(
   meta: ExportMeta,
 ): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = meta.companyName || "K work";
+  workbook.creator = meta.companyName || EXPORT_BRAND;
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet(t.export.sheetTitle, {

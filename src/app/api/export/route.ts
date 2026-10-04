@@ -8,7 +8,12 @@ import { getCompanyEntryHoursInRange } from "@/modules/entries/queries";
 import { buildCsv } from "@/modules/export/csv";
 import { buildPdf } from "@/modules/export/pdf";
 import { buildReportsCsv } from "@/modules/export/reportsCsv";
-import type { ExportRow, ReportExportRow } from "@/modules/export/types";
+import {
+  EXPORT_BRAND,
+  EXPORT_FILE_PREFIX,
+  type ExportRow,
+  type ReportExportRow,
+} from "@/modules/export/types";
 import { buildXlsx } from "@/modules/export/xlsx";
 import { getCompanyReportsInRange } from "@/modules/reports/queries";
 import { getAllSites } from "@/modules/sites/queries";
@@ -97,7 +102,7 @@ export async function GET(request: Request) {
         photoCount: report.photo_count,
       }));
 
-    const fileName = `reports_${from}_${to}.csv`;
+    const fileName = `${EXPORT_FILE_PREFIX}_reports_${from}_${to}.csv`;
 
     return new NextResponse(buildReportsCsv(rows), {
       headers: {
@@ -107,10 +112,9 @@ export async function GET(request: Request) {
     });
   }
 
-  const [entryHours, sites, company] = await Promise.all([
+  const [entryHours, sites] = await Promise.all([
     getCompanyEntryHoursInRange(supabase, profile.company_id, from, to),
     getAllSites(supabase),
-    supabase.from("companies").select("name").eq("id", profile.company_id).maybeSingle(),
   ]);
 
   const siteNameById = new Map(sites.map((site) => [site.id, site.name] as const));
@@ -133,11 +137,11 @@ export async function GET(request: Request) {
     }));
 
   const meta = {
-    companyName: company.data?.name ?? "",
+    companyName: EXPORT_BRAND,
     periodTitle: `${formatDateShort(fromDateKey(from))} – ${formatDateShort(fromDateKey(to))}`,
   };
 
-  const fileName = `hours_${from}_${to}.${formatParam}`;
+  const fileName = `${EXPORT_FILE_PREFIX}_hours_${from}_${to}.${formatParam}`;
   const body = await buildExportBody(formatParam, rows, meta);
 
   return new NextResponse(body, {

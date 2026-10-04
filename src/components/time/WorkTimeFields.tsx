@@ -90,7 +90,7 @@ export function TimeField({
           }}
           onBlur={() => setDraft(null)}
           className={cn(
-            "tabular min-w-0 flex-1 border-x border-dashed border-perf bg-transparent text-center text-[20px] font-semibold text-text outline-none [&::-webkit-calendar-picker-indicator]:hidden",
+            "tabular block min-w-0 flex-1 appearance-none border-x border-dashed border-perf bg-transparent text-center text-[17px] font-semibold text-text outline-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:min-w-0 [&::-webkit-date-and-time-value]:text-center [&::-webkit-datetime-edit]:mx-auto [&::-webkit-datetime-edit]:inline-block [&::-webkit-datetime-edit]:p-0",
             invalid && "text-err"
           )}
         />

@@ -35,3 +35,9 @@ export interface ReportExportRow {
   description: string;
   photoCount: number;
 }
+
+/** Название в экспортируемых файлах (имя файла, шапка PDF, автор Excel) — «VK group», а не название компании из базы. */
+export const EXPORT_BRAND = "VK group";
+
+/** Префикс имени файла: `VK-group`. */
+export const EXPORT_FILE_PREFIX = EXPORT_BRAND.replace(/\s+/g, "-");

@@ -5,7 +5,7 @@ import PDFDocument from "pdfkit";
 import { tokens } from "@/design-system/tokens";
 import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import type { ExportMeta, ExportRow } from "./types";
+import { EXPORT_BRAND, type ExportMeta, type ExportRow } from "./types";
 
 /**
  * Golos Text (текст) і JetBrains Mono (години, дати, час) замість штатних шрифтів
@@ -100,7 +100,7 @@ function drawHeader(doc: PDFKit.PDFDocument, meta: ExportMeta) {
   doc
     .font(FONT_TEXT_BOLD)
     .fontSize(16)
-    .text(meta.companyName || "K work", PAGE_MARGIN, PAGE_MARGIN);
+    .text(meta.companyName || EXPORT_BRAND, PAGE_MARGIN, PAGE_MARGIN);
 
   doc
     .font(FONT_TEXT)
