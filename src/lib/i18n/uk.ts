@@ -405,6 +405,7 @@ export const uk = {
     openMenu: "Дії зі звітом",
     edit: "Редагувати",
     addDescriptionTitle: "Додати опис",
+    descriptionTitle: "Опис",
     addDescriptionPlaceholder: "Наприклад: Монтаж покрівельної мембрани",
     save: "Зберегти",
     saved: "Опис збережено",

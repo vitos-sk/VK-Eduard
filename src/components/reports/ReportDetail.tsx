@@ -187,7 +187,7 @@ export function ReportDetail({
         <section>
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-[15px] font-semibold">
-              {description === "" ? t.reportDetail.addDescriptionTitle : t.manualTime.description}
+              {description === "" ? t.reportDetail.addDescriptionTitle : t.reportDetail.descriptionTitle}
             </h2>
 
             {editable && !isEditingDescription && description !== "" && (
