@@ -74,26 +74,32 @@ export function TimeField({
         >
           <ChevronLeft className="size-5" strokeWidth={1.9} aria-hidden />
         </button>
-        <input
-          type="time"
-          step={60}
-          value={draft ?? value}
-          aria-label={label}
-          aria-invalid={invalid || undefined}
-          onChange={(event) => {
-            if (/^\d{2}:\d{2}$/.test(event.target.value)) {
-              setDraft(null);
-              onChange(event.target.value);
-            } else {
-              setDraft(event.target.value);
-            }
-          }}
-          onBlur={() => setDraft(null)}
+        {/* Кнопка-значение: цифры всегда по центру; настоящее поле времени лежит сверху невидимым и ловит нажатие */}
+        <div
           className={cn(
-            "tabular block min-w-0 flex-1 appearance-none border-x border-dashed border-perf bg-transparent text-center text-[17px] font-semibold text-text outline-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:min-w-0 [&::-webkit-date-and-time-value]:text-center [&::-webkit-datetime-edit]:mx-auto [&::-webkit-datetime-edit]:inline-block [&::-webkit-datetime-edit]:p-0",
+            "relative grid min-w-0 flex-1 place-items-center border-x border-dashed border-perf bg-ticket transition-colors hover:bg-primary-tint",
             invalid && "text-err"
           )}
-        />
+        >
+          <span className="tabular text-[17px] font-semibold">{draft ?? value}</span>
+          <input
+            type="time"
+            step={60}
+            value={draft ?? value}
+            aria-label={label}
+            aria-invalid={invalid || undefined}
+            onChange={(event) => {
+              if (/^\d{2}:\d{2}$/.test(event.target.value)) {
+                setDraft(null);
+                onChange(event.target.value);
+              } else {
+                setDraft(event.target.value);
+              }
+            }}
+            onBlur={() => setDraft(null)}
+            className="absolute inset-0 size-full cursor-pointer appearance-none opacity-0"
+          />
+        </div>
         <button
           type="button"
           aria-label={t.manualTime.increaseTime}
