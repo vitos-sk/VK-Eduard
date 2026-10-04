@@ -129,14 +129,15 @@ export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
 
   return (
     <div className="px-4 lg:px-0">
-      <MonthNavigator className="mb-3" date={month} onChange={setMonth} />
+      <MonthNavigator className="mb-3 lg:w-[380px]" date={month} onChange={setMonth} />
 
       <div className="lg:flex lg:items-center lg:gap-4">
         <SearchField
+          compact
           value={query}
           onChange={setQuery}
           placeholder={t.reports.searchPlaceholder}
-          className="lg:flex-1"
+          className="lg:max-w-[360px] lg:flex-1"
         />
 
         <SegmentedTabs

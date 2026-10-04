@@ -304,36 +304,38 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
   return (
     <div className="px-4 pb-2 lg:px-0">
-      <div className="flex items-center gap-2">
-        <MonthNavigator className="min-w-0 flex-1" date={month} onChange={setMonth} />
-        <ExportButton
-          badge={selectedIds.size}
-          onClick={() => openExport(view === "reports" ? "reports" : "hours")}
+      <div className="lg:flex lg:items-center lg:gap-3">
+        <div className="flex items-center gap-2 lg:w-[380px] lg:shrink-0">
+          <MonthNavigator className="min-w-0 flex-1" date={month} onChange={setMonth} />
+          <ExportButton
+            badge={selectedIds.size}
+            onClick={() => openExport(view === "reports" ? "reports" : "hours")}
+          />
+        </div>
+
+        <p className="tabular mt-3 text-[13px] text-ink-2 lg:order-3 lg:mt-0 lg:ml-auto">
+          {fmt(s.team.summary, {
+            hours: formatHoursShort(totalMinutes),
+            people: fmt(s.team.peopleCount, { n: effectiveRows.length }),
+            avg: formatHoursShort(avgMinutes),
+          })}
+        </p>
+
+        <SegmentedTabs
+          className="mt-3 lg:order-2 lg:mt-0 lg:w-[220px] lg:shrink-0"
+          label={t.reports.title}
+          options={VIEW_OPTIONS}
+          value={view}
+          onChange={setView}
         />
       </div>
-
-      <p className="tabular mt-3 text-[13px] text-ink-2">
-        {fmt(s.team.summary, {
-          hours: formatHoursShort(totalMinutes),
-          people: fmt(s.team.peopleCount, { n: effectiveRows.length }),
-          avg: formatHoursShort(avgMinutes),
-        })}
-      </p>
-
-      <SegmentedTabs
-        className="mt-3"
-        label={t.reports.title}
-        options={VIEW_OPTIONS}
-        value={view}
-        onChange={setView}
-      />
 
       {view === "people" ? (
         <>
           <div className="mt-3 flex items-center gap-2">
             <SearchField
               compact
-              className="min-w-0 flex-1"
+              className="min-w-0 flex-1 lg:max-w-[360px] lg:flex-none lg:basis-[360px]"
               value={search}
               onChange={setSearch}
               placeholder={s.team.searchPlaceholder}

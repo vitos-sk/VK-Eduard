@@ -63,7 +63,7 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
       {isBoss && (
         <div className="px-4 lg:px-0">
           <SegmentedTabs
-            className="mb-3"
+            className="mb-3 lg:w-[240px]"
             options={SCREEN_TAB_OPTIONS}
             value={tab}
             onChange={setTab}
