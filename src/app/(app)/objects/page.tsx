@@ -1,42 +1,29 @@
-import { endOfMonth, startOfMonth } from "date-fns";
-
 import { ObjectsScreen } from "@/components/objects/ObjectsScreen";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { getCompanyEntriesInRange, getEntriesFeed } from "@/modules/entries/queries";
-import { aggregateSiteStats } from "@/modules/entries/siteStats";
+import { getCompanyReportsWithPhotos } from "@/modules/reports/queries";
+import { aggregateSiteStats } from "@/modules/reports/siteStats";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { toSiteObject } from "@/modules/sites/present";
 import { getAllSites } from "@/modules/sites/queries";
-import { dateKeyOf } from "@/modules/time/calc";
 
 /**
  * Список объектов компании. Фото/звіти в карточке — не из отдельных
- * счётчиков в базе (их там нет), а посчитаны из своих же записей:
- * рабочий и через RLS не увидел бы чужие, поэтому считать иначе бессмысленно.
+ * счётчиков в базе (их там нет), а посчитаны из звітів (`site_reports`) всей компании; RLS сама
+ * отдаёт шефу все, а рабочему — только его.
  */
 export default async function ObjectsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
   const isBoss = profile.role === "boss";
-  const now = new Date();
 
-  const [sites, entries, monthEntries] = await Promise.all([
+  const [sites, reports] = await Promise.all([
     getAllSites(supabase),
-    getEntriesFeed(supabase, profile.id),
-    // Години/люди по об'єктах за поточний місяць — тільки boss (RLS дає всі записи).
-    isBoss
-      ? getCompanyEntriesInRange(
-          supabase,
-          profile.company_id,
-          dateKeyOf(startOfMonth(now)),
-          dateKeyOf(endOfMonth(now)),
-        )
-      : Promise.resolve(undefined),
+    getCompanyReportsWithPhotos(supabase, profile.company_id),
   ]);
 
-  const stats = aggregateSiteStats(entries);
+  const stats = aggregateSiteStats(reports);
   const photoPaths = sites
     .map((site) => site.photo_path)
     .filter((path): path is string => Boolean(path));
@@ -54,7 +41,6 @@ export default async function ObjectsPage() {
       objects={objects}
       isBoss={isBoss}
       profile={profile}
-      initialEntries={monthEntries}
     />
   );
 }

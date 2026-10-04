@@ -39,8 +39,9 @@ export function AppShell({ profile, openEntry, children }: AppShellProps) {
       {/* Мобильная ветка — без изменений */}
       <div className="lg:hidden">
         <PhoneFrame>
-          {/* pb-[92px]: 68px бар + 24px воздуха, чтобы контент не заезжал под него */}
-          <div className="h-full overflow-y-auto overscroll-contain pb-[92px]">
+          {/* Бар — flex-элемент под скроллом, а не absolute: он всегда у низа
+              фрейма, даже когда iOS меняет высоту вьюпорта. pb-6 — воздух под FAB. */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
             {children}
           </div>
 

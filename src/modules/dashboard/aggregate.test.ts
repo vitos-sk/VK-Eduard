@@ -34,32 +34,28 @@ function makeEntry(overrides: Partial<WorkEntryWithNames>): WorkEntryWithNames {
 }
 
 describe("buildOverview", () => {
-  it("рахує суму годин, середнє на робочий день і кількість об'єктів", () => {
+  it("рахує суму годин, людей, об'єкти і години без об'єкта", () => {
     const overview = buildOverview([
-      makeEntry({ work_date: "2026-09-01", site_id: "site-1", total_minutes: 480 }),
-      makeEntry({ work_date: "2026-09-01", site_id: "site-2", total_minutes: 120 }),
-      makeEntry({ work_date: "2026-09-02", site_id: "site-1", total_minutes: 300 }),
+      makeEntry({ author_id: "a1", site_id: "site-1", total_minutes: 480 }),
+      makeEntry({ author_id: "a2", site_id: "site-2", total_minutes: 120 }),
+      makeEntry({ author_id: "a1", site_id: null, total_minutes: 60 }),
     ]);
 
-    expect(overview.totalMinutes).toBe(900);
-    expect(overview.avgPerWorkdayMinutes).toBe(450); // 900 / 2 робочих дня
-    expect(overview.objectsWorkedCount).toBe(2);
-  });
-
-  it("порожній список не ділить на нуль", () => {
-    const overview = buildOverview([]);
-
     expect(overview).toEqual({
-      totalMinutes: 0,
-      avgPerWorkdayMinutes: 0,
-      objectsWorkedCount: 0,
+      totalMinutes: 660,
+      workersCount: 2,
+      objectsWorkedCount: 2,
+      noSiteMinutes: 60,
     });
   });
 
-  it("записи без об'єкта (site_id null) не рахуються в objectsWorkedCount", () => {
-    const overview = buildOverview([makeEntry({ site_id: null })]);
-
-    expect(overview.objectsWorkedCount).toBe(0);
+  it("порожній список — всі нулі", () => {
+    expect(buildOverview([])).toEqual({
+      totalMinutes: 0,
+      workersCount: 0,
+      objectsWorkedCount: 0,
+      noSiteMinutes: 0,
+    });
   });
 });
 
@@ -97,21 +93,39 @@ describe("buildTopSites / buildTopWorkers", () => {
 });
 
 describe("buildTodayOverview", () => {
-  it("рахує активних сьогодні і відкриті зміни", () => {
-    const overview = buildTodayOverview([
-      makeEntry({ author_id: "a1", author_full_name: "Іван", ended_at: "16:00", total_minutes: 480 }),
-      makeEntry({ author_id: "a2", author_full_name: "Петро", ended_at: null, total_minutes: null }),
-    ]);
+  const workers = [
+    { id: "a1", name: "Іван" },
+    { id: "a2", name: "Петро" },
+    { id: "a3", name: "Олег" },
+  ];
 
-    expect(overview.activeCount).toBe(2);
-    expect(overview.openShifts).toEqual([{ id: "a2", name: "Петро" }]);
+  it("показує тих, хто працює зараз, і тих, у кого немає записів", () => {
+    const overview = buildTodayOverview(
+      [
+        makeEntry({ author_id: "a1", ended_at: "16:00", total_minutes: 480 }),
+        makeEntry({
+          author_id: "a2",
+          author_full_name: "Петро",
+          site_name: "Об'єкт Б",
+          started_at: "07:30:00",
+          ended_at: null,
+          total_minutes: null,
+        }),
+      ],
+      workers,
+    );
+
+    expect(overview.workingNow).toEqual([
+      { id: "a2", name: "Петро", siteName: "Об'єкт Б", since: "07:30:00" },
+    ]);
+    expect(overview.withoutEntries).toEqual([{ id: "a3", name: "Олег" }]);
     expect(overview.totalMinutes).toBe(480);
   });
 
-  it("без записів сьогодні — всі нулі", () => {
-    expect(buildTodayOverview([])).toEqual({
-      activeCount: 0,
-      openShifts: [],
+  it("без записів сьогодні — ніхто не працює, усі без записів", () => {
+    expect(buildTodayOverview([], workers)).toEqual({
+      workingNow: [],
+      withoutEntries: workers,
       totalMinutes: 0,
     });
   });

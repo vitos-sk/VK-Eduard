@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Building2, Plus } from "lucide-react";
 
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
-import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
-import { ObjectMenu } from "@/components/objects/ObjectMenu";
 import {
-  addMonthsSafe,
-  useCompanyMonthEntries,
-} from "@/components/objects/useCompanyMonthEntries";
+  ANY,
+  EMPTY_FILTERS,
+  ObjectsFilters,
+  type ObjectsFiltersState,
+} from "@/components/objects/ObjectsFilters";
+import { ObjectMenu } from "@/components/objects/ObjectMenu";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { FiltersDrawer } from "@/components/shared/FiltersDrawer";
 import { ObjectCard } from "@/components/shared/ObjectCard";
@@ -22,14 +23,20 @@ import {
 } from "@/components/shared/SegmentedTabs";
 import { t } from "@/lib/i18n";
 import { objectsStrings as s } from "@/lib/i18n/parts/objects";
-import type { WorkEntryWithNames } from "@/modules/entries/types";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+import { getCompanyEntriesInRange } from "@/modules/entries/queries";
+import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
+
+/** Границы «без ограничения» для запроса записей, когда задан только работник или одна дата. */
+const MIN_DATE = "2000-01-01";
+const MAX_DATE = "2100-12-31";
 
 /** «Всі» + три статуса объектов из справочника 3.4. */
-type ObjectFilter = "all" | "in_progress" | "not_started" | "completed";
+type ObjectFilter = "all" | "in_progress" | "not_started" | "completed" | "paused";
 
 const FILTER_OPTIONS: readonly SegmentedOption<ObjectFilter>[] = [
   { value: "all", label: t.objects.tabs.all },
@@ -46,36 +53,7 @@ const ARCHIVE_OPTIONS: readonly SegmentedOption<ArchiveFilter>[] = [
   { value: "all", label: s.archiveTabs.all },
 ];
 
-interface SiteStat {
-  minutes: number;
-  workerCount: number;
-}
-
-/** Хвилини й унікальні люди по кожному об'єкту; записи без об'єкта пропускаємо. */
-function aggregateBySite(
-  entries: readonly Pick<WorkEntryWithNames, "site_id" | "author_id" | "total_minutes">[],
-): Map<string, SiteStat> {
-  const workers = new Map<string, Set<string>>();
-  const result = new Map<string, SiteStat>();
-
-  for (const entry of entries) {
-    if (!entry.site_id) continue;
-    const set = workers.get(entry.site_id) ?? new Set<string>();
-    set.add(entry.author_id);
-    workers.set(entry.site_id, set);
-    const prev = result.get(entry.site_id) ?? { minutes: 0, workerCount: 0 };
-    result.set(entry.site_id, {
-      minutes: prev.minutes + (entry.total_minutes ?? 0),
-      workerCount: set.size,
-    });
-  }
-
-  return result;
-}
-
 interface ObjectsScreenProps {
-  /** Записи компанії за поточний місяць (тільки boss) — для годин на картках. */
-  initialEntries?: readonly WorkEntryWithNames[];
   objects: readonly SiteObject[];
   /** Шеф бачить архів, місячні години і статистику по компанії. */
   isBoss: boolean;
@@ -88,23 +66,78 @@ interface ObjectsScreenProps {
  * Фильтр и поиск считаются на клиенте поверх готового списка: масштаб
  * компании (десятки объектов) этого не замечает.
  */
-export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: ObjectsScreenProps) {
-  const [filter, setFilter] = useState<ObjectFilter>("all");
+export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) {
+  const [filters, setFilters] = useState<ObjectsFiltersState>(EMPTY_FILTERS);
+  const [workers, setWorkers] = useState<readonly Worker[]>([]);
+  // `null` — записи для фильтра по дате/работнику ещё грузятся (или фильтр не задан).
+  const [activeSiteIds, setActiveSiteIds] = useState<ReadonlySet<string> | null>(null);
+  const filter: ObjectFilter = filters.status;
+  const setFilter = (status: ObjectFilter) => setFilters((prev) => ({ ...prev, status }));
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>("active");
-  const { month, setMonth, entries, isLoading } = useCompanyMonthEntries(
-    profile.company_id,
-    isBoss ? (initialEntries ?? []) : null,
-  );
-  const siteStats = useMemo(() => aggregateBySite(entries), [entries]);
-  const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
   const [query, setQuery] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const needsEntries =
+    filters.dateFrom !== "" || filters.dateTo !== "" || filters.workerId !== ANY;
+  const isFiltersActive =
+    filters.status !== "all" || filters.siteId !== ANY || needsEntries;
+
+  useEffect(() => {
+    if (!isBoss) return;
+    let cancelled = false;
+    getCompanyWorkers(createClient(), profile.company_id)
+      .then((data) => {
+        if (!cancelled) setWorkers(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isBoss, profile.company_id]);
+
+  // Дата и работник — свойства записей времени, а не самого объекта: берём
+  // объекты, по которым в выбранном периоде есть смены (нужного работника).
+  const { dateFrom, dateTo, workerId } = filters;
+  useEffect(() => {
+    if (!needsEntries) return;
+    let cancelled = false;
+    getCompanyEntriesInRange(
+      createClient(),
+      profile.company_id,
+      dateFrom || MIN_DATE,
+      dateTo || MAX_DATE,
+    )
+      .then((entries) => {
+        if (cancelled) return;
+        const ids = new Set<string>();
+        for (const entry of entries) {
+          if (entry.site_id && (workerId === ANY || entry.author_id === workerId)) {
+            ids.add(entry.site_id);
+          }
+        }
+        setActiveSiteIds(ids);
+      })
+      .catch(() => {
+        if (!cancelled) setActiveSiteIds(new Set());
+      });
+    return () => {
+      cancelled = true;
+      setActiveSiteIds(null);
+    };
+  }, [needsEntries, dateFrom, dateTo, workerId, profile.company_id]);
+
+  const isEntriesLoading = needsEntries && activeSiteIds === null;
 
   const visibleObjects = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("uk");
 
     return objects.filter((object) => {
       if (filter !== "all" && object.status !== filter) {
+        return false;
+      }
+
+      if (filters.siteId !== ANY && object.id !== filters.siteId) return false;
+      if (needsEntries && (activeSiteIds === null || !activeSiteIds.has(object.id))) {
         return false;
       }
 
@@ -125,7 +158,7 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
         object.address.toLocaleLowerCase("uk").includes(needle)
       );
     });
-  }, [objects, filter, archiveFilter, isBoss, query]);
+  }, [objects, filter, filters.siteId, needsEntries, activeSiteIds, archiveFilter, isBoss, query]);
 
   return (
     <div className="pb-6">
@@ -161,12 +194,6 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
               size="sm"
               className="lg:mx-0 lg:px-0"
             />
-            <PeriodNavigator
-              className="lg:w-[340px] lg:shrink-0"
-              title={monthTitle}
-              onPrev={() => setMonth((m) => addMonthsSafe(m, -1))}
-              onNext={() => setMonth((m) => addMonthsSafe(m, 1))}
-            />
           </div>
         )}
 
@@ -176,13 +203,17 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
           onChange={setQuery}
           placeholder={t.objects.searchPlaceholder}
           onFilterClick={() => setIsFiltersOpen(true)}
+          filterActive={isFiltersActive}
         />
 
-        {visibleObjects.length > 0 ? (
+        {isEntriesLoading ? (
+          <p className="mt-6 text-center text-[14px] font-medium text-text-muted">
+            {t.common.loading}
+          </p>
+        ) : visibleObjects.length > 0 ? (
           <div
             className={cn(
-              "mt-4 space-y-3 transition-opacity lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0",
-              isBoss && isLoading && "opacity-60",
+              "mt-4 space-y-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0",
             )}
           >
             {visibleObjects.map((object) =>
@@ -191,7 +222,6 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
                   <ObjectCard
                     object={object}
                     showChevron
-                    stats={siteStats.get(object.id) ?? { minutes: 0, workerCount: 0 }}
                     className="h-full pr-12 lg:pr-0"
                   />
                   <ObjectMenu
@@ -217,7 +247,22 @@ export function ObjectsScreen({ objects, isBoss, profile, initialEntries }: Obje
         )}
       </div>
 
-      <FiltersDrawer open={isFiltersOpen} onOpenChange={setIsFiltersOpen} />
+      <FiltersDrawer
+        open={isFiltersOpen}
+        onOpenChange={setIsFiltersOpen}
+        onReset={() => setFilters(EMPTY_FILTERS)}
+      >
+        <ObjectsFilters
+          value={filters}
+          onChange={setFilters}
+          sites={objects
+            .filter((object) => isBoss || object.archivedAt === null)
+            .map((object) => ({ id: object.id, name: object.name }))}
+          workers={
+            isBoss ? workers.map((worker) => ({ id: worker.id, name: worker.full_name })) : undefined
+          }
+        />
+      </FiltersDrawer>
     </div>
   );
 }

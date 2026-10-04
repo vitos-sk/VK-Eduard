@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types.gen";
+import { categoryLabel } from "./categoryLabels";
 import type {
   ReportPhoto,
   SiteReport,
@@ -79,6 +80,26 @@ export async function getReportsFeed(
   return ((data ?? []) as ReportRow[]).map(withCategoryIds);
 }
 
+/**
+ * Усі звіти компанії з фото — для лічильників у картках об'єктів. Об'єкт
+ * спільний, тож рахувати треба по звітах усіх авторів; RLS сама віддає шефу
+ * все по компанії, працівнику — тільки його звіти.
+ */
+export async function getCompanyReportsWithPhotos(
+  supabase: Client,
+  companyId: string,
+): Promise<SiteReportWithPhotos[]> {
+  const { data, error } = await supabase
+    .from("site_reports")
+    .select("*, report_photos(*), report_categories(category_id)")
+    .eq("company_id", companyId)
+    .not("site_id", "is", null);
+
+  if (error) throw error;
+
+  return ((data ?? []) as ReportRow[]).map(withCategoryIds);
+}
+
 /** Усі звіти по об'єкту (всі автори) — для шефа на сторінці об'єкта. RLS сама обмежує компанією. */
 export async function getSiteReportsFeed(
   supabase: Client,
@@ -120,7 +141,7 @@ type CompanyReportRow = SiteReport & {
   profiles: { full_name: string } | null;
   sites: { name: string } | null;
   report_photos: { id: string }[];
-  report_categories: { work_categories: { label: string } | null }[];
+  report_categories: { work_categories: { label: string; is_other: boolean } | null }[];
 };
 
 /** Звіти компанії за діапазон дат — для CSV-експорту «Звіти». */
@@ -133,7 +154,7 @@ export async function getCompanyReportsInRange(
   const { data, error } = await supabase
     .from("site_reports")
     .select(
-      "*, profiles(full_name), sites(name), report_photos(id), report_categories(work_categories(label))",
+      "*, profiles(full_name), sites(name), report_photos(id), report_categories(work_categories(label, is_other))",
     )
     .eq("company_id", companyId)
     .gte("work_date", fromDate)
@@ -148,7 +169,7 @@ export async function getCompanyReportsInRange(
       author_full_name: profiles?.full_name ?? "",
       site_name: sites?.name ?? null,
       category_labels: report_categories
-        .map((item) => item.work_categories?.label ?? "")
+        .map((item) => (item.work_categories ? categoryLabel(item.work_categories, report.other_text) : ""))
         .filter((label) => label !== ""),
       photo_count: report_photos.length,
     }),

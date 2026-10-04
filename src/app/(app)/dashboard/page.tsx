@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       profile={profile}
       initialPeriodEntries={periodEntries}
       todayEntries={todayEntries}
-      activeWorkersCount={workers.length}
+      workers={workers.map((worker) => ({ id: worker.id, name: worker.full_name }))}
     />
   );
 }

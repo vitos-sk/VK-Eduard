@@ -85,6 +85,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
           label,
           sort_order: nextSortOrder,
           archived_at: null,
+          is_other: false,
         },
       ]);
       setName("");

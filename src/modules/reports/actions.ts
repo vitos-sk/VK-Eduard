@@ -8,6 +8,7 @@ import { t } from "@/lib/i18n";
 import { companyStrings } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
+import { OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
 import {
   isBreakPairValid,
   isDurationValid,
@@ -31,6 +32,8 @@ export interface ReportInput {
   siteId: string | null;
   description: string;
   categoryIds: string[];
+  /** Текст категорії «Інше»; ігнорується, якщо «Інше» не вибрано. */
+  otherText: string;
 }
 
 export interface CreateReportInput extends ReportInput {
@@ -42,13 +45,41 @@ export interface CreateReportState extends ReportActionState {
   reportId: string | null;
 }
 
+type ServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Текст «Інше», який треба зберегти: обрізаний, а якщо «Інше» серед
+ * категорій нема — порожній (щоб не лишався «хвіст» від знятої категорії).
+ * `null` — «Інше» вибрано, а тексту нема: звіт не зберігаємо.
+ */
+async function resolveOtherText(
+  supabase: ServerClient,
+  categoryIds: readonly string[],
+  otherText: string,
+): Promise<string | null> {
+  if (categoryIds.length === 0) return "";
+
+  const { data, error } = await supabase
+    .from("work_categories")
+    .select("id")
+    .in("id", [...categoryIds])
+    .eq("is_other", true);
+
+  if (error) throw error;
+  if (!data || data.length === 0) return "";
+
+  const text = otherText.trim().slice(0, OTHER_TEXT_MAX_LENGTH);
+
+  return text === "" ? null : text;
+}
+
 /**
  * Перезаписує повний набір категорій звіту: видаляє старі зв'язки і вставляє
  * нові одним запитом — простіше й дешевше за diff, а звітів мало категорій
  * (одиниці), тому зайвої роботи тут не буде.
  */
 async function replaceReportCategories(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ServerClient,
   reportId: string,
   categoryIds: readonly string[],
 ): Promise<void> {
@@ -98,6 +129,19 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
   }
 
   const supabase = await createClient();
+
+  let otherText: string | null;
+
+  try {
+    otherText = await resolveOtherText(supabase, input.categoryIds, input.otherText);
+  } catch {
+    return { error: t.reportForm.saveError, reportId: null };
+  }
+
+  if (otherText === null) {
+    return { error: t.reportForm.otherRequired, reportId: null };
+  }
+
   const { data, error } = await supabase
     .from("site_reports")
     .insert({
@@ -107,6 +151,7 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
       site_id: input.siteId,
       work_date: input.workDate,
       description: input.description,
+      other_text: otherText,
     })
     .select("id")
     .single();
@@ -158,12 +203,26 @@ export async function updateReport(
   }
 
   const supabase = await createClient();
+
+  let otherText: string | null;
+
+  try {
+    otherText = await resolveOtherText(supabase, input.categoryIds, input.otherText);
+  } catch {
+    return { error: t.reportForm.saveError };
+  }
+
+  if (otherText === null) {
+    return { error: t.reportForm.otherRequired };
+  }
+
   const { data, error } = await supabase
     .from("site_reports")
     .update({
       site_id: input.siteId,
       work_date: input.workDate,
       description: input.description,
+      other_text: otherText,
     })
     .eq("id", reportId)
     .select("id");
@@ -222,6 +281,7 @@ export async function updateReportDescription(
 export async function updateReportCategories(
   reportId: string,
   categoryIds: string[],
+  otherText: string,
 ): Promise<ReportActionState> {
   const profile = await getProfile();
 
@@ -232,6 +292,21 @@ export async function updateReportCategories(
   const supabase = await createClient();
 
   try {
+    const resolvedText = await resolveOtherText(supabase, categoryIds, otherText);
+
+    if (resolvedText === null) {
+      return { error: t.reportForm.otherRequired };
+    }
+
+    const { data, error } = await supabase
+      .from("site_reports")
+      .update({ other_text: resolvedText })
+      .eq("id", reportId)
+      .select("id");
+
+    if (error) throw error;
+    if (!data || data.length === 0) return { error: t.reportDetail.saveRejected };
+
     await replaceReportCategories(supabase, reportId, categoryIds);
   } catch {
     return { error: t.reportDetail.saveError };

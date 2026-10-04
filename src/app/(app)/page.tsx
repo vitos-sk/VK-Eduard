@@ -1,120 +1,170 @@
+import { startOfWeek } from "date-fns";
+
+import { DayReportCard } from "@/components/home/DayReportCard";
+import { Greeting } from "@/components/home/Greeting";
 import { HomeHeader } from "@/components/home/HomeHeader";
-import { WorkTimeCard } from "@/components/home/WorkTimeCard";
+import { HomeObjectCard } from "@/components/home/HomeObjectCard";
+import { LastReportCard } from "@/components/home/LastReportCard";
+import { WeekStats } from "@/components/home/WeekStats";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ObjectCard } from "@/components/shared/ObjectCard";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { fmt, formatDateLong } from "@/lib/format";
+import { formatDateFull } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { initialsOf, requireProfile } from "@/modules/auth/session";
 import { getEntriesFeed } from "@/modules/entries/queries";
-import { aggregateSiteStats } from "@/modules/entries/siteStats";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
+import { getCompanyReportsWithPhotos } from "@/modules/reports/queries";
+import { reportState } from "@/modules/reports/reportState";
+import { aggregateSiteStats } from "@/modules/reports/siteStats";
 import { toSiteObject } from "@/modules/sites/present";
 import { getActiveSites } from "@/modules/sites/queries";
+import { dateKeyOf, sumTotalMinutes } from "@/modules/time/calc";
 
-/** Сколько объектов показывать в блоке «Мої об'єкти» на главной. */
-const HOME_OBJECTS_LIMIT = 3;
+/** Сколько объектов показывать в ленте «Мої об'єкти» на главной. */
+const HOME_OBJECTS_LIMIT = 6;
 
+/**
+ * Головна працівника: подати звіт за день, мої об'єкти, підсумок тижня,
+ * останній звіт. Ніяких таймерів і форм — години додаються через «+».
+ */
 export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [entries, sites] = await Promise.all([
+  const [entries, companyReports, sites] = await Promise.all([
     getEntriesFeed(supabase, profile.id),
+    getCompanyReportsWithPhotos(supabase, profile.company_id),
     getActiveSites(supabase),
   ]);
 
-  const stats = aggregateSiteStats(entries);
+  const now = new Date();
+  const todayKey = dateKeyOf(now);
+  const weekStartKey = dateKeyOf(startOfWeek(now, { weekStartsOn: 1 }));
 
-  // «Мої» — те, на яких я реально працював, найсвіжіші зверху; поки історії
-  // немає (новий співробітник), показуємо перші активні об'єкти компанії —
-  // порожній блок на головній нічого не пояснює новачку.
-  const recentSiteIds = [...stats.entries()]
+  // Лічильники в картках об'єктів — по всіх звітах об'єкта; «мої» — де я писав звіти.
+  const stats = aggregateSiteStats(companyReports);
+  const myReports = companyReports
+    .filter((report) => report.author_id === profile.id)
+    .sort(
+      (a, b) =>
+        b.work_date.localeCompare(a.work_date) || b.created_at.localeCompare(a.created_at),
+    );
+
+  const isReady = (report: (typeof myReports)[number]) =>
+    reportState(report, report.report_photos.length) === "ready";
+
+  const todayReport = myReports.find((report) => report.work_date === todayKey && isReady(report));
+  const lastReport = myReports.find(isReady) ?? myReports[0] ?? null;
+
+  // Мої об'єкти: найсвіжіші за моїми звітами; новачку — перші активні об'єкти.
+  const recentSiteIds = [
+    ...aggregateSiteStats(myReports).entries(),
+  ]
     .sort((a, b) => (b[1].lastWorkedDate ?? "").localeCompare(a[1].lastWorkedDate ?? ""))
     .map(([siteId]) => siteId);
-
   const orderedSites = [
     ...recentSiteIds.map((id) => sites.find((site) => site.id === id)).filter(Boolean),
     ...sites.filter((site) => !recentSiteIds.includes(site.id)),
   ].slice(0, HOME_OBJECTS_LIMIT) as typeof sites;
 
-  const homePhotoPaths = orderedSites
+  // Тиждень: з понеділка по сьогодні.
+  const weekEntries = entries.filter((entry) => entry.work_date >= weekStartKey);
+  const weekReports = myReports.filter(
+    (report) => report.work_date >= weekStartKey && isReady(report),
+  );
+  const weekSiteIds = new Set(
+    weekEntries.map((entry) => entry.site_id).filter((id): id is string => Boolean(id)),
+  );
+
+  const lastReportSite = lastReport ? sites.find((site) => site.id === lastReport.site_id) : null;
+
+  const objectPhotoPaths = orderedSites
     .map((site) => site.photo_path)
     .filter((path): path is string => Boolean(path));
-  const homePhotoUrls = await getSignedPhotoUrls(supabase, homePhotoPaths, "site-photos");
+  const lastReportPhotoPath = lastReport?.report_photos[0]?.storage_path;
+  const [objectPhotoUrls, reportPhotoUrls] = await Promise.all([
+    getSignedPhotoUrls(supabase, objectPhotoPaths, "site-photos"),
+    getSignedPhotoUrls(supabase, lastReportPhotoPath ? [lastReportPhotoPath] : []),
+  ]);
+
   const homeObjects = orderedSites.map((site) =>
     toSiteObject(
       site,
       stats.get(site.id),
-      site.photo_path ? (homePhotoUrls.get(site.photo_path) ?? null) : null,
+      site.photo_path ? (objectPhotoUrls.get(site.photo_path) ?? null) : null,
     ),
   );
 
+  const lastReportMinutes = lastReport
+    ? sumTotalMinutes(entries.filter((entry) => entry.work_date === lastReport.work_date))
+    : 0;
+
   return (
-    <div className="px-4 pb-6 lg:px-0">
+    <div className="mx-auto max-w-[640px] px-4 pb-6 lg:px-0">
       <HomeHeader initials={initialsOf(profile)} />
 
       <div className="mt-6">
         <h1 className="text-[26px] leading-tight font-extrabold tracking-tight">
-          {fmt(t.home.greeting, { name: profile.full_name })}
+          <Greeting name={profile.full_name} />
         </h1>
-        <p className="mt-1 text-[15px] font-medium text-text-muted">
-          {formatDateLong(new Date())}
-        </p>
+        <p className="mt-1 text-[15px] font-medium text-text-muted">{formatDateFull(now)}</p>
       </div>
 
-      {/* Мобільна колонка — без змін, прихована від lg */}
-      <div className="lg:hidden">
-        <WorkTimeCard className="mt-5" sites={sites} entries={entries} />
+      <DayReportCard className="mt-5" reportId={todayReport?.id ?? null} />
 
-        <SectionHeader
-          className="mt-6"
-          title={t.home.myObjects}
-          action={{ label: t.home.viewAll, href: "/objects" }}
+      <SectionHeader
+        className="mt-6"
+        title={t.home.myObjects}
+        action={{ label: t.home.viewAll, href: "/objects" }}
+      />
+      {homeObjects.length > 0 ? (
+        <div className="-mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
+          {homeObjects.map((object) => (
+            <HomeObjectCard
+              key={object.id}
+              object={object}
+              className="w-[190px] shrink-0 snap-start"
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          className="mt-3"
+          title={t.objects.emptyTitle}
+          description={t.objects.emptyHint}
         />
+      )}
 
-        {homeObjects.length > 0 ? (
-          <div className="mt-3 space-y-3">
-            {homeObjects.map((object) => (
-              <ObjectCard key={object.id} object={object} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            className="mt-3"
-            title={t.objects.emptyTitle}
-            description={t.objects.emptyHint}
+      <SectionHeader className="mt-6" title={t.home.week.title} />
+      <WeekStats
+        className="mt-2"
+        minutes={sumTotalMinutes(weekEntries)}
+        reportsCount={weekReports.length}
+        objectsCount={weekSiteIds.size}
+      />
+
+      {lastReport && (
+        <>
+          <SectionHeader
+            className="mt-6"
+            title={t.home.lastReport.title}
+            action={{ label: t.home.lastReport.open, href: `/reports/${lastReport.id}` }}
           />
-        )}
-      </div>
-
-      {/* Десктопна розкладка — видима тільки від lg. Таймер горизонтальною
-          смугою на всю ширину (замість вузької картки з порожнечею
-          справа), нижче — сітка об'єктів на всю ширину контейнера. */}
-      <div className="hidden lg:block lg:mt-6">
-        <WorkTimeCard sites={sites} entries={entries} />
-
-        <SectionHeader
-          className="mt-8"
-          title={t.home.myObjects}
-          action={{ label: t.home.viewAll, href: "/objects" }}
-        />
-
-        {homeObjects.length > 0 ? (
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {homeObjects.map((object) => (
-              <ObjectCard key={object.id} object={object} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            className="mt-4"
-            title={t.objects.emptyTitle}
-            description={t.objects.emptyHint}
+          <LastReportCard
+            reportId={lastReport.id}
+            workDate={lastReport.work_date}
+            siteId={lastReport.site_id}
+            siteName={lastReportSite?.name ?? t.hours.noObject}
+            siteAddress={lastReportSite?.address ?? ""}
+            thumbUrl={lastReportPhotoPath ? (reportPhotoUrls.get(lastReportPhotoPath) ?? null) : null}
+            minutes={lastReportMinutes}
+            photosCount={lastReport.report_photos.length}
+            worksCount={lastReport.category_ids.length}
+            isReady={isReady(lastReport)}
           />
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

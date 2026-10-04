@@ -3,7 +3,7 @@
  * Ни одной строки текста не должно попадать в JSX напрямую.
  *
  * Плейсхолдеры в фигурных скобках подставляются через `fmt()` из `@/lib/format`:
- * `fmt(t.home.greeting, { name: "Віталік" })`.
+ * `fmt(t.home.greetingMorning, { name: "Віталік" })`.
  *
  * Структура файла заложена под будущие локали (de, en) — добавится
  * соседний файл с тем же типом.
@@ -22,6 +22,7 @@ export const uk = {
     filters: "Фільтри",
     apply: "Застосувати",
     reset: "Скинути",
+    loading: "Завантаження…",
     viewAll: "Дивитися всі",
     notFound: "Нічого не знайдено",
     notFoundHint: "Спробуйте змінити фільтри або пошуковий запит",
@@ -133,7 +134,10 @@ export const uk = {
 
   /** Экран «Головна». */
   home: {
-    greeting: "Доброго ранку, {name} 👋",
+    greetingMorning: "Доброго ранку, {name} 👋",
+    greetingDay: "Доброго дня, {name} 👋",
+    greetingEvening: "Доброго вечора, {name} 👋",
+    greetingNeutral: "Вітаю, {name} 👋",
     workTime: "Робочий день",
     objectLabel: "Об'єкт",
     objectPlaceholder: "Оберіть об'єкт",
@@ -148,6 +152,28 @@ export const uk = {
     finishWork: "Завершити роботу",
     viewReport: "Переглянути звіт",
     myObjects: "Мої об'єкти",
+    dayReport: {
+      today: "Сьогодні",
+      title: "Звіт за день",
+      hint: "Додайте виконані роботи, години, об'єкт та фото.",
+      submitted: "Подано",
+      notSubmitted: "Не подано",
+      create: "Створити звіт за сьогодні",
+      view: "Переглянути звіт за сьогодні",
+    },
+    week: {
+      title: "Цей тиждень",
+      worked: "Відпрацьовано",
+      reports: "Звітів",
+      objects: "Об'єкти",
+    },
+    lastReport: {
+      title: "Останній звіт",
+      open: "Відкрити",
+      photos: "{n} фото",
+      works: "Видів робіт: {n}",
+      noDescription: "Без опису",
+    },
     viewAll: "Дивитися всі",
     postShift: {
       title: "Де ви сьогодні працювали?",
@@ -405,6 +431,9 @@ export const uk = {
   reportForm: {
     title: "Новий звіт",
     categoriesLabel: "Вид робіт",
+    otherLabel: "Яку роботу ви виконували?",
+    otherPlaceholder: "Наприклад: завозили матеріал на об'єкт",
+    otherRequired: "Опишіть, яку роботу ви виконували в «Інше»",
     repeatYesterday: "Повторити останній звіт",
     hint: "Опишіть, що зробили сьогодні — фото можна додати одразу після збереження",
     addHours: "Вказати відпрацьований час",
@@ -424,14 +453,6 @@ export const uk = {
       title: "Додати час вручну",
       description: "Додайте години, якщо забули натиснути «Почати роботу»",
     },
-    startWork: {
-      title: "Почати роботу",
-      description: "Запустити таймер робочого часу",
-    },
-    startBreak: {
-      title: "Почати перерву",
-      description: "Зафіксувати перерву в роботі",
-    },
     createReport: {
       title: "Створити звіт",
       description: "Швидко створити звіт по роботі",
@@ -440,8 +461,6 @@ export const uk = {
       title: "Дашборд",
       description: "Загальна статистика по компанії",
     },
-    breakStarted: "Перерву розпочато",
-    workStarted: "Роботу розпочато",
   },
 
   /** Экран «Додати час вручну». */
@@ -506,15 +525,20 @@ export const uk = {
     periodQuarter: "Квартал",
     periodYear: "Рік",
     totalHours: "Годин за період",
-    avgPerWorkday: "Ø на робочий день",
-    activeWorkers: "Активних співробітників",
+    /** {n} — скільки людей працювало, {total} — всього в команді. */
+    workersWorked: "Працювало людей",
+    workersWorkedValue: "{n} з {total}",
     objectsWorked: "Об'єктів у роботі",
-    todayTitle: "Сьогодні",
-    /** {active} — скільки відмітились, {total} — всього активних співробітників. */
-    todayActive: "{active} з {total} активні",
-    todayOpen: "Відкрито",
+    noSiteHours: "Годин без об'єкта",
+    nowTitle: "Зараз на роботі",
+    nowEmpty: "Зараз ніхто не працює",
+    /** {time} — час початку зміни. */
+    nowSince: "з {time}",
+    noSite: "Без об'єкта",
     /** {hours} — форматована рядком через formatHoursShort. */
-    todayHoursLogged: "{hours} відмічено сьогодні",
+    todayHoursLogged: "Відмічено сьогодні: {hours}",
+    /** {names} — імена через кому. */
+    withoutEntries: "Ще без запису сьогодні: {names}",
     chartTitle: "Динаміка годин",
     chartEmpty: "Немає годин за цей період",
     topSitesTitle: "Топ-об'єкти",

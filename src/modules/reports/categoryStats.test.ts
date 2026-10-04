@@ -4,8 +4,8 @@ import { aggregateCategoryStats } from "./categoryStats";
 import type { SiteReportWithPhotos, WorkCategory } from "./types";
 
 const CATEGORIES: WorkCategory[] = [
-  { id: "roof", company_id: "c1", label: "Покрівля", sort_order: 0, archived_at: null },
-  { id: "demo", company_id: "c1", label: "Демонтаж", sort_order: 1, archived_at: null },
+  { id: "roof", company_id: "c1", label: "Покрівля", sort_order: 0, archived_at: null, is_other: false },
+  { id: "demo", company_id: "c1", label: "Демонтаж", sort_order: 1, archived_at: null, is_other: false },
 ];
 
 function report(categoryIds: string[]): SiteReportWithPhotos {
@@ -17,6 +17,7 @@ function report(categoryIds: string[]): SiteReportWithPhotos {
     site_id: "s1",
     work_date: "2026-09-01",
     description: "",
+    other_text: "",
     created_at: "",
     updated_at: "",
     report_photos: [],

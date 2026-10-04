@@ -13,6 +13,8 @@ interface SearchFieldProps {
   placeholder: string;
   /** Кнопка фильтров справа появляется, только если передан обработчик. */
   onFilterClick?: () => void;
+  /** Есть применённые фильтры — на кнопке появляется точка-индикатор. */
+  filterActive?: boolean;
   /** Низкая версия (44px) для плотных панелей. */
   compact?: boolean;
   className?: string;
@@ -24,6 +26,7 @@ export function SearchField({
   onChange,
   placeholder,
   onFilterClick,
+  filterActive = false,
   compact = false,
   className,
 }: SearchFieldProps) {
@@ -50,11 +53,17 @@ export function SearchField({
         <Button
           variant="outline"
           size="icon"
-          className={cn("rounded-ctl bg-field", compact ? "size-ctl-md" : "size-field")}
+          className={cn("relative rounded-ctl bg-field", compact ? "size-ctl-md" : "size-field")}
           onClick={onFilterClick}
           aria-label={t.common.filters}
         >
           <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
+          {filterActive && (
+            <span
+              aria-hidden
+              className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-surface"
+            />
+          )}
         </Button>
       )}
     </div>

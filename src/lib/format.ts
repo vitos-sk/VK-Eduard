@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 /**
  * Подставляет значения в плейсхолдеры вида `{name}`.
  *
- * @example fmt(t.home.greeting, { name: "Віталік" }) // «Доброго ранку, Віталік 👋»
+ * @example fmt(t.home.greetingMorning, { name: "Віталік" }) // «Доброго ранку, Віталік 👋»
  */
 export function fmt(
   template: string,

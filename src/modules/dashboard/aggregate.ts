@@ -3,26 +3,25 @@ import type { WorkEntryWithNames } from "@/modules/entries/types";
 
 export interface DashboardOverview {
   totalMinutes: number;
-  avgPerWorkdayMinutes: number;
+  /** Скільки різних людей мали хоч одну зміну за період. */
+  workersCount: number;
   objectsWorkedCount: number;
+  /** Години без прив'язки до об'єкта — те, що шефу варто дорозібрати. */
+  noSiteMinutes: number;
 }
 
-/**
- * Зведення по періоду для 4 stat-карток. `avgPerWorkdayMinutes` рахує
- * середнє тільки по днях, коли реально хтось працював — не по всіх днях
- * періоду, інакше в перших числах місяця цифра була б заниженою.
- */
+/** Зведення по періоду для 4 stat-карток. */
 export function buildOverview(entries: readonly WorkEntryWithNames[]): DashboardOverview {
-  const totalMinutes = sumTotalMinutes(entries);
-  const workDates = new Set(entries.map((entry) => entry.work_date));
+  const authorIds = new Set(entries.map((entry) => entry.author_id));
   const siteIds = new Set(
     entries.map((entry) => entry.site_id).filter((id): id is string => id !== null),
   );
 
   return {
-    totalMinutes,
-    avgPerWorkdayMinutes: workDates.size === 0 ? 0 : Math.round(totalMinutes / workDates.size),
+    totalMinutes: sumTotalMinutes(entries),
+    workersCount: authorIds.size,
     objectsWorkedCount: siteIds.size,
+    noSiteMinutes: sumTotalMinutes(entries.filter((entry) => entry.site_id === null)),
   };
 }
 
@@ -71,35 +70,47 @@ export function buildTopWorkers(entries: readonly WorkEntryWithNames[]): RankedI
   );
 }
 
+export interface WorkingNow {
+  id: string;
+  name: string;
+  siteName: string | null;
+  /** Час початку відкритої зміни, `HH:MM:SS`. */
+  since: string;
+}
+
 export interface TodayOverview {
-  activeCount: number;
-  openShifts: { id: string; name: string }[];
+  /** Люди з відкритою зміною просто зараз. */
+  workingNow: WorkingNow[];
+  /** Активні співробітники, у яких сьогодні ще немає жодного запису. */
+  withoutEntries: { id: string; name: string }[];
   totalMinutes: number;
 }
 
 /**
- * Блок «Сьогодні». `activeCount` — скільки різних людей сьогодні хоч щось
- * відмітили (закриту чи відкриту зміну), `openShifts` — тільки ті, у
- * кого зміна ще триває (`ended_at === null`) — це і є бейджі «Відкрито».
- * Дедуплікація йде по `author_id`, не по імені — двоє тезок з відкритими
- * змінами повинні дати два окремих бейджі, а не один.
+ * Блок «Зараз на роботі». Дедуплікація йде по `author_id`, не по імені —
+ * двоє тезок з відкритими змінами дають два окремі рядки.
  */
 export function buildTodayOverview(
   todayEntries: readonly WorkEntryWithNames[],
+  workers: readonly { id: string; name: string }[],
 ): TodayOverview {
-  const activeAuthorIds = new Set(todayEntries.map((entry) => entry.author_id));
-
-  const openShiftsById = new Map<string, string>();
+  const workingById = new Map<string, WorkingNow>();
   for (const entry of todayEntries) {
     if (entry.ended_at === null) {
-      openShiftsById.set(entry.author_id, entry.author_full_name);
+      workingById.set(entry.author_id, {
+        id: entry.author_id,
+        name: entry.author_full_name,
+        siteName: entry.site_name,
+        since: entry.started_at,
+      });
     }
   }
-  const openShifts = [...openShiftsById.entries()].map(([id, name]) => ({ id, name }));
+
+  const clockedIds = new Set(todayEntries.map((entry) => entry.author_id));
 
   return {
-    activeCount: activeAuthorIds.size,
-    openShifts,
+    workingNow: [...workingById.values()].sort((a, b) => a.since.localeCompare(b.since)),
+    withoutEntries: workers.filter((worker) => !clockedIds.has(worker.id)),
     totalMinutes: sumTotalMinutes(todayEntries),
   };
 }

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
-import { WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
+import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { Thumb } from "@/components/shared/Thumb";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
@@ -53,6 +53,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const [siteId, setSiteId] = useState<string | null>(lastReport?.site_id ?? null);
   const [date, setDate] = useState<Date>(() => new Date());
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [otherText, setOtherText] = useState("");
   const [description, setDescription] = useState("");
   const [withTime, setWithTime] = useState(false);
   const [startAt, setStartAt] = useState("07:00");
@@ -70,7 +71,8 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const breakEnd = breakMin > 0 ? minutesToTime(timeToMinutes(startAt) + breakMin) : null;
   const durationMin = totalMinutes(startAt, endAt, breakStart, breakEnd) ?? 0;
   const isDurationOk = isDurationValid(durationMin);
-  const canSubmit = !withTime || isDurationOk;
+  const isOtherMissing = isOtherSelected(categories, categoryIds) && otherText.trim() === "";
+  const canSubmit = (!withTime || isDurationOk) && !isOtherMissing;
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
@@ -79,6 +81,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
     setSiteId(lastReport.site_id);
     setCategoryIds(lastReport.category_ids);
+    setOtherText(lastReport.other_text);
     // Описание намеренно не копируем — REPORTS.md: «описание чистое».
   };
 
@@ -89,6 +92,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         siteId,
         description,
         categoryIds,
+        otherText,
         time: withTime ? { startedAt: startAt, endedAt: endAt, breakStart, breakEnd } : null,
       });
 
@@ -204,7 +208,13 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
         {categories.length > 0 && (
           <Field label={t.reportForm.categoriesLabel}>
-            <WorkCategoryChips categories={categories} value={categoryIds} onChange={setCategoryIds} />
+            <WorkCategoryChips
+              categories={categories}
+              value={categoryIds}
+              onChange={setCategoryIds}
+              otherText={otherText}
+              onOtherTextChange={setOtherText}
+            />
           </Field>
         )}
 

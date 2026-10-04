@@ -9,24 +9,28 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface FiltersDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Наполнение появится позже — пока лист пустой, как и задумано в плане. */
+  /** Содержимое фильтров. Фильтры применяются сразу, лист лишь закрывается. */
   children?: ReactNode;
+  /** Сброс всех фильтров; без него кнопка «Скинути» не показывается. */
+  onReset?: () => void;
 }
 
 /**
- * Нижний лист фильтров: заголовок «Фільтри», место под содержимое
- * и кнопка «Скасувати». Общий для списков объектов и отчётов.
+ * Нижний лист фильтров: заголовок «Фільтри», содержимое,
+ * кнопки «Скинути» и «Застосувати». Общий для списков объектов и отчётов.
  */
 export function FiltersDrawer({
   open,
   onOpenChange,
   children,
+  onReset,
 }: FiltersDrawerProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -37,7 +41,7 @@ export function FiltersDrawer({
           "mx-auto max-w-[430px] border-border bg-surface text-text",
           // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
           // В «телефоне по центру» под баром ещё 24px рамки — учитываем их.
-          "pb-[calc(68px+env(safe-area-inset-bottom))] phone:pb-[calc(68px+1.5rem)]",
+          "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
         )}
       >
         <DrawerHeader className="pb-2">
@@ -46,18 +50,20 @@ export function FiltersDrawer({
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4">{children}</div>
+        <div className="max-h-[60dvh] overflow-y-auto px-4">{children}</div>
 
-        <DrawerClose
-          className={cn(
-            "mx-4 mt-4 mb-3 flex h-[56px] items-center justify-center",
-            "rounded-[14px] bg-surface-2 text-[15px] font-bold text-text",
-            "transition-transform duration-150 active:scale-[0.98]",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        <div className="mx-4 mt-4 mb-3 flex gap-2">
+          {onReset && (
+            <Button variant="outline" size="lg" className="flex-1" onClick={onReset}>
+              {t.common.reset}
+            </Button>
           )}
-        >
-          {t.common.cancel}
-        </DrawerClose>
+          <DrawerClose asChild>
+            <Button size="lg" className="flex-1">
+              {t.common.apply}
+            </Button>
+          </DrawerClose>
+        </div>
       </DrawerContent>
     </Drawer>
   );

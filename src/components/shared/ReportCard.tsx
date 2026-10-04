@@ -7,6 +7,7 @@ import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { gradientForId } from "@/lib/siteGradient";
 import { reportState } from "@/modules/reports/reportState";
+import { categoryLabelsOf } from "@/modules/reports/categoryLabels";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +34,7 @@ export function ReportCard({ report, siteName, categories, thumbUrl, className }
   const dateLabel = formatDayMonth(fromDateKey(report.work_date));
   const name = siteName ?? t.hours.noObject;
 
-  const labelById = new Map(categories.map((category) => [category.id, category.label] as const));
-  const categoryLabels = report.category_ids.map((id) => labelById.get(id)).filter((label): label is string => Boolean(label));
+  const categoryLabels = categoryLabelsOf(report, categories);
   const visibleLabels = categoryLabels.slice(0, MAX_VISIBLE_CATEGORIES);
   const extraCount = categoryLabels.length - visibleLabels.length;
 

@@ -1,6 +1,6 @@
 import type { SiteObject } from "@/lib/types";
 import { gradientForId } from "@/lib/siteGradient";
-import type { SiteStats } from "@/modules/entries/siteStats";
+import type { SiteStats } from "@/modules/reports/siteStats";
 import type { Site } from "./queries";
 
 /** Приводит объект из базы к форме, которую рисуют `ObjectCard`/`Thumb`. */

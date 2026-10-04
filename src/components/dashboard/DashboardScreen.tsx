@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Building2, Clock, Users } from "lucide-react";
+import { Building2, Clock, FileQuestion, Users } from "lucide-react";
 
 import { HoursChart } from "@/components/dashboard/HoursChart";
 import { StatTile } from "@/components/dashboard/StatTile";
@@ -11,7 +11,7 @@ import { TopList } from "@/components/dashboard/TopList";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
-import { formatHoursShort } from "@/lib/format";
+import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { initialsOf, type Profile } from "@/modules/auth/profile";
@@ -31,7 +31,7 @@ interface DashboardScreenProps {
   profile: Profile;
   initialPeriodEntries: readonly WorkEntryWithNames[];
   todayEntries: readonly WorkEntryWithNames[];
-  activeWorkersCount: number;
+  workers: readonly { id: string; name: string }[];
 }
 
 const PERIOD_OPTIONS: readonly { value: DashboardPeriod; label: string }[] = [
@@ -50,7 +50,7 @@ export function DashboardScreen({
   profile,
   initialPeriodEntries,
   todayEntries,
-  activeWorkersCount,
+  workers,
 }: DashboardScreenProps) {
   const supabase = useMemo(() => createClient(), []);
   const referenceDate = useMemo(() => new Date(), []);
@@ -91,7 +91,8 @@ export function DashboardScreen({
     () => buildHoursChartData(period, referenceDate, periodEntries),
     [period, referenceDate, periodEntries],
   );
-  const today = useMemo(() => buildTodayOverview(todayEntries), [todayEntries]);
+  const isWorkday = referenceDate.getDay() !== 0 && referenceDate.getDay() !== 6;
+  const today = useMemo(() => buildTodayOverview(todayEntries, workers), [todayEntries, workers]);
 
   return (
     <div className="pb-6">
@@ -117,12 +118,16 @@ export function DashboardScreen({
       <div className="px-4 lg:px-0">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatTile icon={Clock} label={t.dashboard.totalHours} value={formatHoursShort(overview.totalMinutes)} />
-          <StatTile icon={Clock} label={t.dashboard.avgPerWorkday} value={formatHoursShort(overview.avgPerWorkdayMinutes)} />
-          <StatTile icon={Users} label={t.dashboard.activeWorkers} value={String(activeWorkersCount)} />
+          <StatTile
+            icon={Users}
+            label={t.dashboard.workersWorked}
+            value={fmt(t.dashboard.workersWorkedValue, { n: overview.workersCount, total: workers.length })}
+          />
           <StatTile icon={Building2} label={t.dashboard.objectsWorked} value={String(overview.objectsWorkedCount)} />
+          <StatTile icon={FileQuestion} label={t.dashboard.noSiteHours} value={formatHoursShort(overview.noSiteMinutes)} />
         </div>
 
-        <TodayCard className="mt-4" overview={today} activeWorkersCount={activeWorkersCount} />
+        <TodayCard className="mt-4" overview={today} isWorkday={isWorkday} />
 
         <Card asChild padding="lg"><section className="mt-4">
           <h3 className="text-[17px] font-bold">{t.dashboard.chartTitle}</h3>

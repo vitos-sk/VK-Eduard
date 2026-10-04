@@ -2,8 +2,7 @@
  * Общие типы приложения. Всё здесь строится из реальных данных — моков
  * в `src/lib/mock/` для этого больше не осталось (остался только `quick.ts`,
  * список пунктов листа быстрых действий — это конфигурация UI, не данные).
- * Отчёты («Звіти») не отдельный тип — это те же `work_entries`,
- * см. `modules/entries/types.ts`.
+ * Отчёты («Звіти») — `site_reports`, см. `modules/reports/types.ts`.
  */
 
 /** Статус объекта или рабочего дня. Справочник — раздел 3.4 плана. */
@@ -12,7 +11,7 @@ export type WorkStatus = "in_progress" | "not_started" | "completed" | "paused";
 /**
  * Форма стройплощадки для карточки/миниатюры. Строится из строки `sites`
  * через `modules/sites/present.ts` — `photosCount`/`reportsCount` в базе
- * не хранятся, это агрегат по своим же записям (`modules/entries/siteStats.ts`).
+ * не хранятся, это агрегат по звітам (`site_reports`) (`modules/reports/siteStats.ts`).
  */
 export interface SiteObject {
   id: string;
@@ -58,9 +57,6 @@ export interface PeriodSummary {
 
 /** Идентификатор пункта листа быстрых действий (кнопка «+»). */
 export type QuickActionId =
-  | "manual_time"
-  | "start_work"
-  | "start_break"
   | "create_report"
   | "dashboard";
 

@@ -37,7 +37,7 @@ interface BottomNavProps {
 
 /**
  * Нижний таб-бар: 4 вкладки и FAB по центру.
- * Прижат к низу `PhoneFrame`, а не к окну браузера.
+ * Последний flex-элемент `PhoneFrame` — всегда у его низа.
  *
  * `z-60` — выше подложки нижних листов (z-50): по макету таб-бар
  * остаётся видимым, когда открыт лист быстрых действий.
@@ -48,9 +48,9 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   return (
     <nav
       aria-label={t.common.appName}
-      className="absolute inset-x-0 bottom-0 z-60 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="relative z-60 shrink-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="flex h-[68px] items-stretch">
+      <div className="flex h-14 items-stretch">
         {leftItems.map((item) => (
           <NavTab key={item.href} item={item} pathname={pathname} />
         ))}
@@ -59,7 +59,7 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
           <FabButton
             onClick={onFabClick}
             expanded={fabExpanded}
-            className="absolute -top-[18px]"
+            className="absolute -top-[16px]"
           />
         </div>
 
@@ -81,14 +81,14 @@ function NavTab({ item, pathname }: { item: NavItem; pathname: string }) {
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex flex-1 flex-col items-center justify-center gap-1 pt-1",
+        "flex flex-1 flex-col items-center justify-center gap-0.5",
         "transition-colors duration-150",
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
         isActive ? "text-primary" : "text-text-dim",
       )}
     >
-      <Icon className="size-6" strokeWidth={isActive ? 2.4 : 2} aria-hidden />
-      <span className="text-[11px] font-semibold">{item.label}</span>
+      <Icon className="size-[22px]" strokeWidth={isActive ? 2.4 : 2} aria-hidden />
+      <span className="text-[10px] font-semibold">{item.label}</span>
     </Link>
   );
 }

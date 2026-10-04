@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { DeleteReportButton } from "@/components/reports/DeleteReportButton";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
-import { WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
+import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fmt, formatDateFull, formatDateShort, fromDateKey } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -59,6 +59,8 @@ export function ReportDetail({
   const [categoryIds, setCategoryIds] = useState<string[]>(report.category_ids);
   const [isEditingCategories, setIsEditingCategories] = useState(false);
   const [categoryDraft, setCategoryDraft] = useState<string[]>(categoryIds);
+  const [otherText, setOtherText] = useState(report.other_text);
+  const [otherDraft, setOtherDraft] = useState(report.other_text);
 
   const [photos, setPhotos] = useState<ReportPhoto[]>(report.report_photos);
   const [urls, setUrls] = useState<Record<string, string>>({ ...photoUrls });
@@ -80,7 +82,7 @@ export function ReportDetail({
 
   const handleSaveCategories = () => {
     startCatTransition(async () => {
-      const result = await updateReportCategories(report.id, categoryDraft);
+      const result = await updateReportCategories(report.id, categoryDraft, otherDraft);
 
       if (result.error) {
         toast(result.error);
@@ -88,6 +90,7 @@ export function ReportDetail({
       }
 
       setCategoryIds(categoryDraft);
+      setOtherText(isOtherSelected(categories, categoryDraft) ? otherDraft.trim() : "");
       setIsEditingCategories(false);
       toast(t.reportDetail.saved);
     });
@@ -126,6 +129,7 @@ export function ReportDetail({
               size="icon-sm"
               onClick={() => {
                 setCategoryDraft(categoryIds);
+                setOtherDraft(otherText);
                 setIsEditingCategories(true);
               }}
               aria-label={t.reportDetail.edit}
@@ -138,9 +142,20 @@ export function ReportDetail({
 
         {isEditingCategories ? (
           <div className="mt-3 space-y-3">
-            <WorkCategoryChips categories={categories} value={categoryDraft} onChange={setCategoryDraft} />
+            <WorkCategoryChips
+              categories={categories}
+              value={categoryDraft}
+              onChange={setCategoryDraft}
+              otherText={otherDraft}
+              onOtherTextChange={setOtherDraft}
+            />
             <div className="flex gap-2">
-              <Button size="md" className="flex-1" onClick={handleSaveCategories} disabled={isCatPending}>
+              <Button
+                size="md"
+                className="flex-1"
+                onClick={handleSaveCategories}
+                disabled={isCatPending || (isOtherSelected(categories, categoryDraft) && otherDraft.trim() === "")}
+              >
                 {t.reportDetail.save}
               </Button>
               <Button variant="outline" size="md" className="flex-1" onClick={() => setIsEditingCategories(false)}>
@@ -153,6 +168,7 @@ export function ReportDetail({
             className="mt-3"
             categories={categories}
             value={categoryIds}
+            otherText={otherText}
             onChange={() => {}}
             readOnly
           />

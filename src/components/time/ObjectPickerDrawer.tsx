@@ -75,7 +75,7 @@ export function ObjectPickerDrawer({
         className={cn(
           "mx-auto max-w-[430px] border-border bg-surface text-text",
           // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
-          "pb-[calc(68px+env(safe-area-inset-bottom))] phone:pb-[calc(68px+1.5rem)]",
+          "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
           "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
         )}
       >

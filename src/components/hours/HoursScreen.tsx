@@ -328,6 +328,8 @@ export function HoursScreen({
           isBoss={isTeamView}
           companyId={profile.company_id}
           monthEntries={visibleEntries}
+          workerId={workerFilter}
+          onWorkerChange={setWorkerFilter}
         />
 
         <MonthEntriesTable
@@ -355,12 +357,14 @@ export function HoursScreen({
           {monthSummary && <PeriodView summary={monthSummary} variant="totalOnly" />}
 
           <SalaryCalculator
-          key={String(isTeamView)}
+            key={String(isTeamView)}
             monthTitle={getMonthTitle(date)}
             selfId={profile.id}
             isBoss={isTeamView}
             companyId={profile.company_id}
             monthEntries={visibleEntries}
+            workerId={workerFilter}
+            onWorkerChange={setWorkerFilter}
           />
         </div>
 

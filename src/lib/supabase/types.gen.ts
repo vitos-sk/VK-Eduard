@@ -202,6 +202,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          other_text: string
           site_id: string | null
           updated_at: string
           work_date: string
@@ -213,6 +214,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          other_text?: string
           site_id?: string | null
           updated_at?: string
           work_date: string
@@ -224,6 +226,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          other_text?: string
           site_id?: string | null
           updated_at?: string
           work_date?: string
@@ -311,6 +314,7 @@ export type Database = {
           archived_at: string | null
           company_id: string
           id: string
+          is_other: boolean
           label: string
           sort_order: number
         }
@@ -318,6 +322,7 @@ export type Database = {
           archived_at?: string | null
           company_id: string
           id?: string
+          is_other?: boolean
           label: string
           sort_order?: number
         }
@@ -325,6 +330,7 @@ export type Database = {
           archived_at?: string | null
           company_id?: string
           id?: string
+          is_other?: boolean
           label?: string
           sort_order?: number
         }

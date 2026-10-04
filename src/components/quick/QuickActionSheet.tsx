@@ -1,19 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   ChevronLeft,
   ChevronRight,
-  Clock,
   FileText,
   LayoutDashboard,
-  Pause,
-  Play,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import {
   Drawer,
@@ -23,17 +17,12 @@ import {
 } from "@/components/ui/drawer";
 import { t } from "@/lib/i18n";
 import { quickActions } from "@/lib/mock/quick";
-import { startCurrentBreak, startShift } from "@/modules/entries/actions";
-import { dateKeyOf, hhmmOf } from "@/modules/time/calc";
 import type { QuickAction, QuickActionId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
 /** Иконки не хранятся в моке — сопоставляем их по id пункта. */
 const icons: Record<QuickActionId, LucideIcon> = {
-  manual_time: Clock,
-  start_work: Play,
-  start_break: Pause,
   create_report: FileText,
   dashboard: LayoutDashboard,
 };
@@ -46,41 +35,14 @@ interface QuickActionSheetProps {
 }
 
 /**
- * Нижний лист по кнопке «+»: быстрые действия. «Почати роботу» и «Почати
- * перерву» пишут в базу прямо отсюда — независимо от того, какой экран
- * открыт (лист доступен с любой вкладки).
+ * Нижний лист по кнопке «+»: быстрые действия.
  * Закрывают свайп вниз, стрелка «назад», тап вне листа и повторный тап по FAB;
  * таб-бар остаётся видимым под листом.
  */
 export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionSheetProps) {
-  const router = useRouter();
-  const [, startTransition] = useTransition();
-
   const visibleActions = isBoss
     ? quickActions
     : quickActions.filter((action) => action.id !== "dashboard");
-
-  const handleAction = (action: QuickAction) => {
-    onOpenChange(false);
-
-    if (action.id === "start_work" || action.id === "start_break") {
-      startTransition(async () => {
-        const now = new Date();
-        const result =
-          action.id === "start_work"
-            ? await startShift(null, dateKeyOf(now), hhmmOf(now))
-            : await startCurrentBreak(hhmmOf(now));
-
-        if (result.error) {
-          toast(result.error);
-          return;
-        }
-
-        toast(action.id === "start_work" ? t.quick.workStarted : t.quick.breakStarted);
-        router.refresh();
-      });
-    }
-  };
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -96,7 +58,7 @@ export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionShee
           "[&>div:first-child]:hidden",
           // Прозрачный отступ снизу под таб-бар: он остаётся видимым под листом.
           // В «телефоне по центру» под баром ещё 24px рамки — учитываем их.
-          "pb-[calc(68px+env(safe-area-inset-bottom))] phone:pb-[calc(68px+1.5rem)]",
+          "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
           // Лист высокий: при нехватке места скроллится список пунктов,
           // заголовок остаётся на месте.
           "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
@@ -135,7 +97,7 @@ export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionShee
               <QuickActionRow
                 key={action.id}
                 action={action}
-                onSelect={() => handleAction(action)}
+                onSelect={() => onOpenChange(false)}
               />
             ))}
           </div>
@@ -158,7 +120,7 @@ function QuickActionRow({
     <>
       <span
         aria-hidden
-        style={{ color: action.accent, backgroundColor: `${action.accent}1F` }}
+        style={{ color: action.accent, backgroundColor: `color-mix(in srgb, ${action.accent} 12%, transparent)` }}
         className="flex size-11 shrink-0 items-center justify-center rounded-[12px]"
       >
         <Icon className="size-5" strokeWidth={2.2} />

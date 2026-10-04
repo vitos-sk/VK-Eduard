@@ -17,11 +17,12 @@ import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { sumTotalMinutes } from "@/modules/time/calc";
 import { cn } from "@/lib/utils";
+import { ALL_FILTER } from "@/components/hours/HoursFilters";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const ALL_WORKERS_ID = "all";
+const ALL_WORKERS_ID = ALL_FILTER;
 
 interface SalaryCalculatorProps {
   /** Заголовок обраного місяця — той самий текст, що в навігаторі періоду. */
@@ -30,10 +31,12 @@ interface SalaryCalculatorProps {
   /** Шеф бачить перемикач співробітника, рабочий — тільки себе. */
   isBoss: boolean;
   companyId: string;
+  /** Обраний співробітник — стан екрана «Години», спільний зі списком змін. */
+  workerId: string;
+  onWorkerChange: (id: string) => void;
   /**
-   * Зміни за обраний місяць. Для рабочего RLS вже віддає тільки його власні
-   * записи, для шефа — всю компанію, тому фільтрація по `author_id`
-   * коректна для обох ролей без окремого запиту.
+   * Зміни за обраний місяць, уже відфільтровані екраном (співробітник/об'єкт) —
+   * та сама вибірка, що й у списку «Зміни за місяць», тож сума завжди збігається з ним.
    */
   monthEntries: readonly WorkEntryWithNames[];
   className?: string;
@@ -48,11 +51,12 @@ export function SalaryCalculator({
   selfId,
   isBoss,
   companyId,
+  workerId,
+  onWorkerChange,
   monthEntries,
   className,
 }: SalaryCalculatorProps) {
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
-  const [selectedWorkerId, setSelectedWorkerId] = useState(selfId);
   const [rate, setRate] = useState("");
   const [isCopied, setIsCopied] = useState(false);
 
@@ -73,15 +77,7 @@ export function SalaryCalculator({
     };
   }, [isBoss, companyId]);
 
-  const targetMinutes = useMemo(
-    () =>
-      sumTotalMinutes(
-        selectedWorkerId === ALL_WORKERS_ID
-          ? monthEntries
-          : monthEntries.filter((entry) => entry.author_id === selectedWorkerId),
-      ),
-    [monthEntries, selectedWorkerId],
-  );
+  const targetMinutes = useMemo(() => sumTotalMinutes(monthEntries), [monthEntries]);
 
   const rateNumber = Number(rate.replace(",", "."));
   const hasValidRate = rate.trim() !== "" && Number.isFinite(rateNumber) && rateNumber >= 0;
@@ -110,7 +106,7 @@ export function SalaryCalculator({
               <label className="text-[12px] font-medium text-text-muted">
                 {t.hours.salaryCalcWorkerLabel}
               </label>
-              <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
+              <Select value={workerId} onValueChange={onWorkerChange}>
                 <SelectTrigger
                   className="mt-1 h-ctl-sm w-full rounded-md px-2.5 text-[13px] font-bold text-text"
                 >
