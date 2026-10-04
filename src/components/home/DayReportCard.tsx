@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { HoursRuler } from "@/components/ui/hours-ruler";
-import { ProgressPips } from "@/components/ui/progress-pips";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { DateStub, Ticket, TicketBody, TicketFoot } from "@/components/ui/ticket";
 import { formatHoursShort } from "@/lib/format";
@@ -20,32 +19,20 @@ interface DayReportCardProps {
   siteName: string | null;
   /** Id сегодняшнего звіту, якщо він уже поданий; інакше `null`. */
   reportId: string | null;
-  /** У поданого звіту є фото. */
-  hasPhotos: boolean;
   className?: string;
 }
 
-/** Первый невыполненный шаг дня: Години → Звіт → Фото (3 — всё сделано). */
-function currentStep(minutes: number, reportId: string | null, hasPhotos: boolean): number {
-  if (minutes <= 0) return 0;
-  if (!reportId) return 1;
-  if (!hasPhotos) return 2;
-  return 3;
-}
-
-/** Талон дня: часы с линейкой нормы, три шага и главное действие (создать/посмотреть звіт). */
+/** Талон дня: часы с линейкой нормы, состояние звіту и главное действие (создать/посмотреть звіт). */
 export function DayReportCard({
   date,
   minutes,
   normMinutes,
   siteName,
   reportId,
-  hasPhotos,
   className,
 }: DayReportCardProps) {
   const copy = t.home.dayReport;
   const isSubmitted = reportId !== null;
-  const steps = [t.home.progress.hours, t.home.progress.report, t.home.progress.photo];
 
   return (
     <Ticket variant="notch" className={cn(className)}>
@@ -62,7 +49,6 @@ export function DayReportCard({
       </TicketBody>
 
       <TicketFoot>
-        <ProgressPips steps={steps} current={currentStep(minutes, reportId, hasPhotos)} />
         <div className="flex items-center justify-between gap-2">
           <span className="text-[13px] text-ink-2">{copy.title}</span>
           <StampTag variant={isSubmitted ? "submitted" : "notSubmitted"}>

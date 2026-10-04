@@ -140,7 +140,6 @@ export default async function HomePage() {
         normMinutes={profile.daily_norm_minutes}
         siteName={todaySiteName}
         reportId={todayReport?.id ?? null}
-        hasPhotos={(todayReport?.report_photos.length ?? 0) > 0}
       />
 
       <SectionHeader
