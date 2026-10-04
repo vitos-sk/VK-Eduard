@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-active aria-busy:bg-primary-hover disabled:bg-disabled disabled:text-text-dim",
+          "bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-active aria-busy:bg-primary-hover disabled:bg-disabled disabled:text-text-dim disabled:aria-busy:bg-primary-hover disabled:aria-busy:text-on-primary",
         outline:
           "border-primary bg-surface text-primary hover:bg-primary-tint active:bg-primary-tint disabled:border-edge disabled:bg-disabled disabled:text-text-dim",
         ghost:
@@ -66,7 +66,6 @@ function Button({
   disabled,
   children,
   type,
-  onClick,
   ...props
 }: ButtonProps) {
   const classes = cn(buttonVariants({ variant, size, block }), className)
@@ -85,17 +84,8 @@ function Button({
       data-slot="button"
       data-variant={variant ?? "primary"}
       className={classes}
-      disabled={disabled}
+      disabled={disabled || loading}
       aria-busy={loading || undefined}
-      // loading не ставит `disabled`: иначе кнопка серела бы вместо «зелёная + спиннер».
-      // Повторное нажатие блокируем здесь (мышь и клавиатура).
-      onClick={(event) => {
-        if (loading) {
-          event.preventDefault()
-          return
-        }
-        onClick?.(event)
-      }}
       {...props}
     >
       {loading && <Spinner aria-hidden />}
