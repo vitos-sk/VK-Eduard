@@ -88,6 +88,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_hue: number
+          avatar_path: string | null
           company_id: string
           created_at: string
           daily_norm_minutes: number
@@ -98,6 +99,7 @@ export type Database = {
         }
         Insert: {
           avatar_hue?: number
+          avatar_path?: string | null
           company_id: string
           created_at?: string
           daily_norm_minutes?: number
@@ -108,6 +110,7 @@ export type Database = {
         }
         Update: {
           avatar_hue?: number
+          avatar_path?: string | null
           company_id?: string
           created_at?: string
           daily_norm_minutes?: number

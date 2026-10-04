@@ -14,7 +14,10 @@ import { createClient } from "@/lib/supabase/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { buildWorkerHoursList } from "@/modules/team/hours";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { initialsOf } from "@/components/shared/Thumb";
+import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
 import { Ticket } from "@/components/ui/ticket";
 import { SearchField } from "@/components/shared/SearchField";
 
@@ -38,6 +41,7 @@ export function TeamManagementScreen({
   const supabase = useMemo(() => createClient(), []);
   const [workers, setWorkers] = useState<readonly Worker[]>(initialWorkers);
   const [search, setSearch] = useState("");
+  const avatarUrls = useAvatarUrls(workers);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const refreshWorkers = useCallback(() => {
@@ -100,7 +104,12 @@ export function TeamManagementScreen({
             <Ticket asChild variant="flat" key={worker.id} className="flex flex-col gap-3">
             <li>
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <Avatar
+                  initials={initialsOf(worker.full_name)}
+                  src={avatarUrls[worker.id]}
+                  className="size-11"
+                />
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-semibold">{worker.full_name}</p>
                   <p className="text-[13px] text-ink-2">
                     {worker.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}

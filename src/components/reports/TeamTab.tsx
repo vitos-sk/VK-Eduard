@@ -15,6 +15,9 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
+import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
+import { Avatar } from "@/components/ui/avatar";
+import { initialsOf } from "@/components/shared/Thumb";
 import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -77,6 +80,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [month, setMonth] = useState(() => new Date());
+  const avatarUrls = useAvatarUrls(workers);
   const [monthMinutes, setMonthMinutes] = useState<ReadonlyMap<string, number>>(new Map());
   const [weekMinutes, setWeekMinutes] = useState<ReadonlyMap<string, number>>(new Map());
   const [search, setSearch] = useState("");
@@ -411,6 +415,12 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
                       aria-pressed={isSelectMode ? isChecked : undefined}
                     >
                       {isSelectMode && <CheckMark checked={isChecked} />}
+
+                      <Avatar
+                        initials={initialsOf(worker.full_name)}
+                        src={avatarUrls[worker.id]}
+                        className="size-11"
+                      />
 
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[14px] font-medium">{worker.full_name}</span>

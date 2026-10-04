@@ -16,7 +16,10 @@ import { companyStrings } from "@/lib/i18n/parts/company";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/modules/auth/actions";
 import { requireProfile } from "@/modules/auth/session";
-import { Ticket, TicketBody, TicketStub } from "@/components/ui/ticket";
+import { Avatar } from "@/components/ui/avatar";
+import { Ticket, TicketBody } from "@/components/ui/ticket";
+import { AVATARS_BUCKET } from "@/modules/media/photos";
+import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { Button } from "@/components/ui/button";
 
 interface SettingsRow {
@@ -39,6 +42,10 @@ export default async function MorePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const avatarUrl = profile.avatar_path
+    ? ((await getSignedPhotoUrls(supabase, [profile.avatar_path], AVATARS_BUCKET).catch(() => new Map<string, string>())).get(profile.avatar_path) ?? null)
+    : null;
 
   const rows: SettingsRow[] = [
     ...(profile.role === "boss"
@@ -63,11 +70,11 @@ export default async function MorePage() {
 
       <div className="flex flex-col gap-4 px-4 lg:mx-auto lg:max-w-[480px] lg:px-0">
         <Ticket compact>
-          <TicketStub aria-hidden>
-            <span className="text-[18px] leading-none font-semibold">
-              {initialsOf(profile.full_name)}
-            </span>
-          </TicketStub>
+          <Avatar
+            initials={initialsOf(profile.full_name)}
+            src={avatarUrl}
+            className="size-auto w-(--ticket-stub) shrink-0 self-stretch rounded-none rounded-l-[9px] border-0 border-r border-dashed border-perf text-[18px]"
+          />
 
           <TicketBody className="flex items-center gap-3">
             <div className="min-w-0 flex-1">

@@ -6,7 +6,9 @@ import { LayoutDashboard, LogOut, Settings } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
 import { NAV_ITEMS } from "@/components/layout/BottomNav";
+import { useOwnAvatarUrl } from "@/components/layout/OwnAvatar";
 import { initialsOf } from "@/components/shared/Thumb";
+import { Avatar } from "@/components/ui/avatar";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/modules/auth/profile";
@@ -24,6 +26,7 @@ interface DesktopSidebarProps {
  */
 export function DesktopSidebar({ profile }: DesktopSidebarProps) {
   const pathname = usePathname();
+  const avatarUrl = useOwnAvatarUrl();
 
   const items = [
     ...NAV_ITEMS,
@@ -67,12 +70,7 @@ export function DesktopSidebar({ profile }: DesktopSidebarProps) {
 
       <div className="perf-t mt-4 pt-4">
         <div className="flex items-center gap-2.5 px-1">
-          <span
-            aria-hidden
-            className="grid size-8 shrink-0 place-items-center rounded-md border border-edge bg-stub text-[12px] font-semibold"
-          >
-            {initialsOf(profile.full_name)}
-          </span>
+          <Avatar initials={initialsOf(profile.full_name)} src={avatarUrl} />
           <div className="min-w-0">
             <p className="truncate text-[14px] font-medium">{profile.full_name}</p>
             <p className="text-[12px] text-ink-2">

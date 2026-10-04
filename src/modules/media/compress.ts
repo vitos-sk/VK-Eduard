@@ -21,11 +21,14 @@ export interface CompressedImage {
  * поворачивает пиксели по EXIF-тегу при декодировании, дальше это обычная
  * картинка без вращения. Ручной разбор EXIF не нужен.
  */
-export async function compressImage(file: File): Promise<CompressedImage> {
+export async function compressImage(
+  file: File,
+  maxDimension: number = MAX_DIMENSION,
+): Promise<CompressedImage> {
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
 
   try {
-    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
     const height = Math.max(1, Math.round(bitmap.height * scale));
 

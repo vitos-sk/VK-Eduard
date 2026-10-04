@@ -178,3 +178,59 @@ export async function deleteSitePhoto(
 
   if (updateError) throw updateError;
 }
+
+const AVATARS_BUCKET = "avatars";
+/** Аватар маленький: хватает 480 px по длинной стороне. */
+const AVATAR_MAX_DIMENSION = 480;
+
+/**
+ * Загружает аватар сотрудника: сжатый WebP в `{company}/{user}/{uuid}.webp`, затем
+ * `profiles.avatar_path`. Старый файл не трогает — его подчищает вызывающая сторона
+ * через `deleteAvatar`, чтобы при неудачном апдейте не остаться без фото.
+ */
+export async function uploadAvatar(
+  supabase: SupabaseClient<Database>,
+  params: { companyId: string; userId: string },
+  file: File,
+): Promise<string> {
+  const { blob } = await compressImage(file, AVATAR_MAX_DIMENSION);
+  const path = `${params.companyId}/${params.userId}/${crypto.randomUUID()}.webp`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(AVATARS_BUCKET)
+    .upload(path, blob, { contentType: "image/webp" });
+
+  if (uploadError) throw uploadError;
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({ avatar_path: path })
+    .eq("id", params.userId);
+
+  if (updateError) throw updateError;
+
+  return path;
+}
+
+/** Удаляет аватар: файл из Storage, затем `avatar_path` в null. */
+export async function deleteAvatar(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  avatarPath: string,
+): Promise<void> {
+  const { error: removeError } = await supabase.storage
+    .from(AVATARS_BUCKET)
+    .remove([avatarPath]);
+
+  if (removeError) throw removeError;
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({ avatar_path: null })
+    .eq("id", userId);
+
+  if (updateError) throw updateError;
+}
+
+/** Бакет аватаров — для `getSignedPhotoUrls`. */
+export { AVATARS_BUCKET };

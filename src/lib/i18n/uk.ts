@@ -88,6 +88,13 @@ export const uk = {
     nameRequired: "Вкажіть ім'я",
     saveError: "Не вдалося зберегти. Спробуйте ще раз",
     editTitle: "Змінити ім'я",
+    avatarTitle: "Фото профілю",
+    avatarTake: "Сфотографуватися",
+    avatarGallery: "З галереї",
+    avatarRemove: "Видалити",
+    avatarUploading: "Завантаження...",
+    avatarUploadError: "Не вдалося завантажити фото",
+    avatarRemoveError: "Не вдалося видалити фото",
     save: "Зберегти",
     rows: {
       team: "Команда",

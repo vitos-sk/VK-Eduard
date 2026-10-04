@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 
+import { useOwnAvatarUrl } from "@/components/layout/OwnAvatar";
+import { Avatar } from "@/components/ui/avatar";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -9,21 +13,23 @@ interface AvatarLinkProps {
 }
 
 /**
- * Аватар-инициалы 32 px (фон `stub`, рамка `edge`) со ссылкой в «Налаштування» (`/more`) —
- * общий элемент шапки верхнеуровневых экранов: «Налаштування» всегда в одном тапе.
+ * Аватар 32 px со ссылкой в «Налаштування» (`/more`) — общий элемент шапки верхнеуровневых
+ * экранов. Показывает своё фото, если оно загружено, иначе инициалы.
  * Зона нажатия 44 px — через `before`.
  */
 export function AvatarLink({ initials, className }: AvatarLinkProps) {
+  const url = useOwnAvatarUrl();
+
   return (
     <Link
       href="/more"
       aria-label={t.common.profile}
       className={cn(
-        "relative grid size-8 shrink-0 place-items-center rounded-md border border-edge bg-stub text-[12px] font-semibold text-text outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        "relative shrink-0 rounded-md outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         className,
       )}
     >
-      {initials}
+      <Avatar initials={initials} src={url} />
     </Link>
   );
 }
