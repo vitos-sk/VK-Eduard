@@ -43,7 +43,7 @@ interface ReportsFeedProps {
   reports: readonly SiteReportWithPhotos[];
   sites: readonly Site[];
   categories: readonly WorkCategory[];
-  /** Не используется: карточка звіту без миниатюры. */
+  /** Подписанные ссылки первых фото: `storage_path` → URL. */
   thumbUrls?: Readonly<Record<string, string>>;
 }
 
@@ -57,7 +57,7 @@ interface ReportsFeedProps {
  * і на вкладці «Мої», і на вкладці «Команда» для одного обраного
  * співробітника (`TeamTab`) — без дублювання розмітки й логіки фільтрів.
  */
-export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
+export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: ReportsFeedProps) {
   const [filter, setFilter] = useState<ReportFilter>("all");
   const [query, setQuery] = useState("");
   const [month, setMonth] = useState(() => new Date());
@@ -182,6 +182,11 @@ export function ReportsFeed({ reports, sites, categories }: ReportsFeedProps) {
                   report={report}
                   siteName={report.site_id ? (siteNameById.get(report.site_id) ?? null) : null}
                   categories={categories}
+                  thumbUrl={
+                    report.report_photos[0]
+                      ? (thumbUrls[report.report_photos[0].storage_path] ?? null)
+                      : null
+                  }
                 />
               ))}
             </div>

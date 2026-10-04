@@ -79,7 +79,11 @@ export default async function HomePage() {
   const objectPhotoPaths = orderedSites
     .map((site) => site.photo_path)
     .filter((path): path is string => Boolean(path));
-  const objectPhotoUrls = await getSignedPhotoUrls(supabase, objectPhotoPaths, "site-photos");
+  const lastReportPhotoPath = lastReport?.report_photos[0]?.storage_path;
+  const [objectPhotoUrls, reportPhotoUrls] = await Promise.all([
+    getSignedPhotoUrls(supabase, objectPhotoPaths, "site-photos"),
+    getSignedPhotoUrls(supabase, lastReportPhotoPath ? [lastReportPhotoPath] : []),
+  ]);
 
   const homeObjects = orderedSites.map((site) =>
     toSiteObject(
@@ -188,6 +192,7 @@ export default async function HomePage() {
               worksLabel={categoryLabelsOf(lastReport, categories).join(", ")}
               minutes={lastReportMinutes}
               photosCount={lastReport.report_photos.length}
+              thumbUrl={lastReportPhotoPath ? (reportPhotoUrls.get(lastReportPhotoPath) ?? null) : null}
               isReady={isReady(lastReport)}
             />
           </div>

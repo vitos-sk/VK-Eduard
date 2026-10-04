@@ -1,26 +1,24 @@
-import { ChevronRight } from "lucide-react";
-
 import { ObjectTicket } from "@/components/ui/object-ticket";
-import { Ticket } from "@/components/ui/ticket";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { objectsStrings } from "@/lib/i18n/parts/objects";
 import type { SiteObject } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 
 interface ObjectCardProps {
   object: SiteObject;
   /** Годин и людей за период — boss. */
   stats?: { minutes: number; workerCount: number };
+  /** Справа поверх карточки стоит кнопка-меню (шеф). */
+  reserveMenuSpace?: boolean;
   className?: string;
 }
 
 /**
  * Строка списка «Об'єкти»: плоский талон — название, вид работ («демо» или вид),
- * статус капсом, шеврон справа. Архивный объект помечен «Архів» вместо статуса.
+ * статус капсом и горизонтальное фото справа вплотную к рамке.
+ * Нет фото — рамка с иконкой «нет изображения». Архивный объект помечен «Архів».
  */
-export function ObjectCard({ object, stats, className }: ObjectCardProps) {
+export function ObjectCard({ object, stats, reserveMenuSpace, className }: ObjectCardProps) {
   const caption = [
     object.kind || object.address,
     stats
@@ -30,32 +28,16 @@ export function ObjectCard({ object, stats, className }: ObjectCardProps) {
     .filter(Boolean)
     .join(" · ");
 
-  if (object.archivedAt) {
-    return (
-      <Ticket asChild variant="flat" interactive className={cn("flex items-center gap-3", className)}>
-        <Link href={`/objects/${object.id}`}>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[14px] leading-snug font-medium">{object.name}</span>
-            {caption && <span className="block truncate text-[12px] text-ink-2">{caption}</span>}
-            <span className="mt-1 block text-[12px] font-semibold tracking-[0.04em] text-ink-2 uppercase">
-              {t.objects.archivedBadge}
-            </span>
-          </span>
-          <ChevronRight className="size-4 shrink-0 text-ink-3" strokeWidth={1.9} aria-hidden />
-        </Link>
-      </Ticket>
-    );
-  }
-
   return (
     <ObjectTicket
       href={`/objects/${object.id}`}
       name={object.name}
       caption={caption}
       status={object.status}
+      photoUrl={object.photoUrl}
+      reserveMenuSpace={reserveMenuSpace}
+      archivedLabel={object.archivedAt ? t.objects.archivedBadge : undefined}
       className={className}
-      trailing={<ChevronRight className="size-4 shrink-0 text-ink-3" strokeWidth={1.9} aria-hidden />}
     />
   );
 }
-

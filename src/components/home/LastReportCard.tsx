@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CardPhoto } from "@/components/ui/card-photo";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { DateStub, Ticket, TicketBody } from "@/components/ui/ticket";
 import { fmt, formatHoursShort } from "@/lib/format";
@@ -13,6 +14,8 @@ interface LastReportCardProps {
   worksLabel: string;
   minutes: number;
   photosCount: number;
+  /** Подписанная ссылка на первое фото звіту. */
+  thumbUrl?: string | null;
   /** У звіті є опис або фото. */
   isReady: boolean;
 }
@@ -25,28 +28,30 @@ export function LastReportCard({
   worksLabel,
   minutes,
   photosCount,
+  thumbUrl = null,
   isReady,
 }: LastReportCardProps) {
   const copy = t.home.lastReport;
 
   return (
-    <Ticket asChild compact interactive>
+    <Ticket asChild compact interactive className="overflow-hidden">
       <Link href={`/reports/${reportId}`}>
         <DateStub date={workDate} compact />
-        <TicketBody className="flex items-center gap-2.5">
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[14px] leading-snug font-medium">
-              {worksLabel || copy.noDescription}
-            </span>
-            <span className="block truncate text-[12px] text-ink-2">
-              {siteName} · {fmt(copy.photos, { n: photosCount })}
-            </span>
+        <TicketBody className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-2.5">
+          <span className="block truncate text-[14px] leading-snug font-medium">
+            {worksLabel || copy.noDescription}
           </span>
-          <span className="flex shrink-0 flex-col items-end gap-1">
-            <span className="tabular text-[14px] font-semibold">{formatHoursShort(minutes)}</span>
-            {isReady && <StampTag variant="submitted">{t.home.dayReport.submitted}</StampTag>}
+          <span className="block truncate text-[12px] text-ink-2">
+            {siteName} · {fmt(copy.photos, { n: photosCount })} ·{" "}
+            <span className="tabular">{formatHoursShort(minutes)}</span>
           </span>
+          {isReady && (
+            <StampTag variant="submitted" className="mt-0.5">
+              {t.home.dayReport.submitted}
+            </StampTag>
+          )}
         </TicketBody>
+        <CardPhoto src={thumbUrl} />
       </Link>
     </Ticket>
   );

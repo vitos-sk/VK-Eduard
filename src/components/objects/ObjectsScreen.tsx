@@ -218,12 +218,12 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
             {visibleObjects.map((object) =>
               isBoss ? (
                 <div key={object.id} className="relative">
-                  <ObjectCard object={object} className="h-full pr-12" />
+                  <ObjectCard object={object} reserveMenuSpace className="h-full" />
                   <ObjectMenu
                     siteId={object.id}
                     siteName={object.name}
                     isArchived={object.archivedAt !== null}
-                    className="absolute top-1/2 right-2 -translate-y-1/2"
+                    className="absolute top-1/2 right-[104px] -translate-y-1/2"
                   />
                 </div>
               ) : (

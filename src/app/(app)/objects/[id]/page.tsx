@@ -54,9 +54,15 @@ export default async function ObjectDetailPage({
   const reports = isBoss ? allReports : allReports.filter((report) => report.site_id === id);
   const categoryStats = aggregateCategoryStats(reports, categories);
 
-  const coverPhotoUrls = site.photo_path
-    ? await getSignedPhotoUrls(supabase, [site.photo_path], "site-photos")
-    : new Map<string, string>();
+  const firstPhotoPaths = reports
+    .map((report) => report.report_photos[0]?.storage_path)
+    .filter((path): path is string => Boolean(path));
+  const [thumbUrls, coverPhotoUrls] = await Promise.all([
+    getSignedPhotoUrls(supabase, firstPhotoPaths),
+    site.photo_path
+      ? getSignedPhotoUrls(supabase, [site.photo_path], "site-photos")
+      : Promise.resolve(new Map<string, string>()),
+  ]);
   const coverPhotoUrl = site.photo_path ? (coverPhotoUrls.get(site.photo_path) ?? null) : null;
 
   return (
@@ -163,7 +169,11 @@ export default async function ObjectDetailPage({
                   report={report}
                   siteName={site.name}
                   categories={categories}
-                  thumbUrl={null}
+                  thumbUrl={
+                    report.report_photos[0]
+                      ? (thumbUrls.get(report.report_photos[0].storage_path) ?? null)
+                      : null
+                  }
                 />
               ))}
             </div>

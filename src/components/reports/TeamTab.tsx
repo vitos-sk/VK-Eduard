@@ -87,6 +87,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const [exportIds, setExportIds] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
   const [companyReports, setCompanyReports] = useState<readonly SiteReportWithNames[]>([]);
+  const [companyThumbUrls, setCompanyThumbUrls] = useState<Readonly<Record<string, string>>>({});
   const [loadedFeedKey, setLoadedFeedKey] = useState<string | null>(null);
   const feedKey = dateKeyOf(startOfMonth(month));
   const isFeedLoading = loadedFeedKey !== feedKey;
@@ -143,9 +144,41 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
         if (cancelled) return;
         setCompanyReports(data);
         setLoadedFeedKey(dateKeyOf(startOfMonth(month)));
+
+        // Первое фото каждого звіту — для превью в карточке (одним запросом на весь месяц).
+        const withPhotos = data.filter((report) => report.photo_count > 0).map((report) => report.id);
+        if (withPhotos.length === 0) {
+          setCompanyThumbUrls({});
+          return;
+        }
+
+        supabase
+          .from("report_photos")
+          .select("report_id, storage_path, sort_order")
+          .in("report_id", withPhotos)
+          .order("sort_order", { ascending: true })
+          .then(async ({ data: rows }) => {
+            const firstPathByReport = new Map<string, string>();
+            for (const row of rows ?? []) {
+              if (!firstPathByReport.has(row.report_id)) firstPathByReport.set(row.report_id, row.storage_path);
+            }
+
+            const urls = await getSignedPhotoUrls(supabase, [...firstPathByReport.values()]).catch(
+              () => new Map<string, string>(),
+            );
+            if (cancelled) return;
+
+            const byReport: Record<string, string> = {};
+            for (const [reportId, path] of firstPathByReport) {
+              const url = urls.get(path);
+              if (url) byReport[reportId] = url;
+            }
+            setCompanyThumbUrls(byReport);
+          }, () => {});
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) return;
+        console.error("getCompanyReportsInRange failed", error);
         toast(s.feed.loadError);
         setLoadedFeedKey(dateKeyOf(startOfMonth(month)));
       });
@@ -433,7 +466,12 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
           ) : (
             <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {feedReports.map((report) => (
-                <CompanyReportCard key={report.id} report={report} onDeleted={handleReportDeleted} />
+                <CompanyReportCard
+                  key={report.id}
+                  report={report}
+                  thumbUrl={companyThumbUrls[report.id] ?? null}
+                  onDeleted={handleReportDeleted}
+                />
               ))}
             </div>
           )}
