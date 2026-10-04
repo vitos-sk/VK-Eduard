@@ -16,7 +16,7 @@ interface PhoneFrameProps {
  */
 export function PhoneFrame({ children }: PhoneFrameProps) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-paper">
+    <div className="fixed inset-0 flex h-dvh items-center justify-center overflow-hidden bg-paper">
       <div className="app-bg relative flex h-full w-full max-w-[560px] flex-col overflow-hidden">
         {children}
       </div>
