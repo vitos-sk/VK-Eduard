@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { uk as ukLocale } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pointer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -67,9 +67,13 @@ export function DatePickLink({
         <button
           type="button"
           aria-label={t.hours.pickDate}
-          className="relative mt-0.5 block text-[13px] text-ink-2 underline decoration-perf decoration-dashed underline-offset-4 outline-none before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="relative mt-0.5 flex items-center gap-1.5 text-[13px] text-ink-2 outline-none before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          {formatDateLong(date)}
+          <span className="underline decoration-perf decoration-dashed underline-offset-4">
+            {formatDateLong(date)}
+          </span>
+          {/* Палец-указатель: дату можно нажать и выбрать другую */}
+          <Pointer className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto border border-edge bg-ticket p-2">
