@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Chip } from "@/components/ui/chip";
 import { TimeRangeRuler } from "@/components/ui/hours-ruler";
-import { Stepper } from "@/components/ui/stepper";
 import { UnderlineField } from "@/components/ui/underline-field";
 import { formatHoursShort } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -52,15 +52,28 @@ export function TimeField({
     onChange(minutesToTime(timeToMinutes(value) + deltaMin));
   };
 
+  const arrowClass =
+    "grid w-10 shrink-0 place-items-center text-ink outline-none transition-colors hover:bg-primary-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+
   return (
     <div className="min-w-0">
       <FieldLabel>{label}</FieldLabel>
-      <div className="mt-1 flex items-center gap-1">
-        <Stepper
-          direction="earlier"
-          label={t.manualTime.decreaseTime}
+      {/* Один блок: ‹ [ 08:00 ] › — стрелки и цифры одной высоты, ровно в линию */}
+      <div
+        className={cn(
+          "mt-1 flex h-11 items-stretch overflow-hidden rounded-ctl border bg-ticket",
+          invalid ? "border-err" : "border-edge focus-within:border-primary"
+        )}
+      >
+        <button
+          type="button"
+          aria-label={t.manualTime.decreaseTime}
+          title={t.manualTime.decreaseTime}
           onClick={() => shift(-TIME_STEP_MIN)}
-        />
+          className={arrowClass}
+        >
+          <ChevronLeft className="size-5" strokeWidth={1.9} aria-hidden />
+        </button>
         <input
           type="time"
           step={60}
@@ -77,18 +90,22 @@ export function TimeField({
           }}
           onBlur={() => setDraft(null)}
           className={cn(
-            "tabular h-[34px] min-w-0 flex-1 rounded-md border border-edge bg-ticket text-center text-[16px] font-semibold text-text outline-none hover:border-ink-3 focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-calendar-picker-indicator]:hidden",
+            "tabular min-w-0 flex-1 border-x border-dashed border-perf bg-transparent text-center text-[20px] font-semibold text-text outline-none [&::-webkit-calendar-picker-indicator]:hidden",
             invalid && "text-err"
           )}
         />
-        <Stepper
-          direction="later"
-          label={t.manualTime.increaseTime}
+        <button
+          type="button"
+          aria-label={t.manualTime.increaseTime}
+          title={t.manualTime.increaseTime}
           onClick={() => shift(TIME_STEP_MIN)}
-        />
+          className={arrowClass}
+        >
+          <ChevronRight className="size-5" strokeWidth={1.9} aria-hidden />
+        </button>
       </div>
     </div>
-  );
+  )
 }
 
 interface WorkTimeFieldsProps {
