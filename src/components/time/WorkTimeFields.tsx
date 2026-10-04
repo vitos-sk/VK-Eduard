@@ -77,7 +77,7 @@ export function TimeField({
           }}
           onBlur={() => setDraft(null)}
           className={cn(
-            "tabular min-w-0 flex-1 bg-transparent text-center text-[16px] font-semibold text-text outline-none focus-visible:underline [&::-webkit-calendar-picker-indicator]:hidden",
+            "tabular h-[34px] min-w-0 flex-1 rounded-md border border-edge bg-ticket text-center text-[16px] font-semibold text-text outline-none hover:border-ink-3 focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-calendar-picker-indicator]:hidden",
             invalid && "text-err"
           )}
         />
@@ -144,6 +144,7 @@ export function WorkTimeFields({
             invalid={!isDurationOk}
           />
         </div>
+        <p className="mt-1.5 text-[12px] text-ink-2">{t.manualTime.timeHint}</p>
         <TimeRangeRuler startMinutes={startMinutes} endMinutes={endMinutes} />
       </div>
 
