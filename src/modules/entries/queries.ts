@@ -109,7 +109,9 @@ export async function getCompanyEntriesInRange(
     .gte("work_date", fromDate)
     .lte("work_date", toDate)
     .order("work_date", { ascending: false })
-    .order("started_at", { ascending: false });
+    // В пределах дня — сначала добавленное последним: свежая запись за сегодня оказывается
+    // первой, а запись, добавленная задним числом, встаёт на своё место по дате.
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
 
