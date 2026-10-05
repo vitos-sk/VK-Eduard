@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
-import { fmt, formatHoursShort, formatTimeShort, formatWorkDateShort } from "@/lib/format";
+import { fmt, formatHoursShort, formatTimeShort, formatWorkDateShort, pluralize } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { breakMinutes } from "@/modules/time/calc";
@@ -171,6 +171,7 @@ export function MonthEntriesTable({
   className,
 }: MonthEntriesTableProps) {
   const t = useT();
+  const locale = useLocale();
   const s = t.hoursUi;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Новий набір записів (інший місяць/фільтр) — знову з першої сторінки.
@@ -191,7 +192,10 @@ export function MonthEntriesTable({
         <h2 className="text-[15px] font-semibold">{t.hours.monthTableTitle}</h2>
         {entries.length > 0 && (
           <p className="tabular shrink-0 text-[13px] text-ink-2">
-            {fmt(s.entriesTotal, { total: formatHoursShort(totalMinutes), n: entries.length })}
+            {fmt(s.entriesTotal, {
+              total: `${formatHoursShort(totalMinutes)} ${t.units.hoursShort}`,
+              n: pluralize(entries.length, locale, { one: s.shiftsOne, few: s.shiftsFew, many: s.shiftsMany }),
+            })}
           </p>
         )}
       </div>

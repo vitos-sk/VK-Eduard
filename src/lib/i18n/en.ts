@@ -739,7 +739,10 @@ export const en: Dict = {
     emptyFilteredHint: "Try resetting the filters or choosing another month",
     loadMore: "Show more",
     shownCount: "Showing {shown} of {total}",
-    entriesTotal: "Total {total} · {n}",
+    entriesTotal: "Total: {total} · {n}",
+    shiftsOne: "{n} shift",
+    shiftsFew: "{n} shifts",
+    shiftsMany: "{n} shifts",
     exportHint: "Timesheet for the selected month",
   },
 

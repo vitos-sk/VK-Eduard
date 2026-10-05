@@ -834,7 +834,10 @@ export const uk = {
     emptyFilteredHint: "Спробуйте скинути фільтри або обрати інший місяць",
     loadMore: "Показати ще",
     shownCount: "Показано {shown} із {total}",
-    entriesTotal: "Разом {total} · {n}",
+    entriesTotal: "Разом: {total} · {n}",
+    shiftsOne: "{n} зміна",
+    shiftsFew: "{n} зміни",
+    shiftsMany: "{n} змін",
     exportHint: "Табель за обраний місяць",
   },
 

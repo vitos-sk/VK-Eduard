@@ -16,6 +16,21 @@ export function fmt(
   );
 }
 
+/**
+ * Подбирает форму слова по числу: «1 зміна», «2 зміни», «5 змін». Правила множественного числа —
+ * свои у каждого языка (`Intl.PluralRules`): в украинском три формы, в английском и нидерландском две.
+ */
+export function pluralize(
+  count: number,
+  locale: Locale,
+  forms: { one: string; few: string; many: string },
+): string {
+  const category = new Intl.PluralRules(INTL_TAGS[locale]).select(count);
+  const template = category === "one" ? forms.one : category === "few" ? forms.few : forms.many;
+
+  return template.replace("{n}", String(count));
+}
+
 /** Первая буква — заглавная. `date-fns` отдаёт названия дней и месяцев строчными. */
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);

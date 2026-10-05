@@ -739,7 +739,10 @@ export const nl: Dict = {
     emptyFilteredHint: "Herstel de filters of kies een andere maand",
     loadMore: "Meer tonen",
     shownCount: "{shown} van {total} getoond",
-    entriesTotal: "Totaal {total} · {n}",
+    entriesTotal: "Totaal: {total} · {n}",
+    shiftsOne: "{n} dienst",
+    shiftsFew: "{n} diensten",
+    shiftsMany: "{n} diensten",
     exportHint: "Urenstaat van de gekozen maand",
   },
 

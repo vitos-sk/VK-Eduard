@@ -1,4 +1,4 @@
-import { eachDayOfInterval, startOfWeek } from "date-fns";
+import { eachDayOfInterval, endOfWeek, startOfWeek } from "date-fns";
 
 import { DayReportCard } from "@/components/home/DayReportCard";
 import { Greeting } from "@/components/home/Greeting";
@@ -107,12 +107,11 @@ export default async function HomePage() {
     ? (sites.find((site) => site.id === todaySiteId)?.name ?? null)
     : null;
 
-  // Міні-талони тижня: з понеділка по сьогодні, у ряд лишаються останні чотири дні.
+  // Тиждень цілком, пн–нд: сьогодні підсвічено, майбутні дні приглушені.
   const weekDays: WeekDay[] = eachDayOfInterval({
     start: startOfWeek(now, { weekStartsOn: 1 }),
-    end: now,
+    end: endOfWeek(now, { weekStartsOn: 1 }),
   })
-    .slice(-4)
     .map((date) => {
       const key = dateKeyOf(date);
       const dayMinutes = sumTotalMinutes(entries.filter((entry) => entry.work_date === key));
@@ -124,6 +123,7 @@ export default async function HomePage() {
         day: date.getDate(),
         hours: dayMinutes > 0 ? formatHoursShort(dayMinutes) : null,
         report: hasReport ? "submitted" : dayMinutes > 0 ? "notSubmitted" : null,
+        when: key === todayKey ? "today" : key > todayKey ? "future" : "past",
       };
     });
 
@@ -153,7 +153,11 @@ export default async function HomePage() {
           </span>
         }
       />
-      <WeekStats className="mt-2" days={weekDays} />
+      <WeekStats
+        className="mt-2"
+        days={weekDays}
+        legend={[t.home.dayReport.submitted, t.home.dayReport.notSubmitted]}
+      />
 
       <SectionHeader
         className="mt-[18px]"
