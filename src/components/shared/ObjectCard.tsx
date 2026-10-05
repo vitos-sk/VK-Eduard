@@ -4,6 +4,7 @@ import { ObjectTicket } from "@/components/ui/object-ticket";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { useT } from "@/lib/i18n/client";
 import type { SiteObject } from "@/lib/types";
+import { categoryName } from "@/modules/reports/categoryLabels";
 
 interface ObjectCardProps {
   object: SiteObject;
@@ -22,7 +23,7 @@ interface ObjectCardProps {
 export function ObjectCard({ object, stats, reserveMenuSpace, className }: ObjectCardProps) {
   const t = useT();
   const caption = [
-    object.kind || object.address,
+    (object.kind && categoryName(object.kind, t)) || object.address,
     stats
       ? `${formatHoursShort(stats.minutes)} · ${fmt(t.objectsUi.workersCount, { n: stats.workerCount })}`
       : null,

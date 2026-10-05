@@ -8,6 +8,8 @@ describe("buildPdf", () => {
     const pdf = await buildPdf(
       [
         {
+          dateKey: "2026-10-08",
+          weekday: "Чт",
           date: "08.10.2026",
           worker: "Ґанна Єгорівна",
           site: "Об'єкт «Їжак»",

@@ -12,9 +12,12 @@ import {
 } from "@/components/shared/SegmentedTabs";
 import { useT } from "@/lib/i18n/client";
 import type { WorkStatus } from "@/lib/types";
+import { canonicalCategoryLabel, categoryName } from "@/modules/reports/categoryLabels";
+import type { WorkCategory } from "@/modules/reports/types";
 import { createSite, updateSite } from "@/modules/sites/actions";
 import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
 
@@ -24,10 +27,12 @@ interface ObjectFormProps {
   companyId: string;
   /** Підписане посилання на поточне фото об'єкта (якщо є). */
   photoUrl?: string | null;
+  /** Категорії робіт компанії — з них обирається «Вид робіт» об'єкта. */
+  categories: readonly WorkCategory[];
 }
 
 /** Форма `/objects/new` і `/objects/[id]/edit` — доступна тільки boss (RLS). */
-export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps) {
+export function ObjectForm({ site, companyId, photoUrl = null, categories }: ObjectFormProps) {
   const t = useT();
   const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
     { value: "not_started", label: t.status.not_started },
@@ -39,7 +44,13 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState(site?.name ?? "");
-  const [kind, setKind] = useState(site?.kind ?? "");
+  // Вид робіт — вибір із категорій компанії (мовою інтерфейсу). Старе вільне значення
+  // («Плоский дах») приводиться до стандартної назви; власне, якого нема у списку, лишається окремим чипом.
+  const [kind, setKind] = useState(() => (site?.kind ? (canonicalCategoryLabel(site.kind) ?? site.kind) : ""));
+  const kindOptions = [
+    ...categories.filter((category) => !category.is_other).map((category) => category.label),
+    ...(kind !== "" && !categories.some((category) => !category.is_other && category.label === kind) ? [kind] : []),
+  ];
   const [address, setAddress] = useState(site?.address ?? "");
   const [status, setStatus] = useState<WorkStatus>(site?.status ?? "not_started");
   // Щойно створений об'єкт (тільки в режимі створення) — форма підмінюється
@@ -130,12 +141,18 @@ export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps
             />
           </TicketSection>
           <TicketSection>
-            <UnderlineField
-              label={t.objects.form.kindLabel}
-              value={kind}
-              onChange={(event) => setKind(event.target.value)}
-              placeholder={t.objects.form.kindPlaceholder}
-            />
+            <p className="text-[12px] text-ink-2">{t.objects.form.kindLabel}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {kindOptions.map((option) => (
+                <Chip
+                  key={option}
+                  selected={kind === option}
+                  onClick={() => setKind(kind === option ? "" : option)}
+                >
+                  {categoryName(option, t)}
+                </Chip>
+              ))}
+            </div>
           </TicketSection>
           <TicketSection>
             <UnderlineField

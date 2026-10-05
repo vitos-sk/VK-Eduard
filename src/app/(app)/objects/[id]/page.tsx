@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getGoogleMapsDirectionsUrl } from "@/lib/utils";
 import { requireProfile } from "@/modules/auth/session";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
+import { categoryName } from "@/modules/reports/categoryLabels";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { getReportsFeed, getSiteReportsFeed, getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
@@ -110,7 +111,7 @@ export default async function ObjectDetailPage({
                 {site.kind && (
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-ink-2">{t.objects.detail.kind}</dt>
-                    <dd className="font-medium">{site.kind}</dd>
+                    <dd className="font-medium">{categoryName(site.kind, t)}</dd>
                   </div>
                 )}
                 <div className="flex items-baseline justify-between gap-4">

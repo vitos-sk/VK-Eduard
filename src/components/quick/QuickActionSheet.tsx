@@ -68,7 +68,7 @@ export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionShee
       inert={!open}
       className={cn(
         // Заканчивается над таб-баром (84 px) — бар не затемняется
-        "absolute inset-x-0 top-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 overflow-hidden",
+        "absolute inset-x-0 top-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-50 overflow-hidden",
         !open && "pointer-events-none",
       )}
     >

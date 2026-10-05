@@ -56,7 +56,7 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
       aria-label={t.common.appName}
       className="perf-t relative z-60 shrink-0 bg-ticket pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="grid min-h-[84px] grid-cols-5 items-start px-1 pt-2.5">
+      <div className="grid min-h-[60px] grid-cols-5 items-start px-1 pt-2">
         {leftItems.map((item) => (
           <NavTab key={item.href} item={item} pathname={pathname} />
         ))}

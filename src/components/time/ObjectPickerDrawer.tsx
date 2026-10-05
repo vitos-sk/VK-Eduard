@@ -68,7 +68,7 @@ export function ObjectPickerDrawer({
       mobileClassName={cn(
         "mx-auto max-w-[560px] border-edge bg-ticket text-text",
         // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
-        "pb-[calc(84px+env(safe-area-inset-bottom))]",
+        "pb-[calc(60px+env(safe-area-inset-bottom))]",
         "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
       )}
       desktopClassName="border-edge bg-ticket"

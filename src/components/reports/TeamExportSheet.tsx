@@ -135,7 +135,7 @@ export function TeamExportSheet({
       mobileClassName={cn(
         "mx-auto max-w-[560px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]",
         // Таб-бар (z-60) лежить над листом: лишаємо під нього місце, як у листі «+».
-        "pb-[calc(84px+env(safe-area-inset-bottom))]",
+        "pb-[calc(60px+env(safe-area-inset-bottom))]",
       )}
       desktopClassName="max-w-[520px] border-border bg-surface"
     >

@@ -4,6 +4,7 @@ import { ObjectForm } from "@/components/objects/ObjectForm";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
+import { getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
 
 /** Редагування об'єкта — шеф або його автор. */
@@ -16,7 +17,10 @@ export default async function EditObjectPage({
   const profile = await requireProfile();
 
   const supabase = await createClient();
-  const site = await getSiteById(supabase, id);
+  const [site, categories] = await Promise.all([
+    getSiteById(supabase, id),
+    getWorkCategories(supabase, profile.company_id),
+  ]);
 
   if (!site) {
     notFound();
@@ -33,5 +37,5 @@ export default async function EditObjectPage({
       ) ?? null)
     : null;
 
-  return <ObjectForm site={site} companyId={profile.company_id} photoUrl={photoUrl} />;
+  return <ObjectForm site={site} companyId={profile.company_id} photoUrl={photoUrl} categories={categories} />;
 }

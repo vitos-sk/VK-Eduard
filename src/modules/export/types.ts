@@ -4,6 +4,11 @@
  * європейський порядок), щоб CSV/Excel/PDF не дублювали форматування.
  */
 export interface ExportRow {
+  /** `YYYY-MM-DD` — для CSV та справжніх дат у Excel. */
+  dateKey: string;
+  /** Скорочена назва дня тижня мовою інтерфейсу. */
+  weekday: string;
+  /** Коротка дата `dd.MM` — для PDF. */
   date: string;
   worker: string;
   site: string;
@@ -13,7 +18,9 @@ export interface ExportRow {
   breakMinutes: number;
   /** `null` — зміна ще триває. */
   totalMinutes: number | null;
+  /** Час до денної норми — PDF. */
   workedMinutes: number;
+  /** Час понад денну норму. */
   overtimeMinutes: number;
   description: string;
   photoCount: number;
@@ -27,6 +34,7 @@ export interface ExportMeta {
 
 /** Один рядок «звіту» для CSV-експорту — на відміну від `ExportRow`, без часу. */
 export interface ReportExportRow {
+  /** `YYYY-MM-DD`. */
   date: string;
   worker: string;
   site: string;

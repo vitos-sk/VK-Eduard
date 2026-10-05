@@ -1,28 +1,21 @@
 import type { Dict } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/locales";
+import { csvDelimiter, csvField } from "./csv";
 import type { ReportExportRow } from "./types";
 
-/** Экранирует поле CSV: кавычки — двойными, оборачивает при спецсимволах. */
-function csvField(value: string): string {
-  if (/[",\r\n;]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-
-  return value;
-}
-
-function header(t: Dict): string[] {
+/**
+ * CSV «Звіти»: дата (ГГГГ-ММ-ДД), сотрудник, объект, виды работ, описание, число фото.
+ * Разделитель и кодировка — те же, что у CSV «Години».
+ */
+export function buildReportsCsv(rows: readonly ReportExportRow[], t: Dict, locale: Locale): string {
+  const delimiter = csvDelimiter(locale);
   const c = t.export.columns;
-
-  return [c.date, c.worker, c.site, c.categories, c.description, c.photos];
-}
-
-/** CSV «Звіти» за діапазон дат — UTF-8 з BOM, як і у CSV «Години». */
-export function buildReportsCsv(rows: readonly ReportExportRow[], t: Dict): string {
-  const lines = [header(t).map(csvField).join(",")];
+  const header = [c.date, c.worker, c.site, c.categories, c.description, c.photos];
+  const lines = [header.map((cell) => csvField(cell, delimiter)).join(delimiter)];
 
   for (const row of rows) {
     const cells = [row.date, row.worker, row.site, row.categories, row.description, String(row.photoCount)];
-    lines.push(cells.map(csvField).join(","));
+    lines.push(cells.map((cell) => csvField(cell, delimiter)).join(delimiter));
   }
 
   // BOM в начале — иначе Excel показывает кириллицу кракозябрами.

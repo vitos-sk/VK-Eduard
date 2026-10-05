@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { formatDateShort, formatTimeShort, formatWorkDateShort, fromDateKey } from "@/lib/format";
 import { getLocale, getT } from "@/lib/i18n/server";
 import type { Dict } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getCompanyEntryHoursInRange } from "@/modules/entries/queries";
@@ -97,7 +98,7 @@ export async function GET(request: Request) {
     const rows: ReportExportRow[] = reports
       .filter((report) => !workerIdSet || workerIdSet.has(report.author_id))
       .map((report) => ({
-        date: formatWorkDateShort(report.work_date, locale),
+        date: report.work_date,
         worker: report.author_full_name,
         site: report.site_id ? (siteNameById.get(report.site_id) ?? "") : t.hours.noObject,
         categories: report.category_labels.join("; "),
@@ -107,7 +108,7 @@ export async function GET(request: Request) {
 
     const fileName = `${EXPORT_FILE_PREFIX}_reports_${from}_${to}.csv`;
 
-    return new NextResponse(buildReportsCsv(rows, t), {
+    return new NextResponse(buildReportsCsv(rows, t, locale), {
       headers: {
         "Content-Type": CONTENT_TYPES.csv,
         "Content-Disposition": `attachment; filename="${fileName}"`,
@@ -126,6 +127,8 @@ export async function GET(request: Request) {
     .filter((row) => row.work_date && row.started_at)
     .filter((row) => !workerIdSet || workerIdSet.has(row.author_id!))
     .map((row) => ({
+      dateKey: row.work_date!,
+      weekday: t.weekdays.short[fromDateKey(row.work_date!).getDay()],
       date: formatWorkDateShort(row.work_date!, locale),
       worker: row.full_name ?? "",
       site: row.site_id ? (siteNameById.get(row.site_id) ?? "") : t.hours.noObject,
@@ -145,7 +148,7 @@ export async function GET(request: Request) {
   };
 
   const fileName = `${EXPORT_FILE_PREFIX}_hours_${from}_${to}.${formatParam}`;
-  const body = await buildExportBody(formatParam, rows, meta, t);
+  const body = await buildExportBody(formatParam, rows, meta, t, locale);
 
   return new NextResponse(body, {
     headers: {
@@ -160,8 +163,9 @@ async function buildExportBody(
   rows: readonly ExportRow[],
   meta: { companyName: string; periodTitle: string },
   t: Dict,
+  locale: Locale,
 ): Promise<BodyInit> {
-  if (format === "xlsx") return new Uint8Array(await buildXlsx(rows, meta, t));
+  if (format === "xlsx") return new Uint8Array(await buildXlsx(rows, meta, t, locale));
   if (format === "pdf") return new Uint8Array(await buildPdf(rows, meta, t));
-  return buildCsv(rows, t);
+  return buildCsv(rows, t, locale);
 }
