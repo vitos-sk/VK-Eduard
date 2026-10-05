@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/lib/i18n/client";
-import { categoryLabel, OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
+import { categoryLabel, categoryName, OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
 import type { WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
 import { Chip } from "@/components/ui/chip";
@@ -64,7 +64,7 @@ export function WorkCategoryChips({
                 onChange(selected ? value.filter((id) => id !== category.id) : [...value, category.id]);
               }}
             >
-              {readOnly ? categoryLabel(category, otherText) : category.label}
+              {readOnly ? categoryLabel(category, otherText, t) : categoryName(category.label, t)}
             </Chip>
           );
         })}

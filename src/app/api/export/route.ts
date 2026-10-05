@@ -88,7 +88,7 @@ export async function GET(request: Request) {
 
   if (kind === "reports") {
     const [reports, sites] = await Promise.all([
-      getCompanyReportsInRange(supabase, profile.company_id, from, to),
+      getCompanyReportsInRange(supabase, profile.company_id, from, to, t),
       getAllSites(supabase),
     ]);
 

@@ -19,6 +19,7 @@ import {
   createWorkCategory,
   restoreWorkCategory,
 } from "@/modules/reports/actions";
+import { categoryName } from "@/modules/reports/categoryLabels";
 import type { WorkCategory } from "@/modules/reports/types";
 import { Badge } from "@/components/ui/badge";
 import { Ticket } from "@/components/ui/ticket";
@@ -183,7 +184,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-[14px] font-semibold text-text">
-                    {category.label}
+                    {categoryName(category.label, t)}
                   </span>
                   {isArchived && (
                     <Badge className="shrink-0">{s.settings.categoriesArchivedBadge}</Badge>
@@ -212,7 +213,7 @@ export function WorkCategoriesManager({ companyId, initialCategories }: WorkCate
             <ModalTitle>{s.settings.categoriesArchiveConfirmTitle}</ModalTitle>
             <ModalDescription>
               {confirmTarget
-                ? fmt(s.settings.categoriesArchiveConfirmBody, { name: confirmTarget.label })
+                ? fmt(s.settings.categoriesArchiveConfirmBody, { name: categoryName(confirmTarget.label, t) })
                 : ""}
             </ModalDescription>
           </ModalHeader>

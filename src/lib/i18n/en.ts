@@ -591,6 +591,27 @@ export const en: Dict = {
     ],
   },
 
+  /**
+   * Названия стандартных категорий работ. В базе они лежат по-украински (ключ — украинская
+   * подпись); пользовательские категории шефа, которых здесь нет, показываются как введены.
+   */
+  categoryNames: {
+    "Плоскі дахи": "Flat roofs",
+    "Скатні дахи": "Pitched roofs",
+    "EPDM": "EPDM",
+    "Resitrix": "Resitrix",
+    "Рубероїд": "Roofing felt",
+    "Дахівка / черепиця": "Roof tiles",
+    "Фасадні роботи": "Facade work",
+    "Жерстяні роботи": "Sheet metal work",
+    "Водостоки": "Gutters",
+    "Демонтаж": "Demolition",
+    "Ремонт даху": "Roof repair",
+    "Склад": "Warehouse",
+    "Додаткові роботи": "Additional work",
+    "Інше": "Other",
+  },
+
   companyUi: {
     title: "Company",
     team: {

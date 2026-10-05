@@ -32,7 +32,7 @@ export function ReportCard({ report, siteName, categories, thumbUrl = null, clas
   const t = useT();
   const state = reportState(report, report.report_photos.length);
   const name = siteName ?? t.hours.noObject;
-  const labels = categoryLabelsOf(report, categories);
+  const labels = categoryLabelsOf(report, categories, t);
   const title = labels.join(", ") || report.description || t.home.lastReport.noDescription;
   const photos = report.report_photos.length;
 

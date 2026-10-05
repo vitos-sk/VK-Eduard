@@ -53,7 +53,7 @@ export default async function ObjectDetailPage({
   const canEdit = isBoss || site.created_by === profile.id;
 
   const reports = isBoss ? allReports : allReports.filter((report) => report.site_id === id);
-  const categoryStats = aggregateCategoryStats(reports, categories);
+  const categoryStats = aggregateCategoryStats(reports, categories, t);
 
   const firstPhotoPaths = reports
     .map((report) => report.report_photos[0]?.storage_path)

@@ -1,3 +1,5 @@
+import type { Dict } from "@/lib/i18n";
+import { categoryName } from "./categoryLabels";
 import type { SiteReportWithPhotos, WorkCategory } from "./types";
 
 export interface CategoryStat {
@@ -14,8 +16,9 @@ export interface CategoryStat {
 export function aggregateCategoryStats(
   reports: readonly SiteReportWithPhotos[],
   categories: readonly WorkCategory[],
+  t: Dict,
 ): CategoryStat[] {
-  const labelById = new Map(categories.map((category) => [category.id, category.label] as const));
+  const labelById = new Map(categories.map((category) => [category.id, categoryName(category.label, t)] as const));
   const counts = new Map<string, number>();
 
   for (const report of reports) {

@@ -144,6 +144,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
       companyId,
       dateKeyOf(startOfMonth(month)),
       dateKeyOf(endOfMonth(month)),
+      t,
     )
       .then((data) => {
         if (cancelled) return;
@@ -191,7 +192,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, companyId, month, s.feed.loadError]);
+  }, [supabase, companyId, month, t, s.feed.loadError]);
 
   const allRows = useMemo(
     () =>

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types.gen";
+import type { Dict } from "@/lib/i18n";
 import { categoryLabel } from "./categoryLabels";
 import type {
   ReportPhoto,
@@ -150,6 +151,7 @@ export async function getCompanyReportsInRange(
   companyId: string,
   fromDate: string,
   toDate: string,
+  t: Dict,
 ): Promise<SiteReportWithNames[]> {
   const { data, error } = await supabase
     .from("site_reports")
@@ -169,7 +171,7 @@ export async function getCompanyReportsInRange(
       author_full_name: profiles?.full_name ?? "",
       site_name: sites?.name ?? null,
       category_labels: report_categories
-        .map((item) => (item.work_categories ? categoryLabel(item.work_categories, report.other_text) : ""))
+        .map((item) => (item.work_categories ? categoryLabel(item.work_categories, report.other_text, t) : ""))
         .filter((label) => label !== ""),
       photo_count: report_photos.length,
     }),

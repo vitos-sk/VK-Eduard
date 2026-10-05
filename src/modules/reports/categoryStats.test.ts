@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { uk } from "@/lib/i18n";
 import { aggregateCategoryStats } from "./categoryStats";
 import type { SiteReportWithPhotos, WorkCategory } from "./types";
 
@@ -30,6 +31,7 @@ describe("aggregateCategoryStats", () => {
     const stats = aggregateCategoryStats(
       [report(["roof"]), report(["roof", "demo"]), report(["roof"])],
       CATEGORIES,
+      uk,
     );
 
     expect(stats).toEqual([
@@ -39,7 +41,7 @@ describe("aggregateCategoryStats", () => {
   });
 
   it("пропускає категорію без мітки у довіднику (архівована)", () => {
-    const stats = aggregateCategoryStats([report(["ghost"])], CATEGORIES);
+    const stats = aggregateCategoryStats([report(["ghost"])], CATEGORIES, uk);
     expect(stats).toEqual([]);
   });
 });

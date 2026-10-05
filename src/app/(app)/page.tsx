@@ -190,7 +190,7 @@ export default async function HomePage() {
               reportId={lastReport.id}
               workDate={lastReport.work_date}
               siteName={lastReportSite?.name ?? t.hours.noObject}
-              worksLabel={categoryLabelsOf(lastReport, categories).join(", ")}
+              worksLabel={categoryLabelsOf(lastReport, categories, t).join(", ")}
               minutes={lastReportMinutes}
               photosCount={lastReport.report_photos.length}
               thumbUrl={lastReportPhotoPath ? (reportPhotoUrls.get(lastReportPhotoPath) ?? null) : null}

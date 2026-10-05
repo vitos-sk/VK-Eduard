@@ -114,7 +114,7 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
       }));
   }, [visible, todayKey, yesterdayKey, t, locale]);
 
-  const dominantCategory = aggregateCategoryStats(visible, categories)[0] ?? null;
+  const dominantCategory = aggregateCategoryStats(visible, categories, t)[0] ?? null;
 
   const emptyTitle =
     filter === "no_description"
