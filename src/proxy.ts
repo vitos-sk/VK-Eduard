@@ -119,9 +119,13 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Все пути, кроме статики и картинок. Иконки, манифест, сервис-воркер и запасная офлайн-страница тоже исключены:
+     * Все пути, кроме статики и картинок. Иконки, манифест, сервис-воркер и запасная офлайн-страница исключены:
      * гонять их через проверку сессии — лишний запрос к Supabase на каждый файл.
+     *
+     * `/auth/*` (вход по ссылке из письма) исключён по другой причине: обработчик сам создаёт сессию.
+     * Если бы прокси параллельно обновлял СТАРУЮ сессию из кук телефона, его куки перебили бы новые,
+     * и человек после ссылки из письма оказывался бы без сессии («посилання недійсне»).
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|auth/|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
