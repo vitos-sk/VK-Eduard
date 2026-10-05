@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { ChevronRight, FileText, LayoutDashboard } from "lucide-react";
+import { ChevronRight, Clock, FileText, LayoutDashboard } from "lucide-react";
 
 import { Ticket } from "@/components/ui/ticket";
 import { useT } from "@/lib/i18n/client";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 /** Иконки не хранятся в моке — сопоставляем их по id пункта. */
 const icons: Record<QuickActionId, LucideIcon> = {
+  manual_time: Clock,
   create_report: FileText,
   dashboard: LayoutDashboard,
 };

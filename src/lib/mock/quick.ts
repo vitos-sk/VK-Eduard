@@ -11,6 +11,12 @@ import type { QuickAction } from "@/lib/types";
 export function getQuickActions(t: Dict): readonly QuickAction[] {
   return [
     {
+      id: "manual_time",
+      title: t.quick.manualTime.title,
+      description: t.quick.manualTime.description,
+      href: "/time/manual",
+    },
+    {
       id: "create_report",
       title: t.quick.createReport.title,
       description: t.quick.createReport.description,

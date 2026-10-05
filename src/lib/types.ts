@@ -61,6 +61,7 @@ export interface PeriodSummary {
 
 /** Идентификатор пункта листа быстрых действий (кнопка «+»). */
 export type QuickActionId =
+  | "manual_time"
   | "create_report"
   | "dashboard";
 
