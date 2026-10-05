@@ -611,6 +611,7 @@ export const en: Dict = {
     title: "Payroll",
     employee: "Employee",
     noEntries: "No entries",
+    noEntriesFor: "No entries for",
     total: "Total",
     rate: "Hourly rate",
     pay: "Total pay",

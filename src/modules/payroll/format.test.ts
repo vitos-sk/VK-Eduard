@@ -104,8 +104,10 @@ describe("payroll", () => {
 
     expect(text).toContain("Employee: Eduard");
     expect(text).toContain("Employee: Andriy");
-    expect(text).toContain("No entries");
     expect(text).toContain("All together\nTotal: 12:05 h");
+    // у Nobody записей нет — только имя в конце, без пустого блока с нулями
+    expect(text.endsWith("\n\nNo entries for: Nobody")).toBe(true);
+    expect(text).not.toContain("Employee: Nobody");
   });
 
   it("незавершённые смены в расчёт не попадают", () => {
@@ -125,5 +127,19 @@ describe("payroll", () => {
   it("сумма к выплате", () => {
     expect(payrollAmount(ENTRIES, [{ id: "u1", name: "E" }], 15)).toBeCloseTo(166.25, 5);
     expect(payrollAmount(ENTRIES, [{ id: "u1", name: "E" }], null)).toBeNull();
+  });
+
+  it("ни у кого нет записей — одна короткая строка с именами", () => {
+    const text = buildPayrollText({
+      entries: [],
+      monthDate: new Date(2026, 9, 1),
+      people: [{ id: "a", name: "Ivan" }, { id: "b", name: "Ілля" }],
+      rate: 10,
+      showNames: true,
+      t: uk,
+      locale: "uk",
+    });
+
+    expect(text).toBe("Розрахунок зарплати 01.–31. жовтня 2026\n\nНемає записів у: Ivan, Ілля");
   });
 });

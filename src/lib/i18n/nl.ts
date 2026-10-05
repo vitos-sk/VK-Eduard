@@ -611,6 +611,7 @@ export const nl: Dict = {
     title: "Loonberekening",
     employee: "Medewerker",
     noEntries: "Geen registraties",
+    noEntriesFor: "Geen registraties voor",
     total: "Totaal",
     rate: "Uurloon",
     pay: "Totaal loon",

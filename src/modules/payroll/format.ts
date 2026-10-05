@@ -124,10 +124,23 @@ export function payrollAmount(entries: readonly PayrollEntry[], people: readonly
 
 export function buildPayrollText({ entries, monthDate, people, rate, showNames, t, locale }: PayrollOptions): string {
   const header = `${t.payroll.title} ${payrollPeriod(monthDate, t)}`;
+  const withEntries = people.filter((person) => entriesOf(entries, person.id).length > 0);
+  const withoutNames = people
+    .filter((person) => !withEntries.includes(person))
+    .map((person) => person.name)
+    .join(", ");
+
+  // Ни у кого нет записей — только шапка и короткая строка, без пустых блоков с нулями.
+  if (withEntries.length === 0) {
+    const message = showNames && withoutNames ? `${t.payroll.noEntriesFor}: ${withoutNames}` : t.payroll.noEntries;
+
+    return [header, "", message].join("\n");
+  }
+
   const blocks: string[] = [];
   let allMinutes = 0;
 
-  for (const person of people) {
+  for (const person of withEntries) {
     const own = entriesOf(entries, person.id);
     const minutes = sumMinutes(own);
     allMinutes += minutes;
@@ -135,15 +148,20 @@ export function buildPayrollText({ entries, monthDate, people, rate, showNames, 
     const lines = [header];
     if (showNames) lines.push(`${t.payroll.employee}: ${person.name}`);
     lines.push("");
-    lines.push(...(own.length > 0 ? own.map((entry) => payrollLine(entry, t)) : [t.payroll.noEntries]));
+    lines.push(...own.map((entry) => payrollLine(entry, t)));
     lines.push("");
     lines.push(...totalsLines(minutes, rate, t, locale));
 
     blocks.push(lines.join("\n"));
   }
 
-  if (people.length > 1) {
+  if (withEntries.length > 1) {
     blocks.push([t.payroll.all, ...totalsLines(allMinutes, rate, t, locale)].join("\n"));
+  }
+
+  // Сотрудники без записей — одной строкой в конце, только имена.
+  if (showNames && withoutNames) {
+    blocks.push(`${t.payroll.noEntriesFor}: ${withoutNames}`);
   }
 
   return blocks.join("\n\n");

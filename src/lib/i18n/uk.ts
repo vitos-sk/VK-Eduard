@@ -704,6 +704,7 @@ export const uk = {
     title: "Розрахунок зарплати",
     employee: "Працівник",
     noEntries: "Немає записів",
+    noEntriesFor: "Немає записів у",
     total: "Разом",
     rate: "Ставка",
     pay: "До виплати",
