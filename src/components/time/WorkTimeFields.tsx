@@ -53,19 +53,15 @@ export function TimeField({
     onChange(minutesToTime(timeToMinutes(value) + deltaMin));
   };
 
+  // Стрелки — самостоятельные кнопки с рамкой, а значение посередине — поле ввода:
+  // три отдельных элемента читаются как «кнопка · поле · кнопка», а не как одна плашка.
   const arrowClass =
-    "grid w-10 shrink-0 place-items-center text-ink outline-none transition-colors hover:bg-primary-tint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+    "grid w-9 shrink-0 cursor-pointer place-items-center rounded-ctl border border-edge bg-ticket text-primary outline-none transition-colors hover:bg-primary-tint active:bg-primary-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 
   return (
     <div className="min-w-0">
       <FieldLabel>{label}</FieldLabel>
-      {/* Один блок: ‹ [ 08:00 ] › — стрелки и цифры одной высоты, ровно в линию */}
-      <div
-        className={cn(
-          "mt-1 flex h-11 items-stretch overflow-hidden rounded-ctl border bg-ticket",
-          invalid ? "border-err" : "border-edge focus-within:border-primary"
-        )}
-      >
+      <div className="mt-1 flex h-11 items-stretch gap-1.5">
         <button
           type="button"
           aria-label={t.manualTime.decreaseTime}
@@ -75,11 +71,11 @@ export function TimeField({
         >
           <ChevronLeft className="size-5" strokeWidth={1.9} aria-hidden />
         </button>
-        {/* Кнопка-значение: цифры всегда по центру; настоящее поле времени лежит сверху невидимым и ловит нажатие */}
+        {/* Поле: цифры по центру; настоящее поле времени лежит сверху невидимым на всю площадь и ловит нажатие */}
         <div
           className={cn(
-            "relative grid min-w-0 flex-1 place-items-center border-x border-dashed border-perf bg-ticket transition-colors hover:bg-primary-tint",
-            invalid && "text-err"
+            "relative grid min-w-0 flex-1 cursor-pointer place-items-center rounded-ctl border bg-field transition-colors hover:border-primary",
+            invalid ? "border-err text-err" : "border-edge text-text focus-within:border-primary"
           )}
         >
           <span className="tabular text-[17px] font-semibold">{draft ?? value}</span>
@@ -98,6 +94,15 @@ export function TimeField({
               }
             }}
             onBlur={() => setDraft(null)}
+            // Нажатие в любом месте поля открывает выбор времени: без этого десктопный Chrome
+            // реагирует только на попадание в сами цифры.
+            onClick={(event) => {
+              try {
+                event.currentTarget.showPicker?.();
+              } catch {
+                // Браузер без showPicker или поле уже в фокусе — остаётся обычный ввод.
+              }
+            }}
             className="absolute inset-0 size-full cursor-pointer appearance-none opacity-0"
           />
         </div>
