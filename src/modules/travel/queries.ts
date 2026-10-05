@@ -50,3 +50,30 @@ export async function getTravelEntriesInRange(
     site_name: sites?.name ?? null,
   }));
 }
+
+/**
+ * Поездки автора за день отчёта на том же объекте — «дорога» по отчёту (как `getReportEntries` для смен).
+ * Нет таблицы (миграция 0018) — пустой список.
+ */
+export async function getReportTravel(
+  supabase: Client,
+  report: { author_id: string; work_date: string; site_id: string | null },
+): Promise<TravelEntry[]> {
+  let query = supabase
+    .from("travel_entries")
+    .select("*")
+    .eq("author_id", report.author_id)
+    .eq("work_date", report.work_date)
+    .order("started_at", { ascending: true });
+
+  query = report.site_id ? query.eq("site_id", report.site_id) : query.is("site_id", null);
+
+  const { data, error } = await query;
+
+  if (error) {
+    if (error.code && MISSING_TABLE_CODES.has(error.code)) return [];
+    throw error;
+  }
+
+  return data ?? [];
+}

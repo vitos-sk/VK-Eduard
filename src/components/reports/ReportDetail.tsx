@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MoreVertical, Pencil } from "lucide-react";
+import { MoreVertical, Pencil, Route } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
@@ -16,6 +16,7 @@ import { fmt, formatDateShort, formatHoursShort, formatTimeShort } from "@/lib/f
 import { useLocale, useT } from "@/lib/i18n/client";
 import { sceneForId } from "@/lib/siteScene";
 import type { WorkEntry } from "@/modules/entries/types";
+import type { TravelEntry } from "@/modules/travel/queries";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import type { Site } from "@/modules/sites/queries";
 import {
@@ -44,6 +45,8 @@ interface ReportDetailProps {
   siteImageUrl: string | null;
   /** Смены автора за этот день на этом объекте — отработанное время по отчёту. */
   entries: readonly WorkEntry[];
+  /** Поездки автора за этот день на этом объекте — «дорога», отдельно от рабочего времени. */
+  travel?: readonly TravelEntry[];
   /** Активные объекты компании — для выбора объекта отчёта. */
   sites: readonly Site[];
 }
@@ -67,6 +70,7 @@ export function ReportDetail({
   siteId,
   siteImageUrl,
   entries,
+  travel = [],
   sites,
 }: ReportDetailProps) {
   const t = useT();
@@ -372,6 +376,39 @@ export function ReportDetail({
           )}
         </section>
       </Ticket>
+
+      {/* Дорога на объект — только если время дороги записано; в рабочие часы не входит */}
+      {travel.length > 0 && (
+        <Ticket asChild variant="flat">
+          <section>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+                <Route className="size-4 text-primary" strokeWidth={1.9} aria-hidden />
+                {t.travel.title}
+              </h2>
+              <span className="tabular text-[15px] font-semibold">
+                {formatHoursShort(travel.reduce((sum, trip) => sum + trip.minutes, 0))}
+              </span>
+            </div>
+
+            <ul className="mt-2 space-y-1.5">
+              {travel.map((trip) => (
+                <li key={trip.id} className="flex items-baseline justify-between gap-3 text-[14px]">
+                  <span className="tabular">
+                    {formatTimeShort(trip.started_at)}–{formatTimeShort(trip.ended_at)}
+                  </span>
+                  <span className="tabular text-ink-2">
+                    {travel.length > 1 && formatHoursShort(trip.minutes)}
+                    {trip.km !== null && `${travel.length > 1 ? " · " : ""}${fmt("{km} {unit}", { km: trip.km, unit: t.travel.kmUnit })}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-1.5 text-[12px] text-ink-2">{t.travel.note}</p>
+          </section>
+        </Ticket>
+      )}
 
       {/* Проблемное место: что забрало время */}
       {(canEdit || problem !== "") && (
