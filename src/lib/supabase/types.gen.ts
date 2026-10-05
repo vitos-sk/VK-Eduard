@@ -206,6 +206,7 @@ export type Database = {
           description: string
           id: string
           other_text: string
+          problem_note: string
           site_id: string | null
           updated_at: string
           work_date: string
@@ -218,6 +219,7 @@ export type Database = {
           description?: string
           id?: string
           other_text?: string
+          problem_note?: string
           site_id?: string | null
           updated_at?: string
           work_date: string
@@ -230,6 +232,7 @@ export type Database = {
           description?: string
           id?: string
           other_text?: string
+          problem_note?: string
           site_id?: string | null
           updated_at?: string
           work_date?: string

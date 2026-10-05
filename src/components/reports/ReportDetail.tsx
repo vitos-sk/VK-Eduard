@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MoreVertical, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,9 +11,13 @@ import { DeleteReportButton } from "@/components/reports/DeleteReportButton";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fmt, formatDateShort } from "@/lib/format";
+import { Thumb } from "@/components/shared/Thumb";
+import { fmt, formatDateShort, formatHoursShort, formatTimeShort } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
-import { updateReportCategories, updateReportDescription } from "@/modules/reports/actions";
+import { sceneForId } from "@/lib/siteScene";
+import type { WorkEntry } from "@/modules/entries/types";
+import { updateReportCategories, updateReportDescription, updateReportProblem } from "@/modules/reports/actions";
+import { breakMinutes } from "@/modules/time/calc";
 import type { ReportPhoto, SiteReportDetail, WorkCategory } from "@/modules/reports/types";
 import { DateStub, Ticket, TicketBody, TicketFoot } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
@@ -27,10 +32,16 @@ interface ReportDetailProps {
   /** RLS-право редагувати цей звіт — своя запис або шеф. UI-режим (перегляд/редагування) керується локальним станом нижче, а не цим прапорцем напряму. */
   canEdit: boolean;
   photoUrls: Readonly<Record<string, string>>;
+  siteId: string | null;
+  /** Подписанная ссылка на фото объекта; нет фото — рисуется сцена-заглушка. */
+  siteImageUrl: string | null;
+  /** Смены автора за этот день на этом объекте — отработанное время по отчёту. */
+  entries: readonly WorkEntry[];
 }
 
 /**
- * Детальная страница `/reports/[id]` — REPORTS.md, раздел 5 (без блоку часу).
+ * Детальная страница `/reports/[id]` — REPORTS.md, раздел 5: фото объекта, категории, опис,
+ * відпрацьований час (зміни автора за цей день на цьому об'єкті) і блок «Проблемне місце».
  * Відкривається завжди в режимі перегляду: усе редагування (опис,
  * категорії, фото, видалення) ховається за «⋮» в шапці — окремий пункт
  * «Редагувати» вмикає його. Створення звіту вже має власний крок з фото
@@ -44,6 +55,9 @@ export function ReportDetail({
   categories,
   canEdit,
   photoUrls,
+  siteId,
+  siteImageUrl,
+  entries,
 }: ReportDetailProps) {
   const t = useT();
   const locale = useLocale();
@@ -57,6 +71,11 @@ export function ReportDetail({
   const [description, setDescription] = useState(report.description);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [draft, setDraft] = useState(description);
+
+  const [isProblemPending, startProblemTransition] = useTransition();
+  const [problem, setProblem] = useState(report.problem_note ?? "");
+  const [isEditingProblem, setIsEditingProblem] = useState(false);
+  const [problemDraft, setProblemDraft] = useState(problem);
 
   const [categoryIds, setCategoryIds] = useState<string[]>(report.category_ids);
   const [isEditingCategories, setIsEditingCategories] = useState(false);
@@ -81,6 +100,23 @@ export function ReportDetail({
       toast(t.reportDetail.saved);
     });
   };
+
+  const handleSaveProblem = () => {
+    startProblemTransition(async () => {
+      const result = await updateReportProblem(report.id, problemDraft);
+
+      if (result.error) {
+        toast(result.error);
+        return;
+      }
+
+      setProblem(problemDraft.trim());
+      setIsEditingProblem(false);
+      toast(t.reportDetail.saved);
+    });
+  };
+
+  const totalWorkedMinutes = entries.reduce((sum, entry) => sum + (entry.total_minutes ?? 0), 0);
 
   const handleSaveCategories = () => {
     startCatTransition(async () => {
@@ -118,6 +154,11 @@ export function ReportDetail({
 
   const content = (
     <>
+      {/* Картинка объекта: его фото или сцена-заглушка */}
+      {(siteId || siteImageUrl) && (
+        <Thumb scene={sceneForId(siteId ?? report.id)} photoUrl={siteImageUrl} size="cover" />
+      )}
+
       <Ticket asChild>
         <section>
           <DateStub date={report.work_date} />
@@ -234,6 +275,102 @@ export function ReportDetail({
           )}
         </section>
       </Ticket>
+
+      {/* Отработанное время по отчёту */}
+      <Ticket asChild variant="flat">
+        <section>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[15px] font-semibold">{t.reportDetail.timeTitle}</h2>
+            {entries.length > 0 && (
+              <span className="tabular text-[15px] font-semibold">{formatHoursShort(totalWorkedMinutes)}</span>
+            )}
+          </div>
+
+          {entries.length === 0 ? (
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-[14px] text-ink-2">{t.reportDetail.timeNone}</p>
+              {canEdit && (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/time/manual">{t.reportDetail.timeAdd}</Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <ul className="mt-2 space-y-1.5">
+              {entries.map((entry) => {
+                const pause = breakMinutes(entry.break_start, entry.break_end);
+
+                return (
+                  <li key={entry.id} className="flex items-baseline justify-between gap-3 text-[14px]">
+                    <span className="tabular">
+                      {formatTimeShort(entry.started_at)}–{entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
+                      {pause > 0 && (
+                        <span className="ml-2 text-[12px] text-ink-2">{fmt(t.reportDetail.timeBreak, { n: pause })}</span>
+                      )}
+                    </span>
+                    <span className="tabular text-ink-2">
+                      {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </Ticket>
+
+      {/* Проблемное место: что забрало время */}
+      {(canEdit || problem !== "") && (
+        <Ticket asChild variant="flat">
+          <section>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-[15px] font-semibold">{t.reportDetail.problemTitle}</h2>
+
+              {canEdit && !isEditingProblem && (
+                <Button
+                  variant={problem === "" ? "outline" : "ghost"}
+                  size={problem === "" ? "sm" : "icon-sm"}
+                  onClick={() => {
+                    setProblemDraft(problem);
+                    setIsEditingProblem(true);
+                  }}
+                  aria-label={problem === "" ? t.reportDetail.problemAdd : t.reportDetail.edit}
+                >
+                  {problem === "" ? (
+                    t.reportDetail.problemAdd
+                  ) : (
+                    <Pencil className="size-4" strokeWidth={1.9} aria-hidden />
+                  )}
+                </Button>
+              )}
+            </div>
+
+            {isEditingProblem ? (
+              <div className="mt-2 space-y-3">
+                <UnderlineTextarea
+                  value={problemDraft}
+                  onChange={(event) => setProblemDraft(event.target.value)}
+                  rows={3}
+                  placeholder={t.reportDetail.problemPlaceholder}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={handleSaveProblem} loading={isProblemPending}>
+                    {t.reportDetail.save}
+                  </Button>
+                  <Button variant="outline" className="flex-1" onClick={() => setIsEditingProblem(false)}>
+                    {t.common.cancel}
+                  </Button>
+                </div>
+              </div>
+            ) : problem === "" ? (
+              <p className="mt-2 text-[14px] text-ink-2">{t.reportDetail.problemHint}</p>
+            ) : (
+              <p className="mt-2 text-[15px] leading-[1.45] font-medium whitespace-pre-wrap text-text">{problem}</p>
+            )}
+          </section>
+        </Ticket>
+      )}
     </>
   );
 

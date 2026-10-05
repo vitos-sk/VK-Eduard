@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database } from "@/lib/supabase/types.gen";
+import type { Database, Tables } from "@/lib/supabase/types.gen";
 import type { Dict } from "@/lib/i18n";
 import { categoryLabel } from "./categoryLabels";
 import type {
@@ -176,4 +176,30 @@ export async function getCompanyReportsInRange(
       photo_count: report_photos.length,
     }),
   );
+}
+
+/**
+ * Время, отработанное по отчёту: смены того же автора за ту же дату на том же объекте.
+ * Отчёт и смена связаны только этим совпадением (отдельной ссылки между ними нет): так время,
+ * внесённое в форме отчёта или на экране «Додати час», показывается на странице отчёта одинаково.
+ */
+export async function getReportEntries(
+  supabase: Client,
+  report: Pick<SiteReport, "author_id" | "work_date" | "site_id">,
+): Promise<Tables<"work_entries">[]> {
+  let query = supabase
+    .from("work_entries")
+    .select("*")
+    .eq("author_id", report.author_id)
+    .eq("work_date", report.work_date)
+    .not("ended_at", "is", null)
+    .order("started_at", { ascending: true });
+
+  query = report.site_id ? query.eq("site_id", report.site_id) : query.is("site_id", null);
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  return data ?? [];
 }

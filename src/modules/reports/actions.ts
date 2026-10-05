@@ -36,6 +36,8 @@ export interface ReportInput {
 }
 
 export interface CreateReportInput extends ReportInput {
+  /** Что забрало время (проблемное место) — необязательно. */
+  problemNote?: string;
   /** Не задано — звіт без годин, як і раніше. */
   time?: ReportTimeInput | null;
 }
@@ -152,6 +154,9 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
       work_date: input.workDate,
       description: input.description,
       other_text: otherText,
+      // Колонку добавляет миграция 0017: пустую заметку не отправляем, чтобы отчёт без неё
+      // сохранялся и на базе, где миграция ещё не накатана.
+      ...(input.problemNote?.trim() ? { problem_note: input.problemNote.trim() } : {}),
     })
     .select("id")
     .single();
@@ -263,6 +268,38 @@ export async function updateReportDescription(
   const { data, error } = await supabase
     .from("site_reports")
     .update({ description })
+    .eq("id", reportId)
+    .select("id");
+
+  if (error) {
+    return { error: t.reportDetail.saveError };
+  }
+
+  if (!data || data.length === 0) {
+    return { error: t.reportDetail.saveRejected };
+  }
+
+  revalidatePath("/", "layout");
+
+  return OK;
+}
+
+/** Правка блока «Проблемное место» — что забрало время. Пустая строка очищает блок. */
+export async function updateReportProblem(
+  reportId: string,
+  problemNote: string,
+): Promise<ReportActionState> {
+  const t = await getT();
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("site_reports")
+    .update({ problem_note: problemNote.trim() })
     .eq("id", reportId)
     .select("id");
 

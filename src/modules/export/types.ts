@@ -41,6 +41,8 @@ export interface ReportExportRow {
   /** Мітки категорій через «; ». */
   categories: string;
   description: string;
+  /** Проблемное место — что забрало время. */
+  problem: string;
   photoCount: number;
 }
 

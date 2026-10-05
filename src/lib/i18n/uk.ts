@@ -446,6 +446,8 @@ export const uk = {
     overtime: "Додатково",
     photosTitle: "Фото",
     viewPhoto: "Переглянути фото",
+    prevPhoto: "Попереднє фото",
+    nextPhoto: "Наступне фото",
     addPhoto: "Додати фото",
     takePhoto: "Камера",
     fromGallery: "Галерея",
@@ -464,12 +466,23 @@ export const uk = {
     deleteError: "Не вдалося видалити звіт. Спробуйте ще раз",
     categoriesLabel: "Вид робіт",
     noCategoriesLabel: "Не вказано",
+    timeTitle: "Відпрацьований час",
+    timeNone: "Час не вказано",
+    timeAdd: "Додати час",
+    timeBreak: "перерва {n} хв",
+    timeTotal: "Разом",
+    problemTitle: "Проблемне місце",
+    problemHint: "Що забрало час: чекали матеріал, складний вузол, погода…",
+    problemAdd: "Додати",
+    problemPlaceholder: "Наприклад: чекали матеріал 2 години",
   },
 
   /** Форма `/reports/new` — створення звіту з нуля. */
   reportForm: {
     title: "Новий звіт",
     categoriesLabel: "Вид робіт",
+    problemLabel: "Проблемне місце — що забрало час (необов'язково)",
+    problemPlaceholder: "Наприклад: чекали матеріал 2 години",
     otherLabel: "Яку роботу ви виконували?",
     otherPlaceholder: "Наприклад: завозили матеріал на об'єкт",
     otherRequired: "Опишіть, яку роботу ви виконували в «Інше»",
@@ -492,10 +505,6 @@ export const uk = {
   /** Лист быстрых действий — кнопка «+». */
   quick: {
     title: "Що ви хочете зробити?",
-    manualTime: {
-      title: "Додати час",
-      description: "Додайте відпрацьовані години",
-    },
     createReport: {
       title: "Створити звіт",
       description: "Швидко створити звіт по роботі",
@@ -573,6 +582,7 @@ export const uk = {
       worked: "Відпрацьовано",
       overtime: "Додатково",
       categories: "Категорії",
+      problem: "Проблемне місце",
       weekday: "День",
       hours: "Години",
       overtimeHours: "Понад норму (год)",

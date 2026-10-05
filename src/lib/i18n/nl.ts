@@ -412,6 +412,8 @@ export const nl: Dict = {
     overtime: "Extra",
     photosTitle: "Foto's",
     viewPhoto: "Foto bekijken",
+    prevPhoto: "Vorige foto",
+    nextPhoto: "Volgende foto",
     addPhoto: "Foto toevoegen",
     takePhoto: "Camera",
     fromGallery: "Galerij",
@@ -429,11 +431,22 @@ export const nl: Dict = {
     deleteError: "Rapport verwijderen mislukt. Probeer het opnieuw",
     categoriesLabel: "Soort werk",
     noCategoriesLabel: "Niet opgegeven",
+    timeTitle: "Gewerkte tijd",
+    timeNone: "Geen tijd ingevuld",
+    timeAdd: "Tijd toevoegen",
+    timeBreak: "pauze {n} min",
+    timeTotal: "Totaal",
+    problemTitle: "Probleemplek",
+    problemHint: "Wat tijd kostte: wachten op materiaal, lastig detail, weer…",
+    problemAdd: "Toevoegen",
+    problemPlaceholder: "Bijvoorbeeld: 2 uur gewacht op materiaal",
   },
 
   reportForm: {
     title: "Nieuw rapport",
     categoriesLabel: "Soort werk",
+    problemLabel: "Probleemplek — wat tijd kostte (optioneel)",
+    problemPlaceholder: "Bijvoorbeeld: 2 uur gewacht op materiaal",
     otherLabel: "Welk werk heb je gedaan?",
     otherPlaceholder: "Bijvoorbeeld: materiaal naar het project gebracht",
     otherRequired: "Beschrijf welk werk je hebt gedaan onder “Overig”",
@@ -454,10 +467,6 @@ export const nl: Dict = {
 
   quick: {
     title: "Wat wil je doen?",
-    manualTime: {
-      title: "Tijd toevoegen",
-      description: "Voeg de gewerkte uren toe",
-    },
     createReport: {
       title: "Rapport maken",
       description: "Snel een werkrapport maken",
@@ -521,6 +530,7 @@ export const nl: Dict = {
       worked: "Gewerkt",
       overtime: "Extra",
       categories: "Categorieën",
+      problem: "Probleemplek",
       weekday: "Dag",
       hours: "Uren",
       overtimeHours: "Overuren (u)",

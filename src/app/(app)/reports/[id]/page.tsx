@@ -4,7 +4,7 @@ import { ReportDetail } from "@/components/reports/ReportDetail";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
-import { getReportWithPhotos, getWorkCategories } from "@/modules/reports/queries";
+import { getReportEntries, getReportWithPhotos, getWorkCategories } from "@/modules/reports/queries";
 import { getSiteById } from "@/modules/sites/queries";
 
 export default async function ReportDetailPage({
@@ -23,14 +23,22 @@ export default async function ReportDetailPage({
     notFound();
   }
 
-  const [site, photoUrls, categories] = await Promise.all([
+  const [site, photoUrls, categories, entries] = await Promise.all([
     report.site_id ? getSiteById(supabase, report.site_id) : Promise.resolve(null),
     getSignedPhotoUrls(
       supabase,
       report.report_photos.map((photo) => photo.storage_path),
     ),
     getWorkCategories(supabase, profile.company_id),
+    getReportEntries(supabase, report).catch(() => []),
   ]);
+
+  // Картинка объекта — его фото из карточки объекта (если загружено).
+  const siteImageUrl = site?.photo_path
+    ? ((await getSignedPhotoUrls(supabase, [site.photo_path], "site-photos").catch(() => new Map<string, string>())).get(
+        site.photo_path,
+      ) ?? null)
+    : null;
 
   return (
     <ReportDetail
@@ -44,6 +52,9 @@ export default async function ReportDetailPage({
       // `reports_update`/`reports_delete` дозволяють без обмежень.
       canEdit
       photoUrls={Object.fromEntries(photoUrls)}
+      siteId={report.site_id}
+      siteImageUrl={siteImageUrl}
+      entries={entries}
     />
   );
 }

@@ -412,6 +412,8 @@ export const en: Dict = {
     overtime: "Extra",
     photosTitle: "Photos",
     viewPhoto: "View photo",
+    prevPhoto: "Previous photo",
+    nextPhoto: "Next photo",
     addPhoto: "Add photo",
     takePhoto: "Camera",
     fromGallery: "Gallery",
@@ -429,11 +431,22 @@ export const en: Dict = {
     deleteError: "Couldn't delete the report. Please try again",
     categoriesLabel: "Type of work",
     noCategoriesLabel: "Not specified",
+    timeTitle: "Time worked",
+    timeNone: "No time entered",
+    timeAdd: "Add time",
+    timeBreak: "break {n} min",
+    timeTotal: "Total",
+    problemTitle: "Problem area",
+    problemHint: "What took time: waiting for material, a tricky detail, weather…",
+    problemAdd: "Add",
+    problemPlaceholder: "For example: waited 2 hours for material",
   },
 
   reportForm: {
     title: "New report",
     categoriesLabel: "Type of work",
+    problemLabel: "Problem area — what took time (optional)",
+    problemPlaceholder: "For example: waited 2 hours for material",
     otherLabel: "What work did you do?",
     otherPlaceholder: "For example: delivered materials to the site",
     otherRequired: "Describe the work you did under “Other”",
@@ -454,10 +467,6 @@ export const en: Dict = {
 
   quick: {
     title: "What do you want to do?",
-    manualTime: {
-      title: "Add time",
-      description: "Add the hours you worked",
-    },
     createReport: {
       title: "Create report",
       description: "Quickly create a work report",
@@ -521,6 +530,7 @@ export const en: Dict = {
       worked: "Worked",
       overtime: "Extra",
       categories: "Categories",
+      problem: "Problem area",
       weekday: "Day",
       hours: "Hours",
       overtimeHours: "Overtime (h)",

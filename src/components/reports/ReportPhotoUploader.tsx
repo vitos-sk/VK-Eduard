@@ -43,7 +43,9 @@ export function ReportPhotoUploader({
   const t = useT();
   const supabase = useMemo(() => createClient(), []);
   const [isUploading, setIsUploading] = useState(false);
-  const [viewedUrl, setViewedUrl] = useState<string | null>(null);
+  const [viewedIndex, setViewedIndex] = useState<number | null>(null);
+  // Фото, для которых уже есть ссылка, — по ним листает просмотр.
+  const viewableUrls = photos.map((photo) => urls[photo.storage_path]).filter((url): url is string => Boolean(url));
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -109,7 +111,7 @@ export function ReportPhotoUploader({
                 variant="bare"
                 size="bare"
                 block
-                onClick={() => setViewedUrl(urls[photo.storage_path])}
+                onClick={() => setViewedIndex(viewableUrls.indexOf(urls[photo.storage_path]))}
                 aria-label={t.reportDetail.viewPhoto}
                 className="size-full"
               >
@@ -168,7 +170,13 @@ export function ReportPhotoUploader({
 
       {inputs}
 
-      <PhotoLightbox url={viewedUrl} onOpenChange={(open) => !open && setViewedUrl(null)} title={t.reportDetail.photosTitle} />
+      <PhotoLightbox
+        urls={viewableUrls}
+        index={viewedIndex}
+        onIndexChange={setViewedIndex}
+        onOpenChange={(open) => !open && setViewedIndex(null)}
+        title={t.reportDetail.photosTitle}
+      />
     </div>
   );
 }

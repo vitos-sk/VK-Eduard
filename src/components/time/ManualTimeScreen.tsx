@@ -8,6 +8,7 @@ import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/componen
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { useT } from "@/lib/i18n/client";
+import { clearOfflineCache } from "@/lib/offline/cache";
 import { enqueueManualEntry, newClientId } from "@/lib/offline/outbox";
 import { createManualEntry, updateEntry } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
@@ -137,6 +138,8 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
         return;
       }
 
+      // Записи поменялись — сохранённые на телефоне копии «Годин» и дашборда устарели.
+      void clearOfflineCache();
       toast(entry ? t.manualTime.updated : t.manualTime.saved);
       router.push("/hours");
       router.refresh();

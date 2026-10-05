@@ -103,6 +103,7 @@ export async function GET(request: Request) {
         site: report.site_id ? (siteNameById.get(report.site_id) ?? "") : t.hours.noObject,
         categories: report.category_labels.join("; "),
         description: report.description,
+        problem: report.problem_note ?? "",
         photoCount: report.photo_count,
       }));
 

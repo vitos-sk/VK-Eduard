@@ -19,6 +19,7 @@ function report(categoryIds: string[]): SiteReportWithPhotos {
     work_date: "2026-09-01",
     description: "",
     other_text: "",
+    problem_note: "",
     created_at: "",
     updated_at: "",
     report_photos: [],

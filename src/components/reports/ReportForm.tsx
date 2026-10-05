@@ -11,6 +11,7 @@ import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { Toggle } from "@/components/ui/toggle";
 import { useT } from "@/lib/i18n/client";
+import { clearOfflineCache } from "@/lib/offline/cache";
 import { createReport } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
@@ -48,6 +49,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [otherText, setOtherText] = useState("");
   const [description, setDescription] = useState("");
+  const [problemNote, setProblemNote] = useState("");
   const [withTime, setWithTime] = useState(false);
   const [startAt, setStartAt] = useState("07:00");
   const [endAt, setEndAt] = useState("16:00");
@@ -90,6 +92,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         description,
         categoryIds,
         otherText,
+        problemNote,
         time: withTime ? { startedAt: startAt, endedAt: endAt, breakStart, breakEnd } : null,
       });
 
@@ -99,6 +102,8 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
       }
 
       toast(t.reportForm.saved);
+      // Записи времени и отчёты поменялись — сохранённые на телефоне копии экранов устарели.
+      void clearOfflineCache();
       setCreatedReportId(result.reportId);
       router.refresh();
     });
@@ -180,6 +185,16 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
               onChange={(event) => setDescription(event.target.value)}
               rows={2}
               placeholder={t.manualTime.descriptionPlaceholder}
+            />
+          </TicketSection>
+
+          <TicketSection>
+            <UnderlineTextarea
+              label={t.reportForm.problemLabel}
+              value={problemNote}
+              onChange={(event) => setProblemNote(event.target.value)}
+              rows={2}
+              placeholder={t.reportForm.problemPlaceholder}
             />
           </TicketSection>
         </Ticket>
