@@ -52,8 +52,18 @@ export function SalaryCalculator({
 
     const others = workers.filter((worker) => worker.id !== selfId);
 
-    return [{ id: selfId, name: `${selfName} (${t.hours.salaryCalcSelf})` }, ...others];
-  }, [isBoss, selfId, selfName, workers, t.hours.salaryCalcSelf]);
+    return [{ id: selfId, name: selfName }, ...others];
+  }, [isBoss, selfId, selfName, workers]);
+
+  // Пометка «(Я)» — только в списке выбора; в копируемом тексте имя без неё.
+  const selectOptions = useMemo(
+    () =>
+      everyone.map((person) => ({
+        id: person.id,
+        name: person.id === selfId ? `${person.name} (${t.hours.salaryCalcSelf})` : person.name,
+      })),
+    [everyone, selfId, t.hours.salaryCalcSelf],
+  );
 
   // Пустой выбор — все; иначе только отмеченные, в порядке списка.
   const people = useMemo(
@@ -99,7 +109,7 @@ export function SalaryCalculator({
       <div className="mt-2.5 flex flex-col gap-2.5">
         {isBoss && (
           <WorkerMultiSelect
-            workers={everyone.map((person) => ({ id: person.id, name: person.name }))}
+            workers={selectOptions}
             value={selectedIds}
             onChange={setSelectedIds}
             label={t.hours.salaryCalcWorkerLabel}
