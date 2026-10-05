@@ -80,6 +80,9 @@ export async function updateFullName(
 
 export type ForgotPasswordState = { status: "idle" | "sent" | "error"; error: string | null };
 
+/** Сколько ждём ответа почтового сервера, прежде чем сообщить, что отправка затянулась. */
+const RESET_TIMEOUT_MS = 12_000;
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Адрес сайта, с которого пришёл запрос: ссылка в письме должна вести обратно именно сюда. */
@@ -112,9 +115,20 @@ export async function requestPasswordReset(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await requestOrigin()}/auth/callback?next=/reset-password`,
-  });
+  const redirectTo = `${await requestOrigin()}/auth/callback?next=/reset-password`;
+
+  // Письмо уходит через почтовый сервер синхронно: при неверных настройках SMTP запрос может висеть
+  // десятки секунд. Ждём не дольше 12 с и честно говорим, что отправка затянулась.
+  const result = await Promise.race([
+    supabase.auth.resetPasswordForEmail(email, { redirectTo }),
+    new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), RESET_TIMEOUT_MS)),
+  ]);
+
+  if (result === "timeout") {
+    return { status: "error", error: t.auth.forgotSlow };
+  }
+
+  const { error } = result;
 
   if (error) {
     if (error.status === 429 || error.code === "over_email_send_rate_limit") {

@@ -68,6 +68,7 @@ export const en: Dict = {
     forgotInvalidEmail: "Check the email",
     forgotRateLimit: "Too many attempts. Try again in a few minutes",
     forgotFailed: "Couldn't send the email. Please try again",
+    forgotSlow: "Sending is taking longer than usual. Wait a few minutes and check your inbox, then try again.",
     linkInvalid: "The link is invalid or has expired. Request a new one.",
     backToLogin: "Back to sign in",
     resetTitle: "New password",

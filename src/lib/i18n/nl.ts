@@ -68,6 +68,7 @@ export const nl: Dict = {
     forgotInvalidEmail: "Controleer het e-mailadres",
     forgotRateLimit: "Te veel pogingen. Probeer het over een paar minuten opnieuw",
     forgotFailed: "E-mail versturen mislukt. Probeer het opnieuw",
+    forgotSlow: "Het versturen duurt langer dan normaal. Wacht een paar minuten, controleer je inbox en probeer het dan opnieuw.",
     linkInvalid: "De link is ongeldig of verlopen. Vraag een nieuwe aan.",
     backToLogin: "Terug naar inloggen",
     resetTitle: "Nieuw wachtwoord",
