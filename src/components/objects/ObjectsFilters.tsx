@@ -1,7 +1,6 @@
 "use client";
 
 import { Chip } from "@/components/ui/chip";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateRangeField } from "@/components/shared/DateRangeField";
 import { useT } from "@/lib/i18n/client";
 import type { WorkStatus } from "@/lib/types";
 
@@ -80,30 +80,14 @@ export function ObjectsFilters({ value, onChange, sites, workers }: ObjectsFilte
 
       <fieldset>
         <legend className={labelClass}>{s.filters.period}</legend>
-        <div className="mt-1 grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="sr-only">{s.filters.from}</span>
-            <Input
-              type="date"
-              size="sm"
-              aria-label={s.filters.from}
-              value={value.dateFrom}
-              max={value.dateTo || undefined}
-              onChange={(event) => patch({ dateFrom: event.target.value })}
-            />
-          </label>
-          <label className="block">
-            <span className="sr-only">{s.filters.to}</span>
-            <Input
-              type="date"
-              size="sm"
-              aria-label={s.filters.to}
-              value={value.dateTo}
-              min={value.dateFrom || undefined}
-              onChange={(event) => patch({ dateTo: event.target.value })}
-            />
-          </label>
-        </div>
+        <DateRangeField
+          className="mt-1"
+          from={value.dateFrom}
+          to={value.dateTo}
+          onChange={({ from, to }) => patch({ dateFrom: from, dateTo: to })}
+          fromLabel={s.filters.from}
+          toLabel={s.filters.to}
+        />
         <p className="mt-1.5 text-[12px] text-ink-2">{s.filters.periodHint}</p>
       </fieldset>
 
