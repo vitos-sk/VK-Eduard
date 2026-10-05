@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { useOwnAvatarUrl } from "@/components/layout/OwnAvatar";
 import { Avatar } from "@/components/ui/avatar";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 interface AvatarLinkProps {
@@ -18,6 +18,7 @@ interface AvatarLinkProps {
  * Зона нажатия 44 px — через `before`.
  */
 export function AvatarLink({ initials, className }: AvatarLinkProps) {
+  const t = useT();
   const url = useOwnAvatarUrl();
 
   return (

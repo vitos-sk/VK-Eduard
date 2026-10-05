@@ -13,7 +13,7 @@ import { Thumb } from "@/components/shared/Thumb";
 import { Badge } from "@/components/ui/badge";
 import { fmt } from "@/lib/format";
 import { sceneForId } from "@/lib/siteScene";
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getGoogleMapsDirectionsUrl } from "@/lib/utils";
 import { requireProfile } from "@/modules/auth/session";
@@ -34,6 +34,7 @@ export default async function ObjectDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getT();
   const { id } = await params;
   const profile = await requireProfile();
   const supabase = await createClient();

@@ -11,7 +11,7 @@ import {
   startOfYear,
 } from "date-fns";
 
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
 import { dateKeyOf } from "@/modules/time/calc";
 
 export type DashboardPeriod = "month" | "quarter" | "year";
@@ -70,6 +70,7 @@ export function buildHoursChartData(
   period: DashboardPeriod,
   reference: Date,
   entries: readonly HoursEntryLike[],
+  t: Dict,
 ): HoursChartPoint[] {
   const { from, to } = getPeriodRange(period, reference);
 

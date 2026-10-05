@@ -1,7 +1,8 @@
 import { InfoPage } from "@/components/more/InfoPage";
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 
-export default function NotificationsPage() {
+export default async function NotificationsPage() {
+  const t = await getT();
   return (
     <InfoPage title={t.profile.notificationsPage.title}>
       <p>{t.profile.notificationsPage.body}</p>

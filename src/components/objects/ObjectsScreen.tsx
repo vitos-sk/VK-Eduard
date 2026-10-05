@@ -21,8 +21,7 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
-import { t } from "@/lib/i18n";
-import { objectsStrings as s } from "@/lib/i18n/parts/objects";
+import { useLocale, useT } from "@/lib/i18n/client";
 import type { SiteObject } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { initialsOf } from "@/components/shared/Thumb";
@@ -39,20 +38,7 @@ const MAX_DATE = "2100-12-31";
 /** «Всі» + три статуса объектов из справочника 3.4. */
 type ObjectFilter = "all" | "in_progress" | "not_started" | "completed" | "paused";
 
-const FILTER_OPTIONS: readonly SegmentedOption<ObjectFilter>[] = [
-  { value: "all", label: t.objects.tabs.all },
-  { value: "in_progress", label: t.objects.tabs.inProgress },
-  { value: "not_started", label: t.objects.tabs.notStarted },
-  { value: "completed", label: t.objects.tabs.completed },
-];
-
 type ArchiveFilter = "active" | "archived" | "all";
-
-const ARCHIVE_OPTIONS: readonly SegmentedOption<ArchiveFilter>[] = [
-  { value: "active", label: s.archiveTabs.active },
-  { value: "archived", label: s.archiveTabs.archived },
-  { value: "all", label: s.archiveTabs.all },
-];
 
 interface ObjectsScreenProps {
   objects: readonly SiteObject[];
@@ -68,6 +54,20 @@ interface ObjectsScreenProps {
  * компании (десятки объектов) этого не замечает.
  */
 export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) {
+  const t = useT();
+  const locale = useLocale();
+  const s = t.objectsUi;
+  const ARCHIVE_OPTIONS: readonly SegmentedOption<ArchiveFilter>[] = [
+    { value: "active", label: s.archiveTabs.active },
+    { value: "archived", label: s.archiveTabs.archived },
+    { value: "all", label: s.archiveTabs.all },
+  ];
+  const FILTER_OPTIONS: readonly SegmentedOption<ObjectFilter>[] = [
+    { value: "all", label: t.objects.tabs.all },
+    { value: "in_progress", label: t.objects.tabs.inProgress },
+    { value: "not_started", label: t.objects.tabs.notStarted },
+    { value: "completed", label: t.objects.tabs.completed },
+  ];
   const [filters, setFilters] = useState<ObjectsFiltersState>(EMPTY_FILTERS);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   // `null` — записи для фильтра по дате/работнику ещё грузятся (или фильтр не задан).
@@ -130,7 +130,7 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
   const isEntriesLoading = needsEntries && activeSiteIds === null;
 
   const visibleObjects = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase("uk");
+    const needle = query.trim().toLocaleLowerCase(locale);
 
     return objects.filter((object) => {
       if (filter !== "all" && object.status !== filter) {
@@ -155,11 +155,11 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
       }
 
       return (
-        object.name.toLocaleLowerCase("uk").includes(needle) ||
-        object.address.toLocaleLowerCase("uk").includes(needle)
+        object.name.toLocaleLowerCase(locale).includes(needle) ||
+        object.address.toLocaleLowerCase(locale).includes(needle)
       );
     });
-  }, [objects, filter, filters.siteId, needsEntries, activeSiteIds, archiveFilter, isBoss, query]);
+  }, [objects, filter, filters.siteId, needsEntries, activeSiteIds, archiveFilter, isBoss, query, locale]);
 
   return (
     <div className="pb-6">

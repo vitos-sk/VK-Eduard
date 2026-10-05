@@ -14,23 +14,6 @@ type Client = SupabaseClient<Database>;
  * другого бессмысленно — база всё равно отдаст только его записи или пусто.
  */
 
-/** Открытая смена автора. Больше одной быть не может — частичный уникальный индекс. */
-export async function getOpenEntry(
-  supabase: Client,
-  authorId: string,
-): Promise<WorkEntry | null> {
-  const { data, error } = await supabase
-    .from("work_entries")
-    .select("*")
-    .eq("author_id", authorId)
-    .is("ended_at", null)
-    .maybeSingle();
-
-  if (error) throw error;
-
-  return data;
-}
-
 /** Все записи автора за один день работы, от ранней к поздней. */
 export async function getEntriesForDate(
   supabase: Client,

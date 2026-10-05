@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Modal, ModalClose, ModalContent, ModalTitle } from "@/components/ui/modal";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 interface PhotoLightboxProps {
@@ -20,6 +20,7 @@ interface PhotoLightboxProps {
  * під статус-бар та «острівець», як хрестик у верхньому куті.
  */
 export function PhotoLightbox({ url, onOpenChange, title }: PhotoLightboxProps) {
+  const t = useT();
   return (
     <Modal open={url !== null} onOpenChange={onOpenChange}>
       <ModalContent

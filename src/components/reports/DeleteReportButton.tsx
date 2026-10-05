@@ -12,7 +12,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { deleteReport } from "@/modules/reports/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ interface DeleteReportButtonProps {
 
 /** Кнопка видалення звіту з підтвердженням — `/reports/[id]`. */
 export function DeleteReportButton({ reportId, onDeleted, iconOnly, className }: DeleteReportButtonProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

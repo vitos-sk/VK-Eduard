@@ -1,7 +1,8 @@
+"use client";
+
 import { ObjectTicket } from "@/components/ui/object-ticket";
 import { fmt, formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { objectsStrings } from "@/lib/i18n/parts/objects";
+import { useT } from "@/lib/i18n/client";
 import type { SiteObject } from "@/lib/types";
 
 interface ObjectCardProps {
@@ -19,10 +20,11 @@ interface ObjectCardProps {
  * Нет фото — рамка с иконкой «нет изображения». Архивный объект помечен «Архів».
  */
 export function ObjectCard({ object, stats, reserveMenuSpace, className }: ObjectCardProps) {
+  const t = useT();
   const caption = [
     object.kind || object.address,
     stats
-      ? `${formatHoursShort(stats.minutes)} · ${fmt(objectsStrings.workersCount, { n: stats.workerCount })}`
+      ? `${formatHoursShort(stats.minutes)} · ${fmt(t.objectsUi.workersCount, { n: stats.workerCount })}`
       : null,
   ]
     .filter(Boolean)

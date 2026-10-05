@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 
@@ -19,6 +19,7 @@ export async function signIn(
   _prev: SignInState,
   formData: FormData,
 ): Promise<SignInState> {
+  const t = await getT();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -49,6 +50,7 @@ export async function updateFullName(
   _prev: UpdateNameState,
   formData: FormData,
 ): Promise<UpdateNameState> {
+  const t = await getT();
   const fullName = String(formData.get("fullName") ?? "").trim();
 
   if (fullName === "") {

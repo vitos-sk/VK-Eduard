@@ -8,8 +8,7 @@ import { DeactivateWorkerButton } from "@/components/reports/DeactivateWorkerBut
 import { DailyNormEditor } from "@/components/more/team/DailyNormEditor";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { companyStrings as s } from "@/lib/i18n/parts/company";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { buildWorkerHoursList } from "@/modules/team/hours";
@@ -38,6 +37,8 @@ export function TeamManagementScreen({
   workers: initialWorkers,
   entries,
 }: TeamManagementScreenProps) {
+  const t = useT();
+  const s = t.companyUi;
   const supabase = useMemo(() => createClient(), []);
   const [workers, setWorkers] = useState<readonly Worker[]>(initialWorkers);
   const [search, setSearch] = useState("");

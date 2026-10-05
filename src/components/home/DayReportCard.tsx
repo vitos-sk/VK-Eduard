@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -5,7 +7,7 @@ import { HoursRuler } from "@/components/ui/hours-ruler";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { DateStub, Ticket, TicketBody, TicketFoot } from "@/components/ui/ticket";
 import { formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 interface DayReportCardProps {
@@ -31,6 +33,7 @@ export function DayReportCard({
   reportId,
   className,
 }: DayReportCardProps) {
+  const t = useT();
   const copy = t.home.dayReport;
   const isSubmitted = reportId !== null;
 

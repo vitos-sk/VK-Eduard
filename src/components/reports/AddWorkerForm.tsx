@@ -7,18 +7,13 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createWorker } from "@/modules/team/actions";
 import { Ticket } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
 import { UnderlineField } from "@/components/ui/underline-field";
 
 type Role = "worker" | "boss";
-
-const ROLE_OPTIONS: readonly SegmentedOption<Role>[] = [
-  { value: "worker", label: t.reports.team.form.roleWorker },
-  { value: "boss", label: t.reports.team.form.roleBoss },
-];
 
 interface AddWorkerFormProps {
   onClose: () => void;
@@ -33,6 +28,11 @@ interface AddWorkerFormProps {
  * він і передає ці дані людині.
  */
 export function AddWorkerForm({ onClose, onCreated, className }: AddWorkerFormProps) {
+  const t = useT();
+  const ROLE_OPTIONS: readonly SegmentedOption<Role>[] = [
+    { value: "worker", label: t.reports.team.form.roleWorker },
+    { value: "boss", label: t.reports.team.form.roleBoss },
+  ];
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 

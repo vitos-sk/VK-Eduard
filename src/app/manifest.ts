@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 
 import { tokens } from "@/design-system/tokens";
-import { t } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/server";
 
 /**
  * Манифест PWA. Next генерирует его сам — отдельный `public/manifest.json` не нужен.
@@ -13,12 +14,15 @@ import { t } from "@/lib/i18n";
  * Файлы иконок собирает `scripts/generate-app-icons.mjs` из знака в
  * `src/components/brand/Logo.tsx`. Руками их не правим.
  */
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
+
   return {
     name: t.common.appName,
     short_name: t.common.appName,
     description: t.pwa.description,
-    lang: "uk",
+    lang: locale,
     dir: "ltr",
     id: "/",
     start_url: "/",

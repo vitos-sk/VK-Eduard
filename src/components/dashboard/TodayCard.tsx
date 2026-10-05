@@ -1,6 +1,8 @@
+"use client";
+
 import { Ticket } from "@/components/ui/ticket";
 import { fmt, formatHoursShort, formatTimeShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import type { TodayOverview } from "@/modules/dashboard/aggregate";
 import { initialsOf } from "@/components/shared/Thumb";
 
@@ -13,6 +15,7 @@ interface TodayCardProps {
 
 /** Блок «Зараз на роботі»: хто на зміні й де, скільки відмічено, хто ще мовчить. */
 export function TodayCard({ overview, isWorkday, className }: TodayCardProps) {
+  const t = useT();
   const copy = t.dashboard;
 
   return (

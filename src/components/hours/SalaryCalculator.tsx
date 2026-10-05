@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
@@ -56,6 +56,8 @@ export function SalaryCalculator({
   monthEntries,
   className,
 }: SalaryCalculatorProps) {
+  const t = useT();
+  const locale = useLocale();
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [rate, setRate] = useState("");
   const [isCopied, setIsCopied] = useState(false);
@@ -84,7 +86,7 @@ export function SalaryCalculator({
   const amount = hasValidRate ? (targetMinutes / 60) * rateNumber : 0;
 
   const handleCopy = () => {
-    const text = `${monthTitle}: ${formatHoursShort(targetMinutes)}, ${formatCurrency(amount)}`;
+    const text = `${monthTitle}: ${formatHoursShort(targetMinutes)}, ${formatCurrency(amount, locale)}`;
 
     navigator.clipboard
       .writeText(text)
@@ -149,7 +151,7 @@ export function SalaryCalculator({
           </span>
           <div className="flex shrink-0 items-center gap-2">
             <span className="tabular text-[18px] font-semibold whitespace-nowrap">
-              {formatCurrency(amount)}
+              {formatCurrency(amount, locale)}
             </span>
             <Button
               variant="outline"

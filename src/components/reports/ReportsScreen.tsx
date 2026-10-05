@@ -12,7 +12,7 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { initialsOf } from "@/components/shared/Thumb";
 import type { Profile } from "@/modules/auth/profile";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
@@ -20,11 +20,6 @@ import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
 
 type ScreenTab = "mine" | "team";
-
-const SCREEN_TAB_OPTIONS: readonly SegmentedOption<ScreenTab>[] = [
-  { value: "team", label: t.reports.screenTabs.team },
-  { value: "mine", label: t.reports.screenTabs.mine },
-];
 
 interface ReportsScreenProps {
   profile: Profile;
@@ -41,6 +36,11 @@ interface ReportsScreenProps {
  * вкладок нема, він завжди бачить тільки свою стрічку.
  */
 export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }: ReportsScreenProps) {
+  const t = useT();
+  const SCREEN_TAB_OPTIONS: readonly SegmentedOption<ScreenTab>[] = [
+    { value: "team", label: t.reports.screenTabs.team },
+    { value: "mine", label: t.reports.screenTabs.mine },
+  ];
   const [tab, setTab] = useState<ScreenTab>("team");
   const isBoss = profile.role === "boss";
 

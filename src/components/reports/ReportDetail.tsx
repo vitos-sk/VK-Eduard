@@ -11,7 +11,7 @@ import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fmt, formatDateShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n/client";
 import { updateReportCategories, updateReportDescription } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportDetail, WorkCategory } from "@/modules/reports/types";
 import { DateStub, Ticket, TicketBody, TicketFoot } from "@/components/ui/ticket";
@@ -45,6 +45,8 @@ export function ReportDetail({
   canEdit,
   photoUrls,
 }: ReportDetailProps) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const [isDescPending, startDescTransition] = useTransition();
   const [isCatPending, startCatTransition] = useTransition();
@@ -123,7 +125,7 @@ export function ReportDetail({
             <h1 className="text-[18px] leading-tight font-semibold">{siteName ?? t.hours.noObject}</h1>
             <p className="mt-1 text-[13px] text-ink-2">
               {fmt(t.reportDetail.createdBy, { name: authorName })} ·{" "}
-              <span className="tabular">{formatDateShort(new Date(report.created_at))}</span>
+              <span className="tabular">{formatDateShort(new Date(report.created_at), locale)}</span>
             </p>
           </TicketBody>
 

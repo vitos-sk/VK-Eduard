@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { hoursStrings as s } from "@/lib/i18n/parts/hours";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -42,6 +42,8 @@ export function HoursFilters({
   onSiteChange,
   className,
 }: HoursFiltersProps) {
+  const t = useT();
+  const s = t.hoursUi;
   const isActive = workerId !== ALL_FILTER || siteId !== ALL_FILTER;
 
   return (

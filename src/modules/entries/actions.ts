@@ -4,11 +4,10 @@ import { randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 import {
-  breakMinutes,
   isBreakPairValid,
   isDurationValid,
   minutesBetweenWrapped,
@@ -17,212 +16,6 @@ import {
 export type EntryActionState = { error: string | null };
 
 const OK: EntryActionState = { error: null };
-
-/**
- * Уникальный код Postgres, если вставка нарушила `one_open_entry_per_user`:
- * PostgREST пробрасывает `SQLSTATE` как есть.
- */
-const UNIQUE_VIOLATION = "23505";
-
-/**
- * Начинает смену: запись с `ended_at = null`. Открытая смена у автора
- * может быть только одна — при повторной попытке база отклонит вставку
- * уникальным индексом, здесь это превращается в понятный текст.
- *
- * `date`/`time` приходят от вызывающего клиента, а не считаются здесь:
- * сервер (Vercel) исполняется в UTC и не знает часовой пояс рабочего.
- * Взять «сейчас» на сервере значило бы записать смену со сдвигом на пояс
- * дата-центра — `modules/time.hhmmOf`/`dateKeyOf` считают его в браузере.
- */
-export async function startShift(
-  siteId: string | null,
-  date: string,
-  time: string,
-): Promise<EntryActionState> {
-  const profile = await getProfile();
-
-  if (!profile) {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("work_entries").insert({
-    client_id: randomUUID(),
-    company_id: profile.company_id,
-    author_id: profile.id,
-    site_id: siteId,
-    work_date: date,
-    started_at: time,
-    source: "timer",
-  });
-
-  if (error) {
-    return {
-      error:
-        error.code === UNIQUE_VIOLATION
-          ? t.hours.alreadyRunning
-          : t.hours.genericError,
-    };
-  }
-
-  revalidatePath("/", "layout");
-
-  return OK;
-}
-
-/** Завершает текущую открытую смену автора. `time` — локальное время клиента. */
-export async function stopCurrentShift(time: string): Promise<EntryActionState> {
-  const profile = await getProfile();
-
-  if (!profile) {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { data: open, error: findError } = await supabase
-    .from("work_entries")
-    .select("id, started_at, break_start, break_end")
-    .eq("author_id", profile.id)
-    .is("ended_at", null)
-    .maybeSingle();
-
-  if (findError) {
-    return { error: t.hours.genericError };
-  }
-
-  if (!open) {
-    return { error: t.hours.noOpenShift };
-  }
-
-  // Забыли натиснути «Завершити перерву» — закриваємо її тим самим моментом,
-  // що й зміну. Інакше хвіст перерви залишиться незакритим і порахується
-  // як відпрацьований час, а не як перерва.
-  const stillOnBreak = open.break_start !== null && open.break_end === null;
-  const effectiveBreakEnd = stillOnBreak ? time : open.break_end;
-
-  // Перевіряємо `duration_sane` (1..1080 хв) до запиту в базу: інакше
-  // «Завершити роботу» одразу після «Почати» падає з незрозумілою помилкою
-  // замість понятного «зміна ще не тривала і хвилини».
-  const worked =
-    minutesBetweenWrapped(open.started_at, time) - breakMinutes(open.break_start, effectiveBreakEnd);
-
-  if (!isDurationValid(worked)) {
-    return { error: t.hours.shiftTooShort };
-  }
-
-  const { error } = await supabase
-    .from("work_entries")
-    .update(
-      stillOnBreak ? { ended_at: time, break_end: time } : { ended_at: time },
-    )
-    .eq("id", open.id);
-
-  if (error) {
-    // duration_sane: смена длиннее 18 годин — типичная причина, если
-    // «Почати роботу» нажали і забыли про неї на кілька днів.
-    return { error: t.hours.genericError };
-  }
-
-  revalidatePath("/", "layout");
-
-  return OK;
-}
-
-/**
- * Начинает перерыв в текущей открытой смене. Перерыв в записи один —
- * если он уже был, база отклонит по `break_pair`, но мы проверяем
- * заранее, чтобы дать понятный текст, а не код ограничения.
- */
-export async function startCurrentBreak(time: string): Promise<EntryActionState> {
-  const profile = await getProfile();
-
-  if (!profile) {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { data: open, error: findError } = await supabase
-    .from("work_entries")
-    .select("id, break_start")
-    .eq("author_id", profile.id)
-    .is("ended_at", null)
-    .maybeSingle();
-
-  if (findError) {
-    console.error("[startCurrentBreak] findError", findError);
-    return { error: t.hours.genericError };
-  }
-
-  if (!open) {
-    return { error: t.hours.noOpenShift };
-  }
-
-  if (open.break_start !== null) {
-    return { error: t.hours.breakAlreadyTaken };
-  }
-
-  const { error } = await supabase
-    .from("work_entries")
-    .update({ break_start: time })
-    .eq("id", open.id);
-
-  if (error) {
-    console.error("[startCurrentBreak] updateError", error);
-    return { error: t.hours.genericError };
-  }
-
-  revalidatePath("/", "layout");
-
-  return OK;
-}
-
-/** Завершает перерыв, начатый `startCurrentBreak`. */
-export async function endCurrentBreak(time: string): Promise<EntryActionState> {
-  const profile = await getProfile();
-
-  if (!profile) {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { data: open, error: findError } = await supabase
-    .from("work_entries")
-    .select("id, break_start, break_end")
-    .eq("author_id", profile.id)
-    .is("ended_at", null)
-    .maybeSingle();
-
-  if (findError) {
-    console.error("[endCurrentBreak] findError", findError);
-    return { error: t.hours.genericError };
-  }
-
-  if (!open) {
-    return { error: t.hours.noOpenShift };
-  }
-
-  if (open.break_start === null) {
-    return { error: t.hours.breakNotStarted };
-  }
-
-  if (open.break_end !== null) {
-    return { error: t.hours.breakAlreadyEnded };
-  }
-
-  const { error } = await supabase
-    .from("work_entries")
-    .update({ break_end: time })
-    .eq("id", open.id);
-
-  if (error) {
-    console.error("[endCurrentBreak] updateError", error);
-    return { error: t.hours.genericError };
-  }
-
-  revalidatePath("/", "layout");
-
-  return OK;
-}
 
 export interface ManualEntryInput {
   workDate: string;
@@ -250,6 +43,7 @@ export interface CreateManualEntryState extends EntryActionState {
 export async function createManualEntry(
   input: ManualEntryInput,
 ): Promise<CreateManualEntryState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -301,75 +95,6 @@ export async function createManualEntry(
 }
 
 /**
- * Прив'язує запис до об'єкта заднім числом — модалка після «Завершити
- * роботу», коли зміну почали без вибору об'єкта. Той самий патерн, що й
- * у `updateEntryDescription`: RLS сам вирішує, чи можна.
- */
-export async function setEntrySite(entryId: string, siteId: string): Promise<EntryActionState> {
-  const profile = await getProfile();
-
-  if (!profile) {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("work_entries")
-    .update({ site_id: siteId })
-    .eq("id", entryId)
-    .select("id");
-
-  if (error) {
-    return { error: t.reportDetail.saveError };
-  }
-
-  if (!data || data.length === 0) {
-    return { error: t.reportDetail.saveRejected };
-  }
-
-  revalidatePath("/", "layout");
-
-  return OK;
-}
-
-/**
- * Дозаполнение описания — «Дописати» на карточці «Без опису» и правка
- * в детальной странице. RLS сам решает, можно ли: своя запись или что
- * угодно, если шеф.
- */
-export async function updateEntryDescription(
-  entryId: string,
-  description: string,
-): Promise<EntryActionState> {
-  const profile = await getProfile();
-
-  if (!profile) {
-    return { error: t.auth.noProfile };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("work_entries")
-    .update({ description })
-    .eq("id", entryId)
-    .select("id");
-
-  if (error) {
-    return { error: t.reportDetail.saveError };
-  }
-
-  // UPDATE, которому RLS не даёт совпасть ни с одной строкой, не ошибка,
-  // а пустой результат — окно правки закрылось, а не «что-то пошло не так».
-  if (!data || data.length === 0) {
-    return { error: t.reportDetail.saveRejected };
-  }
-
-  revalidatePath("/", "layout");
-
-  return OK;
-}
-
-/**
  * Полная правка записи — объект, дата, время, опис. Перерву навмисно не
  * чіпаємо: форма редагування не дає її міняти, тож передаємо ті самі
  * `breakStart`/`breakEnd`, що вже лежали в записі, інакше є ризик тихо
@@ -380,6 +105,7 @@ export async function updateEntry(
   entryId: string,
   input: ManualEntryInput,
 ): Promise<EntryActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -445,6 +171,7 @@ export async function updateEntry(
  * `entries_update`: своя запис рабочому, будь-яка шефу.
  */
 export async function deleteEntry(entryId: string): Promise<EntryActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {

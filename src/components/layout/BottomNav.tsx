@@ -6,7 +6,8 @@ import { Building2, Clock, FileText, House } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { FabButton } from "@/components/layout/FabButton";
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 export interface NavItem {
@@ -20,15 +21,14 @@ export interface NavItem {
  * (десктопный, `DesktopSidebar`) рендерят один и тот же список, чтобы
  * порядок/тексты/иконки не разъезжались между вёрстками.
  */
-export const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/", label: t.nav.home, icon: House },
-  { href: "/objects", label: t.nav.objects, icon: Building2 },
-  { href: "/hours", label: t.nav.hours, icon: Clock },
-  { href: "/reports", label: t.nav.reports, icon: FileText },
-];
-
-const leftItems = NAV_ITEMS.slice(0, 2);
-const rightItems = NAV_ITEMS.slice(2);
+export function getNavItems(t: Dict): readonly NavItem[] {
+  return [
+    { href: "/", label: t.nav.home, icon: House },
+    { href: "/objects", label: t.nav.objects, icon: Building2 },
+    { href: "/hours", label: t.nav.hours, icon: Clock },
+    { href: "/reports", label: t.nav.reports, icon: FileText },
+  ];
+}
 
 interface BottomNavProps {
   onFabClick: () => void;
@@ -45,7 +45,11 @@ interface BottomNavProps {
  * остаётся видимым, когда открыт лист быстрых действий.
  */
 export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
+  const t = useT();
   const pathname = usePathname();
+  const navItems = getNavItems(t);
+  const leftItems = navItems.slice(0, 2);
+  const rightItems = navItems.slice(2);
 
   return (
     <nav

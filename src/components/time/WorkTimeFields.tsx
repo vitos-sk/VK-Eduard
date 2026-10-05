@@ -7,7 +7,7 @@ import { Chip } from "@/components/ui/chip";
 import { TimeRangeRuler } from "@/components/ui/hours-ruler";
 import { UnderlineField } from "@/components/ui/underline-field";
 import { formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { minutesToTime, timeToMinutes } from "@/modules/time/calc";
 
@@ -45,6 +45,7 @@ export function TimeField({
   onChange: (value: string) => void;
   invalid: boolean;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState<string | null>(null);
 
   const shift = (deltaMin: number) => {
@@ -143,6 +144,7 @@ export function WorkTimeFields({
   isDurationOk,
   className,
 }: WorkTimeFieldsProps) {
+  const t = useT();
   const [isCustomBreak, setIsCustomBreak] = useState(
     breakMin > 0 && !BREAK_PRESETS_MIN.some((minutes) => minutes === breakMin),
   );

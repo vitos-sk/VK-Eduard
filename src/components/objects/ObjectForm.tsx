@@ -10,20 +10,13 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import type { WorkStatus } from "@/lib/types";
 import { createSite, updateSite } from "@/modules/sites/actions";
 import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
-
-const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
-  { value: "not_started", label: t.status.not_started },
-  { value: "in_progress", label: t.status.in_progress },
-  { value: "paused", label: t.status.paused },
-  { value: "completed", label: t.status.completed },
-];
 
 interface ObjectFormProps {
   /** Не задан — форма створення, задан — редагування цього об'єкта. */
@@ -35,6 +28,13 @@ interface ObjectFormProps {
 
 /** Форма `/objects/new` і `/objects/[id]/edit` — доступна тільки boss (RLS). */
 export function ObjectForm({ site, companyId, photoUrl = null }: ObjectFormProps) {
+  const t = useT();
+  const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
+    { value: "not_started", label: t.status.not_started },
+    { value: "in_progress", label: t.status.in_progress },
+    { value: "paused", label: t.status.paused },
+    { value: "completed", label: t.status.completed },
+  ];
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

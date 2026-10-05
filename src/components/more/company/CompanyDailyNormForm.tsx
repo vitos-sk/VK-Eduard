@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { companyStrings as s } from "@/lib/i18n/parts/company";
+import { useT } from "@/lib/i18n/client";
 import { updateCompanyDailyNorm } from "@/modules/company/actions";
 import { Ticket } from "@/components/ui/ticket";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ function minutesToHoursValue(minutes: number): string {
  * кнопка «Зберегти» з'являється тільки коли поле відрізняється від збереженого.
  */
 export function CompanyDailyNormForm({ initialMinutes }: CompanyDailyNormFormProps) {
+  const t = useT();
+  const s = t.companyUi;
   const savedValue = minutesToHoursValue(initialMinutes);
   const [hours, setHours] = useState(savedValue);
   const [saved, setSaved] = useState(savedValue);

@@ -4,8 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 
-import { t } from "@/lib/i18n";
-import { companyStrings } from "@/lib/i18n/parts/company";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 import { OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
@@ -108,6 +107,7 @@ async function replaceReportCategories(
  * вставки звіту, звіт прибираємо, щоб повторне «Зберегти» не наплодило дублів.
  */
 export async function createReport(input: CreateReportInput): Promise<CreateReportState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -196,6 +196,7 @@ export async function updateReport(
   reportId: string,
   input: ReportInput,
 ): Promise<ReportActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -251,6 +252,7 @@ export async function updateReportDescription(
   reportId: string,
   description: string,
 ): Promise<ReportActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -283,6 +285,7 @@ export async function updateReportCategories(
   categoryIds: string[],
   otherText: string,
 ): Promise<ReportActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -319,6 +322,7 @@ export async function updateReportCategories(
 
 /** Видаляє звіт. Фото видаляються каскадом на рівні бази. */
 export async function deleteReport(reportId: string): Promise<ReportActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -378,6 +382,7 @@ function revalidateWorkCategoryPaths(): void {
 export async function createWorkCategory(
   name: string,
 ): Promise<WorkCategoryActionState & { id?: string }> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -387,7 +392,7 @@ export async function createWorkCategory(
   const label = name.trim();
 
   if (label === "") {
-    return { error: companyStrings.settings.categoriesNameRequired };
+    return { error: t.companyUi.settings.categoriesNameRequired };
   }
 
   const supabase = await createClient();
@@ -401,7 +406,7 @@ export async function createWorkCategory(
     .maybeSingle();
 
   if (lastError) {
-    return { error: companyStrings.settings.categoriesSaveError };
+    return { error: t.companyUi.settings.categoriesSaveError };
   }
 
   const nextSortOrder = (lastRow?.sort_order ?? -1) + 1;
@@ -413,7 +418,7 @@ export async function createWorkCategory(
     .single();
 
   if (error) {
-    return { error: companyStrings.settings.categoriesSaveError };
+    return { error: t.companyUi.settings.categoriesSaveError };
   }
 
   revalidateWorkCategoryPaths();
@@ -423,6 +428,7 @@ export async function createWorkCategory(
 
 /** Архівує категорію — не видалення: старі звіти з нею лишаються без змін. */
 export async function archiveWorkCategory(categoryId: string): Promise<WorkCategoryActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -437,7 +443,7 @@ export async function archiveWorkCategory(categoryId: string): Promise<WorkCateg
     .eq("company_id", profile.company_id);
 
   if (error) {
-    return { error: companyStrings.settings.categoriesSaveError };
+    return { error: t.companyUi.settings.categoriesSaveError };
   }
 
   revalidateWorkCategoryPaths();
@@ -447,6 +453,7 @@ export async function archiveWorkCategory(categoryId: string): Promise<WorkCateg
 
 /** Повертає архівовану категорію в активний список вибору для нових звітів. */
 export async function restoreWorkCategory(categoryId: string): Promise<WorkCategoryActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -461,7 +468,7 @@ export async function restoreWorkCategory(categoryId: string): Promise<WorkCateg
     .eq("company_id", profile.company_id);
 
   if (error) {
-    return { error: companyStrings.settings.categoriesSaveError };
+    return { error: t.companyUi.settings.categoriesSaveError };
   }
 
   revalidateWorkCategoryPaths();

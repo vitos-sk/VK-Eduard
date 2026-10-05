@@ -1,10 +1,12 @@
+"use client";
+
 import Link from "next/link";
 
 import { CardPhoto } from "@/components/ui/card-photo";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { DateStub, Ticket, TicketBody } from "@/components/ui/ticket";
 import { fmt } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { reportState } from "@/modules/reports/reportState";
 import { categoryLabelsOf } from "@/modules/reports/categoryLabels";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
@@ -27,6 +29,7 @@ interface ReportCardProps {
  * «Подано» — только у звіту, где есть описание или фото.
  */
 export function ReportCard({ report, siteName, categories, thumbUrl = null, className }: ReportCardProps) {
+  const t = useT();
   const state = reportState(report, report.report_photos.length);
   const name = siteName ?? t.hours.noObject;
   const labels = categoryLabelsOf(report, categories);

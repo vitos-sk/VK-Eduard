@@ -2,7 +2,7 @@
 
 import { Search, SlidersHorizontal } from "lucide-react";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ export function SearchField({
   compact = false,
   className,
 }: SearchFieldProps) {
+  const t = useT();
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div className="relative min-w-0 flex-1">

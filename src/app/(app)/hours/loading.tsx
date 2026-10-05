@@ -1,8 +1,11 @@
+"use client";
+
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 
 export default function Loading() {
+  const t = useT();
   return (
     <div className="pb-6">
       <ScreenHeader

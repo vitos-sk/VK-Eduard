@@ -4,6 +4,7 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import { XIcon } from "lucide-react"
 
+import { useT } from "@/lib/i18n/client"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -49,6 +50,8 @@ function ModalContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  const t = useT()
+
   return (
     <ModalPortal>
       <ModalOverlay />
@@ -68,7 +71,7 @@ function ModalContent({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Закрити"
+              aria-label={t.common.close}
               className="absolute top-3 right-3 text-text-muted"
             >
               <XIcon className="size-5" strokeWidth={1.9} aria-hidden />

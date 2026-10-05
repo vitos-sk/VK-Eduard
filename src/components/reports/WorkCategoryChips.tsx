@@ -1,6 +1,6 @@
 "use client";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { categoryLabel, OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
 import type { WorkCategory } from "@/modules/reports/types";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ export function WorkCategoryChips({
   readOnly,
   className,
 }: WorkCategoryChipsProps) {
+  const t = useT();
   if (readOnly && value.length === 0) {
     return <p className={cn("text-[14px] text-ink-2", className)}>{t.reportDetail.noCategoriesLabel}</p>;
   }

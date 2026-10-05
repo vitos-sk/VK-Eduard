@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { uk as ukLocale } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Pointer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TicketSection } from "@/components/ui/ticket";
 import { formatDateLong } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,6 +29,7 @@ export function FormTopBar({
   /** Строка под заголовком (дата). */
   children?: ReactNode;
 }) {
+  const t = useT();
   return (
     <header className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] lg:px-0 lg:pt-0">
       <div className="flex min-h-8 items-center justify-between gap-2">
@@ -59,6 +60,8 @@ export function DatePickLink({
   date: Date;
   onChange: (date: Date) => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
 
   return (
@@ -67,13 +70,13 @@ export function DatePickLink({
         <button
           type="button"
           aria-label={t.hours.pickDate}
-          className="relative mt-0.5 flex items-center gap-1.5 text-[13px] text-ink-2 outline-none before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="relative mt-0.5 flex items-center gap-1.5 text-[14px] font-medium text-primary outline-none hover:text-primary-hover before:absolute before:-inset-y-3 before:inset-x-0 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          <span className="underline decoration-perf decoration-dashed underline-offset-4">
-            {formatDateLong(date)}
+          <span className="underline decoration-primary decoration-dashed underline-offset-4">
+            {formatDateLong(date, locale)}
           </span>
           {/* Палец-указатель: дату можно нажать и выбрать другую */}
-          <Pointer className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
+          <Pointer className="size-5 shrink-0" strokeWidth={1.9} aria-hidden />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto border border-edge bg-ticket p-2">
@@ -87,7 +90,7 @@ export function DatePickLink({
               setOpen(false);
             }
           }}
-          locale={ukLocale}
+          locale={DATE_FNS_LOCALES[locale]}
         />
       </PopoverContent>
     </Popover>

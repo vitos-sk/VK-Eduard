@@ -13,8 +13,7 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { fmt } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { companyStrings as s } from "@/lib/i18n/parts/company";
+import { useT } from "@/lib/i18n/client";
 import {
   archiveWorkCategory,
   createWorkCategory,
@@ -38,6 +37,8 @@ interface WorkCategoriesManagerProps {
  * було б зайвим. Без drag&drop сортування — нові категорії йдуть у кінець.
  */
 export function WorkCategoriesManager({ companyId, initialCategories }: WorkCategoriesManagerProps) {
+  const t = useT();
+  const s = t.companyUi;
   const [categories, setCategories] = useState<readonly WorkCategory[]>(initialCategories);
   const [name, setName] = useState("");
   const [addError, setAddError] = useState<string | null>(null);

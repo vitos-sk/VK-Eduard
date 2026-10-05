@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/modal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fmt } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { objectsStrings as s } from "@/lib/i18n/parts/objects";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { deleteSite, setSiteArchived } from "@/modules/sites/actions";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,8 @@ interface ObjectMenuProps {
  * підтвердження). Живе поруч із карточкою, а не всередині її посилання.
  */
 export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMenuProps) {
+  const t = useT();
+  const s = t.objectsUi;
   const router = useRouter();
   const [isArchivePending, startArchiveTransition] = useTransition();
   const [isDeletePending, startDeleteTransition] = useTransition();

@@ -12,7 +12,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { deleteEntry } from "@/modules/entries/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ export function DeleteEntryButton({
   iconOnly,
   className,
 }: DeleteEntryButtonProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

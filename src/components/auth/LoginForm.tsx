@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 
 import { Logo } from "@/components/brand/Logo";
 import { signIn, type SignInState } from "@/modules/auth/actions";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UnderlineField } from "@/components/ui/underline-field";
@@ -17,6 +17,7 @@ const initialState: SignInState = { error: null };
  * забывшему его меняет шеф.
  */
 export function LoginForm() {
+  const t = useT();
   const [state, formAction] = useActionState(signIn, initialState);
 
   return (
@@ -76,6 +77,7 @@ function Field({
 }
 
 function SubmitButton() {
+  const t = useT();
   const { pending } = useFormStatus();
 
   return (

@@ -2,13 +2,14 @@
 
 import { useActionState } from "react";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { updateFullName } from "@/modules/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Ticket } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
 
 export function EditNameForm({ fullName }: { fullName: string }) {
+  const t = useT();
   const [state, formAction, isPending] = useActionState(updateFullName, { error: null });
 
   return (

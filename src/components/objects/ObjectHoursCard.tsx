@@ -8,8 +8,7 @@ import {
   useCompanyMonthEntries,
 } from "@/components/objects/useCompanyMonthEntries";
 import { formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { objectsStrings as s } from "@/lib/i18n/parts/objects";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { buildSiteHoursList } from "@/modules/sites/hours";
 import type { Site } from "@/modules/sites/queries";
@@ -23,6 +22,8 @@ interface ObjectHoursCardProps {
 
 /** Години й число людей по одному об'єкту за обраний місяць — тільки boss. */
 export function ObjectHoursCard({ companyId, site, className }: ObjectHoursCardProps) {
+  const t = useT();
+  const s = t.objectsUi;
   const { month, setMonth, entries, loaded, isLoading } = useCompanyMonthEntries(companyId, null);
 
   const stats = useMemo(

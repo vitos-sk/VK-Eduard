@@ -2,13 +2,14 @@ import { BackHeader } from "@/components/layout/ScreenHeader";
 import { AvatarUploader } from "@/components/more/AvatarUploader";
 import { EditNameForm } from "@/components/more/EditNameForm";
 import { initialsOf } from "@/components/shared/Thumb";
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { requireProfile } from "@/modules/auth/session";
 import { AVATARS_BUCKET } from "@/modules/media/photos";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditProfilePage() {
+  const t = await getT();
   const profile = await requireProfile();
   const supabase = await createClient();
   const avatarUrl = profile.avatar_path

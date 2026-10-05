@@ -5,22 +5,21 @@ import { eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Share2 } from "lucide-react";
 
-import { DayActions } from "@/components/hours/DayActions";
+import { AddTimeButton } from "@/components/hours/AddTimeButton";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { SalaryCalculator } from "@/components/hours/SalaryCalculator";
 import { ALL_FILTER, HoursFilters } from "@/components/hours/HoursFilters";
-import { useOpenShift } from "@/components/layout/ShiftContext";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { TeamExportSheet } from "@/components/reports/TeamExportSheet";
 import type { ExportKind } from "@/modules/export/formats";
 import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
-import { t } from "@/lib/i18n";
-import { hoursStrings as s } from "@/lib/i18n/parts/hours";
+import type { Dict } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
-import { getActiveSites, getAllSites, type Site } from "@/modules/sites/queries";
+import { getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { initialsOf } from "@/components/shared/Thumb";
 import type { Profile } from "@/modules/auth/profile";
@@ -31,7 +30,7 @@ import { dateKeyOf } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
 
 /** Заголовок навигатора: месяц з роком. */
-function getMonthTitle(date: Date): string {
+function getMonthTitle(date: Date, t: Dict): string {
   return `${t.months.nominative[date.getMonth()]} ${date.getFullYear()}`;
 }
 
@@ -51,10 +50,10 @@ export function HoursScreen({
   profile,
   initialDate,
 }: HoursScreenProps) {
+  const t = useT();
+  const s = t.hoursUi;
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
-  // Та сама відкрита зміна, що й на «Головній» і в листі «+» — з `ShiftProvider`.
-  const openEntry = useOpenShift();
 
   const isBoss = profile.role === "boss";
 
@@ -73,9 +72,6 @@ export function HoursScreen({
   const [siteFilter, setSiteFilter] = useState(ALL_FILTER);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [sites, setSites] = useState<readonly Site[]>([]);
-  // Активні об'єкти для модалки «Де ви сьогодні працювали?» (`DayActions`) —
-  // потрібні і рядовому робітнику, не тільки шефу, на відміну від `sites` вище.
-  const [activeSites, setActiveSites] = useState<readonly Site[]>([]);
   const isTeamView = isBoss && scope === "team";
 
   useEffect(() => {
@@ -98,23 +94,6 @@ export function HoursScreen({
     };
   }, [isBoss, supabase, profile.company_id]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    getActiveSites(supabase)
-      .then((data) => {
-        if (!cancelled) setActiveSites(data);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase]);
-
-  const todayKey = dateKeyOf(new Date());
-  const isToday = dateKeyOf(date) === todayKey;
-
   // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты.
   useEffect(() => {
     let cancelled = false;
@@ -134,7 +113,7 @@ export function HoursScreen({
     return () => {
       cancelled = true;
     };
-  }, [supabase, profile.company_id, date, refreshToken, openEntry?.id]);
+  }, [supabase, profile.company_id, date, refreshToken]);
 
   const isEntriesLoading = loadedMonthKey !== dateKeyOf(startOfMonth(date));
 
@@ -170,12 +149,12 @@ export function HoursScreen({
     const workDays = days.filter((day) => day.getDay() !== 0 && day.getDay() !== 6).length;
 
     return buildPeriodSummary(
-      getMonthTitle(date),
+      getMonthTitle(date, t),
       workDays * profile.daily_norm_minutes,
       slots,
       monthEntries,
     );
-  }, [date, isBoss, monthEntries, profile.daily_norm_minutes]);
+  }, [date, isBoss, monthEntries, profile.daily_norm_minutes, t]);
 
   return (
     <div className="pb-6">
@@ -225,7 +204,7 @@ export function HoursScreen({
           onOpenChange={setIsExportOpen}
           from={dateKeyOf(startOfMonth(date))}
           to={dateKeyOf(endOfMonth(date))}
-          periodLabel={getMonthTitle(date)}
+          periodLabel={getMonthTitle(date, t)}
           workers={workers.map((worker) => ({ id: worker.id, name: worker.full_name }))}
           workerIds={exportIds}
           onWorkerIdsChange={setExportIds}
@@ -235,13 +214,7 @@ export function HoursScreen({
       )}
 
       <div className="px-4 lg:hidden">
-        {isToday && (
-          <DayActions
-            openEntry={openEntry}
-            sites={activeSites}
-            onChanged={handleChanged}
-          />
-        )}
+        <AddTimeButton />
 
         {/* Тільки сума годин рабочего; норма/дні/графік — у дашборді шефа. */}
         {monthSummary && (
@@ -251,7 +224,7 @@ export function HoursScreen({
         <SalaryCalculator
           key={String(isTeamView)}
           className="mt-3"
-          monthTitle={getMonthTitle(date)}
+          monthTitle={getMonthTitle(date, t)}
           selfId={profile.id}
           isBoss={isTeamView}
           companyId={profile.company_id}
@@ -282,19 +255,13 @@ export function HoursScreen({
         />
 
         <div className="flex flex-col gap-3">
-          {isToday && (
-            <DayActions
-              openEntry={openEntry}
-              sites={activeSites}
-              onChanged={handleChanged}
-            />
-          )}
+          <AddTimeButton />
 
           {monthSummary && <PeriodView summary={monthSummary} />}
 
           <SalaryCalculator
             key={String(isTeamView)}
-            monthTitle={getMonthTitle(date)}
+            monthTitle={getMonthTitle(date, t)}
             selfId={profile.id}
             isBoss={isTeamView}
             companyId={profile.company_id}

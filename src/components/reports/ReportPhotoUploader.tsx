@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { PhotoLightbox } from "@/components/shared/PhotoLightbox";
 import { fmt } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { MAX_PHOTOS_PER_ENTRY, deleteReportPhoto, uploadReportPhoto } from "@/modules/media/photos";
 import type { ReportPhoto } from "@/modules/reports/types";
@@ -40,6 +40,7 @@ export function ReportPhotoUploader({
   editable,
   className,
 }: ReportPhotoUploaderProps) {
+  const t = useT();
   const supabase = useMemo(() => createClient(), []);
   const [isUploading, setIsUploading] = useState(false);
   const [viewedUrl, setViewedUrl] = useState<string | null>(null);

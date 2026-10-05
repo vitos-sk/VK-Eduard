@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { addMonths } from "date-fns";
-import { uk as ukLocale } from "date-fns/locale";
 import { CalendarDays } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Stepper } from "@/components/ui/stepper";
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
 /** «Жовтень 2026» — заголовок месяца в навигаторе. */
-export function monthTitle(date: Date): string {
+export function monthTitle(date: Date, t: Dict): string {
   return `${t.months.nominative[date.getMonth()]} ${date.getFullYear()}`;
 }
 
@@ -28,6 +29,8 @@ interface MonthNavigatorProps {
  * стрелка вперёд. Один и тот же вид на экранах «Години» и «Звіти».
  */
 export function MonthNavigator({ date, onChange, className }: MonthNavigatorProps) {
+  const t = useT();
+  const locale = useLocale();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   return (
@@ -47,7 +50,7 @@ export function MonthNavigator({ date, onChange, className }: MonthNavigatorProp
             className="min-w-0 flex-1 border-edge"
           >
             <CalendarDays className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
-            <span className="whitespace-nowrap">{monthTitle(date)}</span>
+            <span className="whitespace-nowrap">{monthTitle(date, t)}</span>
           </Button>
         </PopoverTrigger>
 
@@ -62,7 +65,7 @@ export function MonthNavigator({ date, onChange, className }: MonthNavigatorProp
                 setIsCalendarOpen(false);
               }
             }}
-            locale={ukLocale}
+            locale={DATE_FNS_LOCALES[locale]}
           />
         </PopoverContent>
       </Popover>

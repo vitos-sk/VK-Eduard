@@ -1,31 +1,28 @@
+"use client";
+
 import Link from "next/link";
 import { Camera, Clock, Database, FileText, PlusCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
 import { InstallHint } from "@/components/welcome/InstallHint";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { Button } from "@/components/ui/button";
-
-/**
- * Пять возможностей приложения. Порядок как на макете:
- * от того, что делают каждый день, к тому, что нужно шефу.
- */
-const features: { icon: LucideIcon; label: string }[] = [
-  { icon: Clock, label: t.welcome.features.hours },
-  { icon: FileText, label: t.welcome.features.description },
-  { icon: Camera, label: t.welcome.features.photos },
-  { icon: PlusCircle, label: t.welcome.features.overtime },
-  { icon: Database, label: t.welcome.features.database },
-];
 
 /**
  * Стартовый экран для тех, кто ещё не вошёл.
  *
- * Единственный статичный экран приложения, поэтому рендерится на сервере.
  * Кнопка ведёт на вход; пока экрана входа нет — на главную.
  */
 export function WelcomeScreen() {
+  const t = useT();
+  const features: { icon: LucideIcon; label: string }[] = [
+    { icon: Clock, label: t.welcome.features.hours },
+    { icon: FileText, label: t.welcome.features.description },
+    { icon: Camera, label: t.welcome.features.photos },
+    { icon: PlusCircle, label: t.welcome.features.overtime },
+    { icon: Database, label: t.welcome.features.database },
+  ];
   return (
     <div className="flex min-h-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+3rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
       <Logo size={30} />

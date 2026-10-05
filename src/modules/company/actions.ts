@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { t } from "@/lib/i18n";
-import { companyStrings } from "@/lib/i18n/parts/company";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 
@@ -24,6 +23,7 @@ const MAX_DAILY_NORM_MINUTES = 1440;
  * коді помилки бази.
  */
 export async function updateCompanyDailyNorm(minutes: number): Promise<UpdateCompanyDailyNormState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -35,7 +35,7 @@ export async function updateCompanyDailyNorm(minutes: number): Promise<UpdateCom
     minutes < MIN_DAILY_NORM_MINUTES ||
     minutes > MAX_DAILY_NORM_MINUTES
   ) {
-    return { error: companyStrings.settings.dailyNormInvalid };
+    return { error: t.companyUi.settings.dailyNormInvalid };
   }
 
   const supabase = await createClient();
@@ -45,7 +45,7 @@ export async function updateCompanyDailyNorm(minutes: number): Promise<UpdateCom
     .eq("id", profile.company_id);
 
   if (error) {
-    return { error: companyStrings.settings.dailyNormSaveError };
+    return { error: t.companyUi.settings.dailyNormSaveError };
   }
 
   revalidatePath("/more/company");

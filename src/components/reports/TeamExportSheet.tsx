@@ -6,14 +6,12 @@ import { toast } from "sonner";
 
 import { downloadExportFile, shareExportFile } from "@/components/reports/shareExport";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
-import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { ResponsiveSheet, SheetClose, SheetTitle } from "@/components/ui/responsive-sheet";
 import { fmt } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { reportsStrings as s } from "@/lib/i18n/parts/reports";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import {
-  HOURS_FORMATS,
-  REPORTS_FORMATS,
+  getExportFormats,
   type ExportFormat,
   type ExportKind,
 } from "@/modules/export/formats";
@@ -46,11 +44,6 @@ interface TeamExportSheetProps {
   onKindChange: (kind: ExportKind) => void;
 }
 
-const KIND_OPTIONS = [
-  { value: "hours" as const, label: s.export.hours },
-  { value: "reports" as const, label: s.export.reports },
-];
-
 function readStoredFormat(): ExportFormat {
   try {
     const value = window.localStorage.getItem(FORMAT_STORAGE_KEY);
@@ -78,6 +71,12 @@ export function TeamExportSheet({
   kind,
   onKindChange,
 }: TeamExportSheetProps) {
+  const t = useT();
+  const s = t.reportsUi;
+  const KIND_OPTIONS = [
+    { value: "hours" as const, label: s.export.hours },
+    { value: "reports" as const, label: s.export.reports },
+  ];
   const [preferredFormat, setPreferredFormat] = useState<ExportFormat>(() =>
     typeof window === "undefined" ? "xlsx" : readStoredFormat(),
   );
@@ -85,7 +84,7 @@ export function TeamExportSheet({
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<"download" | "share" | null>(null);
 
-  const formats = kind === "reports" ? REPORTS_FORMATS : HOURS_FORMATS;
+  const formats = getExportFormats(kind, t);
   const format = formats.some((option) => option.format === preferredFormat)
     ? preferredFormat
     : formats[0].format;
@@ -117,7 +116,7 @@ export function TeamExportSheet({
 
   const run = async (mode: "download" | "share") => {
     setBusy(mode);
-    const params = { from, to, format, kind, workerIds };
+    const params = { from, to, format, kind, workerIds, t };
     const ok = mode === "download" ? await downloadExportFile(params) : await shareExportFile(params);
     setBusy(null);
 
@@ -130,24 +129,25 @@ export function TeamExportSheet({
   const whatLabel = kind === "reports" ? s.export.reports : s.export.hours;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent
-        aria-describedby={undefined}
-        className={cn(
-          "mx-auto max-w-[560px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]",
-          // Таб-бар (z-60) лежить над листом: лишаємо під нього місце, як у листі «+».
-          "pb-[calc(84px+env(safe-area-inset-bottom))] lg:pb-0",
-        )}
-      >
+    <ResponsiveSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      mobileClassName={cn(
+        "mx-auto max-w-[560px] border-t border-border bg-surface text-text data-[vaul-drawer-direction=bottom]:max-h-[88dvh]",
+        // Таб-бар (z-60) лежить над листом: лишаємо під нього місце, як у листі «+».
+        "pb-[calc(84px+env(safe-area-inset-bottom))]",
+      )}
+      desktopClassName="max-w-[520px] border-border bg-surface"
+    >
         <div className="flex items-center gap-1 px-2 pt-3">
-          <DrawerClose
+          <SheetClose
             aria-label={t.common.back}
             className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text transition-colors duration-150 hover:bg-primary-tint"
           >
             <ChevronLeft className="size-6" strokeWidth={1.9} aria-hidden />
-          </DrawerClose>
+          </SheetClose>
           <div className="min-w-0">
-            <DrawerTitle className="text-[20px] font-semibold text-text">{s.export.title}</DrawerTitle>
+            <SheetTitle className="text-[20px] font-semibold text-text">{s.export.title}</SheetTitle>
             <p className="truncate text-[13px] font-medium text-text-muted">
               {fmt(s.export.summary, { what: whatLabel, period: periodLabel })}
             </p>
@@ -270,8 +270,7 @@ export function TeamExportSheet({
             {s.export.sendWhatsapp}
           </Button>
         </div>
-      </DrawerContent>
-    </Drawer>
+    </ResponsiveSheet>
   );
 }
 

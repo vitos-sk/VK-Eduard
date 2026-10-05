@@ -11,8 +11,8 @@ import {
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { initialsOf } from "@/components/shared/Thumb";
-import { t } from "@/lib/i18n";
-import { companyStrings } from "@/lib/i18n/parts/company";
+import { LOCALE_NAMES } from "@/lib/i18n/locales";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/modules/auth/actions";
 import { requireProfile } from "@/modules/auth/session";
@@ -36,6 +36,8 @@ interface SettingsRow {
  * лишились тільки речі, що стосуються самого акаунта.
  */
 export default async function MorePage() {
+  const t = await getT();
+  const locale = await getLocale();
   const profile = await requireProfile();
   const supabase = await createClient();
 
@@ -51,14 +53,14 @@ export default async function MorePage() {
     ...(profile.role === "boss"
       ? [
           { icon: Users, label: t.profile.rows.team, href: "/more/team" },
-          { icon: Building2, label: companyStrings.title, href: "/more/company" },
+          { icon: Building2, label: t.companyUi.title, href: "/more/company" },
         ]
       : []),
     { icon: Bell, label: t.profile.rows.notifications, href: "/more/notifications" },
     {
       icon: Languages,
       label: t.profile.rows.language,
-      value: t.profile.rows.languageValue,
+      value: LOCALE_NAMES[locale],
       href: "/more/language",
     },
     { icon: Info, label: t.profile.rows.about, href: "/more/about" },

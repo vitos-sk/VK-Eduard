@@ -1,4 +1,6 @@
-import { t } from "@/lib/i18n";
+"use client";
+
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 /**
@@ -48,6 +50,7 @@ export function Logo({
   className?: string;
   size?: number;
 }) {
+  const t = useT();
   return (
     <div className={cn("flex items-center gap-2 text-ink", className)}>
       <LogoMark size={size * 1.7} />

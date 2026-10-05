@@ -4,7 +4,7 @@ import PDFDocument from "pdfkit";
 
 import { tokens } from "@/design-system/tokens";
 import { formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
 import { EXPORT_BRAND, type ExportMeta, type ExportRow } from "./types";
 
 /**
@@ -27,13 +27,13 @@ const MONO_BOLD_FONT = readFileSync(join(FONTS_DIR, "JetBrainsMono-SemiBold.ttf"
 const PAGE_MARGIN = 36;
 
 const COLUMNS = [
-  { key: "date", header: "Дата", width: 55 },
-  { key: "worker", header: "Робітник", width: 110 },
-  { key: "site", header: "Об'єкт", width: 105 },
-  { key: "time", header: "Час", width: 85 },
-  { key: "worked", header: "Відпрацьовано", width: 75 },
-  { key: "overtime", header: "Додатково", width: 65 },
-  { key: "description", header: "Опис", width: 175 },
+  { key: "date", width: 55 },
+  { key: "worker", width: 110 },
+  { key: "site", width: 105 },
+  { key: "time", width: 85 },
+  { key: "worked", width: 75 },
+  { key: "overtime", width: 65 },
+  { key: "description", width: 175 },
 ] as const;
 
 const TABLE_WIDTH = COLUMNS.reduce((sum, column) => sum + column.width, 0);
@@ -49,6 +49,7 @@ const MONO_COLUMNS = new Set<string>(["date", "time", "worked", "overtime"]);
 export async function buildPdf(
   rows: readonly ExportRow[],
   meta: ExportMeta,
+  t: Dict,
 ): Promise<Buffer> {
   const doc = new PDFDocument({
     size: "A4",
@@ -72,14 +73,14 @@ export async function buildPdf(
   });
 
   drawHeader(doc, meta);
-  let y = drawTableHeader(doc, doc.y + 12);
+  let y = drawTableHeader(doc, doc.y + 12, t);
 
   const totalWorkedMinutes = rows.reduce((sum, row) => sum + row.workedMinutes, 0);
 
   for (const row of rows) {
     if (y + ROW_HEIGHT > doc.page.height - PAGE_MARGIN - 40) {
       doc.addPage();
-      y = drawTableHeader(doc, PAGE_MARGIN);
+      y = drawTableHeader(doc, PAGE_MARGIN, t);
     }
 
     y = drawRow(doc, y, row);
@@ -110,12 +111,12 @@ function drawHeader(doc: PDFKit.PDFDocument, meta: ExportMeta) {
     .fillColor(tokens.ink);
 }
 
-function drawTableHeader(doc: PDFKit.PDFDocument, y: number): number {
+function drawTableHeader(doc: PDFKit.PDFDocument, y: number, t: Dict): number {
   doc.font(FONT_TEXT_BOLD).fontSize(9);
 
   let x = PAGE_MARGIN;
   for (const column of COLUMNS) {
-    doc.text(column.header, x, y, { width: column.width - 6 });
+    doc.text(t.export.columns[column.key], x, y, { width: column.width - 6 });
     x += column.width;
   }
 

@@ -7,8 +7,8 @@ import type { LucideIcon } from "lucide-react";
 import { ChevronRight, FileText, LayoutDashboard } from "lucide-react";
 
 import { Ticket } from "@/components/ui/ticket";
-import { t } from "@/lib/i18n";
-import { quickActions } from "@/lib/mock/quick";
+import { useT } from "@/lib/i18n/client";
+import { getQuickActions } from "@/lib/mock/quick";
 import type { QuickAction, QuickActionId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,7 @@ interface QuickActionSheetProps {
  * Рендерится внутри колонки (`PhoneFrame`), поэтому позиционируется относительно неё.
  */
 export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionSheetProps) {
+  const t = useT();
   const pathname = usePathname();
   const lastPathname = useRef(pathname);
 
@@ -56,6 +57,7 @@ export function QuickActionSheet({ open, onOpenChange, isBoss }: QuickActionShee
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onOpenChange]);
 
+  const quickActions = getQuickActions(t);
   const visibleActions = isBoss
     ? quickActions
     : quickActions.filter((action) => action.id !== "dashboard");

@@ -1,3 +1,4 @@
+import type { Dict } from "@/lib/i18n";
 import type { ReportExportRow } from "./types";
 
 /** Экранирует поле CSV: кавычки — двойными, оборачивает при спецсимволах. */
@@ -9,11 +10,15 @@ function csvField(value: string): string {
   return value;
 }
 
-const HEADER = ["Дата", "Робітник", "Об'єкт", "Категорії", "Опис", "Фото"];
+function header(t: Dict): string[] {
+  const c = t.export.columns;
+
+  return [c.date, c.worker, c.site, c.categories, c.description, c.photos];
+}
 
 /** CSV «Звіти» за діапазон дат — UTF-8 з BOM, як і у CSV «Години». */
-export function buildReportsCsv(rows: readonly ReportExportRow[]): string {
-  const lines = [HEADER.map(csvField).join(",")];
+export function buildReportsCsv(rows: readonly ReportExportRow[], t: Dict): string {
+  const lines = [header(t).map(csvField).join(",")];
 
   for (const row of rows) {
     const cells = [row.date, row.worker, row.site, row.categories, row.description, String(row.photoCount)];

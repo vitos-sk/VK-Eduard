@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, LogOut, Settings } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
-import { NAV_ITEMS } from "@/components/layout/BottomNav";
+import { getNavItems } from "@/components/layout/BottomNav";
 import { useOwnAvatarUrl } from "@/components/layout/OwnAvatar";
 import { initialsOf } from "@/components/shared/Thumb";
 import { Avatar } from "@/components/ui/avatar";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/modules/auth/profile";
 import { signOut } from "@/modules/auth/actions";
@@ -25,11 +25,12 @@ interface DesktopSidebarProps {
  * Справа от панели вертикальная перфорация — пунктир `perf`.
  */
 export function DesktopSidebar({ profile }: DesktopSidebarProps) {
+  const t = useT();
   const pathname = usePathname();
   const avatarUrl = useOwnAvatarUrl();
 
   const items = [
-    ...NAV_ITEMS,
+    ...getNavItems(t),
     ...(profile.role === "boss"
       ? [{ href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard }]
       : []),

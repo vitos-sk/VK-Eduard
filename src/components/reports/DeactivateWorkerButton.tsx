@@ -12,7 +12,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { setWorkerActive } from "@/modules/team/actions";
 import { Button } from "@/components/ui/button";
 
@@ -33,6 +33,7 @@ export function DeactivateWorkerButton({
   onDeactivated,
   className,
 }: DeactivateWorkerButtonProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

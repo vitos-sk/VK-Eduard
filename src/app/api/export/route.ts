@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { formatDateShort, formatTimeShort, formatWorkDateShort, fromDateKey } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { getLocale, getT } from "@/lib/i18n/server";
+import type { Dict } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getCompanyEntryHoursInRange } from "@/modules/entries/queries";
@@ -52,7 +53,9 @@ function isExportFormat(value: string): value is ExportFormat {
  * рівні бази.
  */
 export async function GET(request: Request) {
+  const t = await getT();
   const profile = await requireProfile();
+  const locale = await getLocale();
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
@@ -94,7 +97,7 @@ export async function GET(request: Request) {
     const rows: ReportExportRow[] = reports
       .filter((report) => !workerIdSet || workerIdSet.has(report.author_id))
       .map((report) => ({
-        date: formatWorkDateShort(report.work_date),
+        date: formatWorkDateShort(report.work_date, locale),
         worker: report.author_full_name,
         site: report.site_id ? (siteNameById.get(report.site_id) ?? "") : t.hours.noObject,
         categories: report.category_labels.join("; "),
@@ -104,7 +107,7 @@ export async function GET(request: Request) {
 
     const fileName = `${EXPORT_FILE_PREFIX}_reports_${from}_${to}.csv`;
 
-    return new NextResponse(buildReportsCsv(rows), {
+    return new NextResponse(buildReportsCsv(rows, t), {
       headers: {
         "Content-Type": CONTENT_TYPES.csv,
         "Content-Disposition": `attachment; filename="${fileName}"`,
@@ -123,7 +126,7 @@ export async function GET(request: Request) {
     .filter((row) => row.work_date && row.started_at)
     .filter((row) => !workerIdSet || workerIdSet.has(row.author_id!))
     .map((row) => ({
-      date: formatWorkDateShort(row.work_date!),
+      date: formatWorkDateShort(row.work_date!, locale),
       worker: row.full_name ?? "",
       site: row.site_id ? (siteNameById.get(row.site_id) ?? "") : t.hours.noObject,
       start: formatTimeShort(row.started_at!),
@@ -138,11 +141,11 @@ export async function GET(request: Request) {
 
   const meta = {
     companyName: EXPORT_BRAND,
-    periodTitle: `${formatDateShort(fromDateKey(from))} – ${formatDateShort(fromDateKey(to))}`,
+    periodTitle: `${formatDateShort(fromDateKey(from), locale)} – ${formatDateShort(fromDateKey(to), locale)}`,
   };
 
   const fileName = `${EXPORT_FILE_PREFIX}_hours_${from}_${to}.${formatParam}`;
-  const body = await buildExportBody(formatParam, rows, meta);
+  const body = await buildExportBody(formatParam, rows, meta, t);
 
   return new NextResponse(body, {
     headers: {
@@ -156,8 +159,9 @@ async function buildExportBody(
   format: ExportFormat,
   rows: readonly ExportRow[],
   meta: { companyName: string; periodTitle: string },
+  t: Dict,
 ): Promise<BodyInit> {
-  if (format === "xlsx") return new Uint8Array(await buildXlsx(rows, meta));
-  if (format === "pdf") return new Uint8Array(await buildPdf(rows, meta));
-  return buildCsv(rows);
+  if (format === "xlsx") return new Uint8Array(await buildXlsx(rows, meta, t));
+  if (format === "pdf") return new Uint8Array(await buildPdf(rows, meta, t));
+  return buildCsv(rows, t);
 }

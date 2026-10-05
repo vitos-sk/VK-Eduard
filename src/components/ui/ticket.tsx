@@ -1,8 +1,10 @@
+"use client";
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
-import { t } from "@/lib/i18n"
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils"
 
 /**
@@ -132,6 +134,7 @@ function DateStub({
   showMonth?: boolean
   className?: string
 }) {
+  const t = useT();
   const value = toDate(date)
 
   return (

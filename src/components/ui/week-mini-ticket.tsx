@@ -1,5 +1,7 @@
+"use client";
+
 import { StampTag } from "@/components/ui/stamp-tag"
-import { t } from "@/lib/i18n"
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils"
 
 interface WeekMiniTicketProps {
@@ -14,6 +16,7 @@ interface WeekMiniTicketProps {
 
 /** Мини-талон дня недели. Лежит рядами в `Ticket variant="sections"`, разделён пунктиром. */
 function WeekMiniTicket({ weekday, day, hours, report, className }: WeekMiniTicketProps) {
+  const t = useT();
   return (
     <div
       data-slot="week-mini-ticket"

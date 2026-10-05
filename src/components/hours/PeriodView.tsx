@@ -1,6 +1,8 @@
+"use client";
+
 import { Ticket } from "@/components/ui/ticket";
 import { formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import type { PeriodSummary } from "@/lib/types";
 
 interface PeriodViewProps {
@@ -10,6 +12,7 @@ interface PeriodViewProps {
 
 /** Сумма часов за период: подпись 13 px и крупная цифра mono 30 / 600. */
 export function PeriodView({ summary, className }: PeriodViewProps) {
+  const t = useT();
   return (
     <Ticket asChild variant="flat" className={className}>
       <section>

@@ -12,8 +12,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
-import { reportsStrings as s } from "@/lib/i18n/parts/reports";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { deleteReport } from "@/modules/reports/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,8 @@ interface CompanyReportDeleteButtonProps {
  * `Link`-обгортку картки, тому `stopPropagation` на самій кнопці.
  */
 export function CompanyReportDeleteButton({ reportId, onDeleted, className }: CompanyReportDeleteButtonProps) {
+  const t = useT();
+  const s = t.reportsUi;
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

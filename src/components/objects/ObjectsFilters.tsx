@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { objectsStrings as s } from "@/lib/i18n/parts/objects";
+import { useT } from "@/lib/i18n/client";
 import type { WorkStatus } from "@/lib/types";
 
 export const ANY = "all";
@@ -32,14 +32,6 @@ export const EMPTY_FILTERS: ObjectsFiltersState = {
   workerId: ANY,
 };
 
-const STATUS_OPTIONS: readonly { value: StatusFilter; label: string }[] = [
-  { value: "all", label: s.filters.statusAll },
-  { value: "not_started", label: s.filters.statusNotStarted },
-  { value: "in_progress", label: s.filters.statusInProgress },
-  { value: "paused", label: s.filters.statusPaused },
-  { value: "completed", label: s.filters.statusCompleted },
-];
-
 interface Option {
   id: string;
   name: string;
@@ -58,6 +50,15 @@ const labelClass = "text-[12px] text-ink-2";
 
 /** Блок фільтрів списку «Об'єкти»: статус, період, конкретний об'єкт, працівник. */
 export function ObjectsFilters({ value, onChange, sites, workers }: ObjectsFiltersProps) {
+  const t = useT();
+  const s = t.objectsUi;
+  const STATUS_OPTIONS: readonly { value: StatusFilter; label: string }[] = [
+    { value: "all", label: s.filters.statusAll },
+    { value: "not_started", label: s.filters.statusNotStarted },
+    { value: "in_progress", label: s.filters.statusInProgress },
+    { value: "paused", label: s.filters.statusPaused },
+    { value: "completed", label: s.filters.statusCompleted },
+  ];
   const patch = (partial: Partial<ObjectsFiltersState>) => onChange({ ...value, ...partial });
 
   return (

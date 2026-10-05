@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildHoursChartData, getPeriodRange } from "./period";
+import { uk } from "@/lib/i18n";
 import { dateKeyOf } from "@/modules/time/calc";
 
 describe("getPeriodRange", () => {
@@ -29,7 +30,7 @@ describe("buildHoursChartData", () => {
       { work_date: "2026-09-01", total_minutes: 60 },
       { work_date: "2026-09-01", total_minutes: 30 },
       { work_date: "2026-09-30", total_minutes: 120 },
-    ]);
+    ], uk);
 
     expect(points).toHaveLength(30);
     expect(points[0]).toEqual({ label: "01", minutes: 90 });
@@ -42,7 +43,7 @@ describe("buildHoursChartData", () => {
       { work_date: "2026-01-15", total_minutes: 480 },
       { work_date: "2026-01-20", total_minutes: 60 },
       { work_date: "2026-09-05", total_minutes: 240 },
-    ]);
+    ], uk);
 
     expect(points).toHaveLength(12);
     expect(points[0]).toEqual({ label: "Січ", minutes: 540 });
@@ -53,7 +54,7 @@ describe("buildHoursChartData", () => {
   it("квартал — по тижнях (понеділок — початок тижня)", () => {
     const points = buildHoursChartData("quarter", new Date("2026-09-11T00:00:00"), [
       { work_date: "2026-07-01", total_minutes: 480 },
-    ]);
+    ], uk);
 
     expect(points.length).toBeGreaterThan(0);
     expect(points.reduce((sum, point) => sum + point.minutes, 0)).toBe(480);
@@ -62,7 +63,7 @@ describe("buildHoursChartData", () => {
   it("відкрита зміна (total_minutes: null) не ламає суму", () => {
     const points = buildHoursChartData("month", new Date("2026-09-11T00:00:00"), [
       { work_date: "2026-09-01", total_minutes: null },
-    ]);
+    ], uk);
 
     expect(points[0]).toEqual({ label: "01", minutes: 0 });
   });

@@ -1,17 +1,18 @@
 /**
- * Единственный источник текстов интерфейса. Украинский.
+ * Единственный источник текстов интерфейса. Украинский (язык по умолчанию).
+ * Эталон формы: `en.ts` и `nl.ts` обязаны иметь ровно те же ключи (тип `Dict`).
  * Ни одной строки текста не должно попадать в JSX напрямую.
  *
  * Плейсхолдеры в фигурных скобках подставляются через `fmt()` из `@/lib/format`:
  * `fmt(t.home.greetingMorning, { name: "Віталік" })`.
  *
- * Структура файла заложена под будущие локали (de, en) — добавится
- * соседний файл с тем же типом.
+ * Активный словарь выбирается по куке языка: на сервере `getT()`
+ * из `@/lib/i18n/server`, в клиентских компонентах `useT()` из `@/lib/i18n/client`.
  */
 export const uk = {
   /** Общее: кнопки и подписи, которые встречаются на разных экранах. */
   common: {
-    appName: "K group",
+    appName: "VK group",
     /** Слово рядом со знаком в логотипе: знак «K» + «group.». */
     appWordmark: "group",
     cancel: "Скасувати",
@@ -100,7 +101,6 @@ export const uk = {
       team: "Команда",
       notifications: "Сповіщення",
       language: "Мова",
-      languageValue: "Українська",
       about: "Про додаток",
     },
     teamPage: {
@@ -113,11 +113,45 @@ export const uk = {
     },
     languagePage: {
       title: "Мова",
-      body: "Зараз інтерфейс доступний тільки українською. Інші мови додамо пізніше.",
+      body: "Оберіть мову інтерфейсу. Вибір зберігається на цьому пристрої.",
+      saveError: "Не вдалося змінити мову. Спробуйте ще раз",
     },
     aboutPage: {
       title: "Про додаток",
-      body: "K group — облік робочих годин і звітів для будівельних бригад.",
+      body: "Облік робочих годин і звітів для будівельних бригад.",
+      creditsTitle: "Над застосунком працювали",
+      infoTitle: "Про застосунок",
+      nameLabel: "Назва",
+      versionLabel: "Версія",
+      purposeLabel: "Призначення",
+      platformLabel: "Платформа",
+      yearLabel: "Рік випуску",
+      purposeValue: "Облік робочих годин, звітів і об'єктів для будівельних бригад",
+      platformValue: "Веб-застосунок (PWA): телефон, планшет, комп'ютер",
+      rights: "© 2026 VK group. Усі права захищено.",
+      vitaliy: {
+      name: "Віталій",
+      role: "Архітектор і розробник",
+      items: [
+        "Проєктування архітектури застосунку та моделі даних",
+        "Розробка інтерфейсу та єдиної дизайн-системи",
+        "Облік годин, звіти з фото, об'єкти, команда та панель керівника",
+        "Експорт у PDF, Excel і CSV",
+        "Підтримка кількох мов і встановлення на телефон (PWA)",
+        "Доступи, безпека та зберігання даних",
+      ],
+    },
+      eduard: {
+      name: "Едуард",
+      role: "Ідеї, переговори, тестування",
+      items: [
+        "Автор ідеї та вимог до застосунку на основі реальної роботи бригад",
+        "Переговори з керівником компанії, узгодження вимог і результату",
+        "Постановка задач і коригування рішень",
+        "Перевірка кожної функції та тестування в щоденній роботі",
+        "Контроль якості кінцевого результату",
+      ],
+    },
     },
   },
 
@@ -155,8 +189,6 @@ export const uk = {
     todayCompleted: "Виконано робіт",
     todayCompletedCount: "{n} об'єктів",
     totalOnSite: "Всього на об'єкті",
-    startWork: "Розпочати роботу",
-    finishWork: "Завершити роботу",
     viewReport: "Переглянути звіт",
     myObjects: "Мої об'єкти",
     dayReport: {
@@ -182,16 +214,6 @@ export const uk = {
       noDescription: "Без опису",
     },
     viewAll: "Дивитися всі",
-    postShift: {
-      title: "Де ви сьогодні працювали?",
-      body: "Зміну завершено без прив'язки до об'єкта. Оберіть об'єкт зі списку або напишіть, де саме ви працювали.",
-      pickAction: "Обрати об'єкт",
-      writeAction: "Написати вручну",
-      placeholder: "Наприклад: ремонт даху, вул. Шевченка 12",
-      save: "Зберегти",
-      skip: "Пропустити",
-      saved: "Дякуємо, дані збережено",
-    },
   },
 
   /** Экран «Об'єкти». */
@@ -278,11 +300,7 @@ export const uk = {
     objects: "Об'єкти",
     noObject: "Без об'єкта",
     now: "Зараз",
-    pause: "Пауза",
-    resume: "Продовжити",
-    startWork: "Почати роботу",
-    finishWork: "Завершити роботу",
-    addManually: "Додати час вручну",
+    addManually: "Додати час",
     plan: "Норма",
     daysWorked: "Робочих днів",
     average: "У середньому за день",
@@ -300,13 +318,6 @@ export const uk = {
     monthTableTimeColumn: "Час",
     monthTableObjectColumn: "Об'єкт",
     monthTableEmpty: "За цей місяць змін ще немає",
-    /** Ошибки действий таймера — один текст на разные причины отказа базы. */
-    alreadyRunning: "Зміна вже триває",
-    noOpenShift: "Немає активної зміни",
-    breakAlreadyTaken: "Перерва вже була — за зміну вона одна",
-    breakNotStarted: "Перерва ще не почалась",
-    breakAlreadyEnded: "Перерва вже закінчилась",
-    shiftTooShort: "Зміна триває ще менше хвилини — зачекайте трохи і спробуйте завершити ще раз",
     genericError: "Не вдалося зберегти. Спробуйте ще раз",
     /** Іконки редагування/видалення в «Зміни за місяць» і на детальній сторінці запису. */
     editEntry: "Редагувати запис",
@@ -462,8 +473,8 @@ export const uk = {
   quick: {
     title: "Що ви хочете зробити?",
     manualTime: {
-      title: "Додати час вручну",
-      description: "Додайте години, якщо забули натиснути «Почати роботу»",
+      title: "Додати час",
+      description: "Додайте відпрацьовані години",
     },
     createReport: {
       title: "Створити звіт",
@@ -477,9 +488,9 @@ export const uk = {
 
   /** Экран «Додати час вручну». */
   manualTime: {
-    title: "Додати час вручну",
+    title: "Додати час",
     editTitle: "Редагувати запис",
-    hint: 'Додайте години, якщо забули натиснути "Почати роботу"',
+    hint: "Додайте відпрацьовані години",
     objectLabel: "Об'єкт (необов'язково)",
     objectPlaceholder: "Оберіть об'єкт",
     selectObject: "Оберіть об'єкт",
@@ -528,6 +539,24 @@ export const uk = {
     /** Назва аркуша Excel-файлу (`modules/export/xlsx.ts`). */
     sheetTitle: "Звіти",
     monthHours: "Годин за місяць",
+    /** Заголовки колонок в выгружаемых файлах (CSV, Excel, PDF). */
+    columns: {
+      date: "Дата",
+      worker: "Робітник",
+      site: "Об'єкт",
+      start: "Початок",
+      end: "Кінець",
+      breakMinutes: "Перерва (хв)",
+      totalMinutes: "Всього (хв)",
+      workedMinutes: "Відпрацьовано (хв)",
+      overtimeMinutes: "Додатково (хв)",
+      description: "Опис",
+      photos: "Фото",
+      time: "Час",
+      worked: "Відпрацьовано",
+      overtime: "Додатково",
+      categories: "Категорії",
+    },
   },
 
   /**
@@ -654,4 +683,189 @@ export const uk = {
       "Грудень",
     ],
   },
-} as const;
+
+  /** Компания: команда и настройки (`/more/company`, `/more/team`). */
+  companyUi: {
+    title: "Компанія",
+    team: {
+      searchPlaceholder: "Пошук співробітника",
+      addWorker: "Додати співробітника",
+      hoursThisMonth: "год за місяць",
+      dailyNorm: "Норма",
+      dailyNormUnit: "год/день",
+      dailyNormSave: "Зберегти",
+      dailyNormSaved: "Норму збережено",
+      dailyNormError: "Не вдалося зберегти норму. Спробуйте ще раз",
+      dailyNormInvalid: "Норма має бути від 1 до 24 год",
+      empty: "У компанії ще немає активних працівників",
+      emptyHint: "Додайте першого співробітника кнопкою вище",
+      emptySearchTitle: "Нічого не знайдено",
+      emptySearchHint: "Спробуйте інше ім'я",
+    },
+    settings: {
+      dailyNormTitle: "Денна норма годин",
+      dailyNormDescription:
+        "Стартове значення для нових співробітників. Кожному можна задати власну норму в розділі «Команда».",
+      dailyNormLabel: "Норма",
+      dailyNormUnit: "год/день",
+      dailyNormSave: "Зберегти",
+      dailyNormSaved: "Норму компанії збережено",
+      dailyNormInvalid: "Норма має бути від 1 до 24 год",
+      dailyNormSaveError: "Не вдалося зберегти норму. Спробуйте ще раз",
+
+      categoriesTitle: "Категорії робіт",
+      categoriesDescription: "Використовуються у звітах по об'єктах для позначення виду роботи.",
+      categoriesAddPlaceholder: "Назва нової категорії",
+      categoriesAdd: "Додати",
+      categoriesNameRequired: "Введіть назву категорії",
+      categoriesSaveError: "Не вдалося зберегти зміни. Спробуйте ще раз",
+      categoriesEmpty: "Категорій ще немає",
+      categoriesArchivedBadge: "Архів",
+      categoriesArchive: "Архівувати",
+      categoriesRestore: "Розархівувати",
+      categoriesArchiveConfirmTitle: "Архівувати категорію?",
+      categoriesArchiveConfirmBody:
+        "Категорія «{name}» зникне зі списку вибору в нових звітах. Старі звіти з нею залишаться без змін, відновити категорію можна будь-коли.",
+      categoriesArchiveConfirmAction: "Архівувати",
+    },
+  },
+
+  /** Дополнения экрана «Години»: фильтры, таблица, источник записи. */
+  hoursUi: {
+    scopeLabel: "Чиї години",
+    scopeSelf: "Я",
+    scopeTeam: "Команда",
+    filterWorkerLabel: "Співробітник",
+    filterWorkerAll: "Усі співробітники",
+    filterSiteLabel: "Об'єкт",
+    filterSiteAll: "Усі об'єкти",
+    resetFilters: "Скинути фільтри",
+    monthTableHoursColumn: "Годин",
+    monthTableSourceColumn: "Джерело",
+    monthTableDescriptionColumn: "Опис",
+    sourceTimer: "Таймер",
+    sourceManual: "Вручну",
+    noDescription: "Без опису",
+    emptyFilteredTitle: "Записів за цими фільтрами не знайдено",
+    emptyFilteredHint: "Спробуйте скинути фільтри або обрати інший місяць",
+    loadMore: "Показати ще",
+    shownCount: "Показано {shown} із {total}",
+    entriesTotal: "Разом {total} · {n}",
+    exportHint: "Табель за обраний місяць",
+  },
+
+  /** Дополнения экрана «Об'єкти» для шефа: архив, фильтры, меню. */
+  objectsUi: {
+    archiveTabs: {
+      active: "Активні",
+      archived: "Архів",
+      all: "Всі",
+    },
+    archiveTabsLabel: "Архів об'єктів",
+    filters: {
+      status: "Статус об'єкта",
+      statusAll: "Всі",
+      statusNotStarted: "Не розпочато",
+      statusInProgress: "В роботі",
+      statusPaused: "На паузі",
+      statusCompleted: "Завершено",
+      period: "Дата",
+      from: "Від",
+      to: "До",
+      periodHint: "Об'єкти, де були записи часу. Один день — однакові дати.",
+      object: "Об'єкт",
+      objectAll: "Усі об'єкти",
+      worker: "Працівник",
+      workerAll: "Усі працівники",
+    },
+    hoursLabel: "Години",
+    workersCount: "{n} людей",
+    noHours: "Немає годин",
+    menu: {
+      open: "Дії з об'єктом",
+      edit: "Редагувати",
+      archive: "Архівувати",
+      restore: "Розархівувати",
+      delete: "Видалити",
+      deleteConfirmTitle: "Видалити об'єкт?",
+      deleteConfirmBody:
+        "Об'єкт «{name}» зникне назавжди. Записи часу, де його вказано, залишаться, але втратять прив'язку до нього.",
+      deleteConfirmAction: "Видалити",
+    },
+    emptySearchTitle: "Нічого не знайдено",
+    emptySearchHint: "Спробуйте змінити пошуковий запит або фільтри",
+    emptyTitle: "Об'єктів ще немає",
+    emptyHint: "Додайте перший об'єкт, щоб бачити по ньому години й команду",
+    detail: {
+      periodTitle: "Години та люди",
+      hours: "Години",
+      workers: "Людей",
+    },
+  },
+
+  /** Дополнения экрана «Звіти»: команда, экспорт, лента компании. */
+  reportsUi: {
+    team: {
+      kpiHours: "Годин за місяць",
+      kpiActive: "Активних співробітників",
+      kpiAvg: "Ø на співробітника",
+      searchPlaceholder: "Пошук співробітника",
+      selectAll: "Усі",
+      deselectAll: "Зняти всі",
+      selected: "Обрано: {n}",
+      selectedAll: "Обрано: усі",
+      openWorker: "Звіти співробітника",
+      workersTitle: "Співробітники",
+      reportsTitle: "Звіти компанії",
+      viewPeople: "Люди",
+      viewReports: "Звіти",
+      select: "Вибрати",
+      selectDone: "Готово",
+      summary: "{hours} · {people} · Ø {avg}",
+      peopleCount: "{n} спів.",
+      reportsSummary: "Звітів: {reports} · Фото: {photos}",
+      weekLine: "Цей тиждень: {hours}",
+    },
+    export: {
+      open: "Поділитися та експорт",
+      title: "Експорт і надсилання",
+      whatLabel: "Що вивантажити",
+      hours: "Години",
+      reports: "Звіти",
+      whoLabel: "Кого включити",
+      scopeAll: "Усі співробітники",
+      scopeSome: "Обрано: {n}",
+      searchPlaceholder: "Пошук співробітника",
+      formatLabel: "Формат",
+      reportsCsvOnly: "Звіти вивантажуються лише в CSV",
+      summary: "{what} · {period}",
+      download: "Завантажити",
+      downloaded: "Файл завантажено",
+      sendWhatsapp: "Надіслати в WhatsApp",
+      error: "Не вдалося підготувати файл",
+    },
+
+    whatsapp: {
+      label: "WhatsApp",
+      fallbackText: "Файл завантажено — прикріпіть його вручну в чаті",
+      error: "Не вдалося підготувати файл",
+    },
+    feed: {
+      kpiReports: "Звітів за період",
+      kpiPhotos: "Фото за період",
+      filterSiteLabel: "Об'єкт",
+      filterSiteAll: "Усі об'єкти",
+      noSite: "Без об'єкта",
+      photosCount: "{n} фото",
+      emptyTitle: "За цей період звітів немає",
+      emptyFilteredTitle: "Звітів за цими фільтрами не знайдено",
+      emptyFilteredHint: "Спробуйте скинути фільтри або обрати інший місяць",
+      deleteReport: "Видалити звіт",
+      deleteConfirmTitle: "Видалити звіт?",
+      deleteConfirmBody: "Звіт разом з усіма фото зникне назавжди — відновити його не вийде.",
+      deleteConfirmAction: "Видалити",
+      deleteSuccess: "Звіт видалено",
+      loadError: "Не вдалося оновити список звітів",
+    },
+  },
+};

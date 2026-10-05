@@ -3,7 +3,8 @@
 import { useSyncExternalStore } from "react";
 
 import { fmt } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 
 /** Раз на хвилину перевіряємо годину: застосунок може бути відкритий довго. */
 function subscribe(onChange: () => void) {
@@ -11,7 +12,7 @@ function subscribe(onChange: () => void) {
   return () => clearInterval(id);
 }
 
-function greetingTemplate(hour: number): string {
+function greetingTemplate(hour: number, t: Dict): string {
   if (hour >= 5 && hour < 12) return t.home.greetingMorning;
   if (hour >= 12 && hour < 18) return t.home.greetingDay;
   return t.home.greetingEvening;
@@ -23,12 +24,13 @@ function greetingTemplate(hour: number): string {
  * «Вітаю», затем сразу подменяется без расхождения гидрации.
  */
 export function Greeting({ name }: { name: string }) {
+  const t = useT();
   const hour = useSyncExternalStore(
     subscribe,
     () => new Date().getHours(),
     () => null,
   );
 
-  const template = hour === null ? t.home.greetingNeutral : greetingTemplate(hour);
+  const template = hour === null ? t.home.greetingNeutral : greetingTemplate(hour, t);
   return <>{fmt(template, { name })}</>;
 }

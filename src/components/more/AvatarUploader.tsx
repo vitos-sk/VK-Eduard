@@ -9,7 +9,7 @@ import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Ticket } from "@/components/ui/ticket";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { AVATARS_BUCKET, deleteAvatar, uploadAvatar } from "@/modules/media/photos";
 
@@ -29,6 +29,7 @@ export function AvatarUploader({
   avatarPath,
   avatarUrl,
 }: AvatarUploaderProps) {
+  const t = useT();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [path, setPath] = useState(avatarPath);

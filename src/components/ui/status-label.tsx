@@ -1,4 +1,6 @@
-import { t } from "@/lib/i18n"
+"use client";
+
+import { useT } from "@/lib/i18n/client";
 import type { WorkStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +19,7 @@ function StatusLabel({
   status: WorkStatus
   className?: string
 }) {
+  const t = useT();
   return (
     <span
       data-slot="status-label"

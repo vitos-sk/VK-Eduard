@@ -1,21 +1,25 @@
 import ExcelJS from "exceljs";
 
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
 import { EXPORT_BRAND, type ExportMeta, type ExportRow } from "./types";
 
-const COLUMNS = [
-  { header: "Дата", key: "date", width: 12 },
-  { header: "Робітник", key: "worker", width: 22 },
-  { header: "Об'єкт", key: "site", width: 22 },
-  { header: "Початок", key: "start", width: 10 },
-  { header: "Кінець", key: "end", width: 10 },
-  { header: "Перерва (хв)", key: "breakMinutes", width: 14 },
-  { header: "Всього (хв)", key: "total", width: 14 },
-  { header: "Відпрацьовано (хв)", key: "workedMinutes", width: 18 },
-  { header: "Додатково (хв)", key: "overtimeMinutes", width: 16 },
-  { header: "Опис", key: "description", width: 36 },
-  { header: "Фото", key: "photoCount", width: 8 },
-] as const;
+function columns(t: Dict) {
+  const c = t.export.columns;
+
+  return [
+    { header: c.date, key: "date", width: 12 },
+    { header: c.worker, key: "worker", width: 22 },
+    { header: c.site, key: "site", width: 22 },
+    { header: c.start, key: "start", width: 10 },
+    { header: c.end, key: "end", width: 10 },
+    { header: c.breakMinutes, key: "breakMinutes", width: 14 },
+    { header: c.totalMinutes, key: "total", width: 14 },
+    { header: c.workedMinutes, key: "workedMinutes", width: 18 },
+    { header: c.overtimeMinutes, key: "overtimeMinutes", width: 16 },
+    { header: c.description, key: "description", width: 36 },
+    { header: c.photos, key: "photoCount", width: 8 },
+  ] as const;
+}
 
 /**
  * Excel .xlsx з форматуванням — `docs/ROADMAP.md`, етап 6, доповнений
@@ -26,7 +30,9 @@ const COLUMNS = [
 export async function buildXlsx(
   rows: readonly ExportRow[],
   meta: ExportMeta,
+  t: Dict,
 ): Promise<Buffer> {
+  const COLUMNS = columns(t);
   const workbook = new ExcelJS.Workbook();
   workbook.creator = meta.companyName || EXPORT_BRAND;
   workbook.created = new Date();

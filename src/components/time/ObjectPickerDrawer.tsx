@@ -5,14 +5,8 @@ import { useRouter } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
-import { t } from "@/lib/i18n";
+import { ResponsiveSheet, SheetClose, SheetTitle } from "@/components/ui/responsive-sheet";
+import { useT } from "@/lib/i18n/client";
 import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
 import { createSite } from "@/modules/sites/actions";
@@ -29,7 +23,7 @@ interface ObjectPickerDrawerProps {
   onSelect: (siteId: string) => void;
 }
 
-/** Нижний лист со списком объектов компании — выбор для поля «Об'єкт». */
+/** Лист со списком объектов компании — выбор для поля «Об'єкт» (нижний лист на телефоне, окно на ПК). */
 export function ObjectPickerDrawer({
   open,
   onOpenChange,
@@ -37,6 +31,7 @@ export function ObjectPickerDrawer({
   value,
   onSelect,
 }: ObjectPickerDrawerProps) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isCreating, setIsCreating] = useState(false);
@@ -67,21 +62,22 @@ export function ObjectPickerDrawer({
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent
-        aria-describedby={undefined}
-        className={cn(
-          "mx-auto max-w-[560px] border-edge bg-ticket text-text",
-          // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
-          "pb-[calc(84px+env(safe-area-inset-bottom))]",
-          "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
-        )}
-      >
-        <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-[20px] font-semibold text-text">
+    <ResponsiveSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      mobileClassName={cn(
+        "mx-auto max-w-[560px] border-edge bg-ticket text-text",
+        // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
+        "pb-[calc(84px+env(safe-area-inset-bottom))]",
+        "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
+      )}
+      desktopClassName="border-edge bg-ticket"
+    >
+        <div className="flex flex-col gap-0.5 p-4 pb-2 text-center lg:text-left">
+          <SheetTitle className="text-[20px] font-semibold text-text">
             {t.manualTime.selectObject}
-          </DrawerTitle>
-        </DrawerHeader>
+          </SheetTitle>
+        </div>
 
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pt-1 pb-1">
           {isCreating ? (
@@ -145,7 +141,7 @@ export function ObjectPickerDrawer({
           })}
         </div>
 
-        <DrawerClose
+        <SheetClose
           className={cn(
             "mx-4 mt-4 mb-3 flex h-ctl-md items-center justify-center",
             "rounded-ctl border border-primary bg-ticket text-[15px] font-semibold text-primary",
@@ -154,8 +150,7 @@ export function ObjectPickerDrawer({
           )}
         >
           {t.common.cancel}
-        </DrawerClose>
-      </DrawerContent>
-    </Drawer>
+        </SheetClose>
+    </ResponsiveSheet>
   );
 }

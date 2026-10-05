@@ -13,7 +13,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { deleteSite } from "@/modules/sites/actions";
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +28,7 @@ interface ObjectDeleteButtonProps {
  * успіху йдемо на список: детальна сторінка більше не існує.
  */
 export function ObjectDeleteButton({ siteId, className }: ObjectDeleteButtonProps) {
+  const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();

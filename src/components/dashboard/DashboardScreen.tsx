@@ -27,7 +27,8 @@ import {
   TicketTableRow,
 } from "@/components/ui/ticket-table";
 import { fmt, formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/modules/auth/profile";
 import {
@@ -48,16 +49,10 @@ interface DashboardScreenProps {
   workers: readonly { id: string; name: string }[];
 }
 
-const PERIOD_OPTIONS: readonly { value: DashboardPeriod; label: string }[] = [
-  { value: "month", label: t.dashboard.periodMonth },
-  { value: "quarter", label: t.dashboard.periodQuarter },
-  { value: "year", label: t.dashboard.periodYear },
-];
-
 const ROMAN_QUARTERS = ["I", "II", "III", "IV"] as const;
 
 /** Подпись периода: «Жовтень 2026», «IV квартал 2026», «2026». */
-function periodTitle(period: DashboardPeriod, date: Date): string {
+function periodTitle(period: DashboardPeriod, date: Date, t: Dict): string {
   if (period === "year") return String(date.getFullYear());
   if (period === "quarter") {
     return fmt(t.dashboard.quarterLabel, {
@@ -70,7 +65,7 @@ function periodTitle(period: DashboardPeriod, date: Date): string {
 }
 
 /** Период в предложении-итоге: «жовтень» / «IV квартал» / «рік». */
-function periodInSentence(period: DashboardPeriod, date: Date): string {
+function periodInSentence(period: DashboardPeriod, date: Date, t: Dict): string {
   if (period === "year") return String(date.getFullYear());
   if (period === "quarter") return `${ROMAN_QUARTERS[getQuarter(date) - 1]} ${t.dashboard.periodQuarter.toLowerCase()}`;
 
@@ -89,6 +84,12 @@ export function DashboardScreen({
   todayEntries,
   workers,
 }: DashboardScreenProps) {
+  const t = useT();
+  const PERIOD_OPTIONS: readonly { value: DashboardPeriod; label: string }[] = [
+    { value: "month", label: t.dashboard.periodMonth },
+    { value: "quarter", label: t.dashboard.periodQuarter },
+    { value: "year", label: t.dashboard.periodYear },
+  ];
   const supabase = useMemo(() => createClient(), []);
   const referenceDate = useMemo(() => new Date(), []);
 
@@ -124,8 +125,8 @@ export function DashboardScreen({
   const overview = useMemo(() => buildOverview(periodEntries), [periodEntries]);
   const topSites = useMemo(() => buildTopSites(periodEntries), [periodEntries]);
   const chartData = useMemo(
-    () => buildHoursChartData(period, referenceDate, periodEntries),
-    [period, referenceDate, periodEntries],
+    () => buildHoursChartData(period, referenceDate, periodEntries, t),
+    [period, referenceDate, periodEntries, t],
   );
   const range = useMemo(() => getPeriodRange(period, referenceDate), [period, referenceDate]);
   const workerRows = useMemo(
@@ -171,7 +172,7 @@ export function DashboardScreen({
       value: point.minutes,
       current: point.label === currentLabel,
     }));
-  }, [period, chartData, range, referenceDate]);
+  }, [period, chartData, range, referenceDate, t]);
 
   const dayCells = bars.filter((bar) => bar.value > 0);
   const hasData = bars.some((bar) => bar.value > 0);
@@ -187,7 +188,7 @@ export function DashboardScreen({
 
       <div className="px-4 lg:px-0">
         <p className="text-[16px] leading-snug font-semibold lg:text-[20px]">
-          {fmt(t.dashboard.summaryBefore, { period: periodInSentence(period, referenceDate) })}{" "}
+          {fmt(t.dashboard.summaryBefore, { period: periodInSentence(period, referenceDate, t) })}{" "}
           <mark className="tabular rounded-xs bg-yellow px-1 text-ink">
             {formatHoursShort(overview.totalMinutes)}
           </mark>{" "}
@@ -205,7 +206,7 @@ export function DashboardScreen({
             onChange={setPeriod}
             className="w-full lg:w-[260px]"
           />
-          <span className="text-[13px] text-ink-2">{periodTitle(period, referenceDate)}</span>
+          <span className="text-[13px] text-ink-2">{periodTitle(period, referenceDate, t)}</span>
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">

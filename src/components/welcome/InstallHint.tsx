@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Share } from "lucide-react";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -49,6 +49,7 @@ function getServerSnapshot(): Platform {
  * Если приложение уже запущено с домашнего экрана, блок не показывается.
  */
 export function InstallHint() {
+  const t = useT();
   const platform = useSyncExternalStore(
     subscribe,
     getSnapshot,

@@ -11,7 +11,9 @@ import {
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
 import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n/client";
+import type { Locale } from "@/lib/i18n/locales";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
@@ -21,22 +23,16 @@ import { Ticket } from "@/components/ui/ticket";
 
 type ReportFilter = "all" | "no_description" | "with_photo";
 
-const FILTER_OPTIONS: readonly SegmentedOption<ReportFilter>[] = [
-  { value: "all", label: t.reports.tabs.all },
-  { value: "no_description", label: t.reports.tabs.noDescription },
-  { value: "with_photo", label: t.reports.tabs.withPhoto },
-];
-
 interface DateGroup {
   date: string;
   title: string;
   reports: SiteReportWithPhotos[];
 }
 
-function groupTitle(date: string, todayKey: string, yesterdayKey: string): string {
+function groupTitle(date: string, todayKey: string, yesterdayKey: string, t: Dict, locale: Locale): string {
   if (date === todayKey) return t.reports.today;
   if (date === yesterdayKey) return t.reports.yesterday;
-  return formatDayMonth(fromDateKey(date));
+  return formatDayMonth(fromDateKey(date), locale);
 }
 
 interface ReportsFeedProps {
@@ -58,6 +54,13 @@ interface ReportsFeedProps {
  * співробітника (`TeamTab`) — без дублювання розмітки й логіки фільтрів.
  */
 export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: ReportsFeedProps) {
+  const t = useT();
+  const locale = useLocale();
+  const FILTER_OPTIONS: readonly SegmentedOption<ReportFilter>[] = [
+    { value: "all", label: t.reports.tabs.all },
+    { value: "no_description", label: t.reports.tabs.noDescription },
+    { value: "with_photo", label: t.reports.tabs.withPhoto },
+  ];
   const [filter, setFilter] = useState<ReportFilter>("all");
   const [query, setQuery] = useState("");
   const [month, setMonth] = useState(() => new Date());
@@ -72,7 +75,7 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
   const yesterdayKey = dateKeyOf(new Date(now.getTime() - 24 * 60 * 60 * 1000));
 
   const visible = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase("uk");
+    const needle = query.trim().toLocaleLowerCase(locale);
 
     const monthKey = dateKeyOf(month).slice(0, 7);
 
@@ -87,11 +90,11 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
       if (!needle) return true;
 
       const siteName = report.site_id ? (siteNameById.get(report.site_id) ?? "") : "";
-      const haystack = `${siteName} ${report.description}`.toLocaleLowerCase("uk");
+      const haystack = `${siteName} ${report.description}`.toLocaleLowerCase(locale);
 
       return haystack.includes(needle);
     });
-  }, [reports, filter, query, siteNameById, month]);
+  }, [reports, filter, query, siteNameById, month, locale]);
 
   const groups = useMemo<DateGroup[]>(() => {
     const byDate = new Map<string, SiteReportWithPhotos[]>();
@@ -106,10 +109,10 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
       .sort(([a], [b]) => (a < b ? 1 : -1))
       .map(([date, items]) => ({
         date,
-        title: groupTitle(date, todayKey, yesterdayKey),
+        title: groupTitle(date, todayKey, yesterdayKey, t, locale),
         reports: items,
       }));
-  }, [visible, todayKey, yesterdayKey]);
+  }, [visible, todayKey, yesterdayKey, t, locale]);
 
   const dominantCategory = aggregateCategoryStats(visible, categories)[0] ?? null;
 

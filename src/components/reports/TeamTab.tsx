@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
-import { uk as ukLocale } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,8 +19,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { initialsOf } from "@/components/shared/Thumb";
 import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { fmt, formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { reportsStrings as s } from "@/lib/i18n/parts/reports";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/client";
 import type { ExportKind } from "@/modules/export/formats";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
@@ -41,11 +40,6 @@ import { SearchField } from "@/components/shared/SearchField";
 const SITE_FILTER_ALL = "all";
 
 type TeamView = "people" | "reports";
-
-const VIEW_OPTIONS: readonly SegmentedOption<TeamView>[] = [
-  { value: "people", label: s.team.viewPeople },
-  { value: "reports", label: s.team.viewReports },
-];
 
 function sumMinutesByAuthor(
   entries: readonly WorkEntryWithNames[],
@@ -76,6 +70,13 @@ interface TeamTabProps {
  * `profile.role`), тут це вже не перевіряється повторно.
  */
 export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
+  const t = useT();
+  const locale = useLocale();
+  const s = t.reportsUi;
+  const VIEW_OPTIONS: readonly SegmentedOption<TeamView>[] = [
+    { value: "people", label: s.team.viewPeople },
+    { value: "reports", label: s.team.viewReports },
+  ];
   const supabase = useMemo(() => createClient(), []);
 
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
@@ -116,8 +117,8 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     let cancelled = false;
     const monthFrom = dateKeyOf(startOfMonth(month));
     const monthTo = dateKeyOf(endOfMonth(month));
-    const weekFrom = dateKeyOf(startOfWeek(new Date(), { locale: ukLocale }));
-    const weekTo = dateKeyOf(endOfWeek(new Date(), { locale: ukLocale }));
+    const weekFrom = dateKeyOf(startOfWeek(new Date(), { locale: DATE_FNS_LOCALES[locale] }));
+    const weekTo = dateKeyOf(endOfWeek(new Date(), { locale: DATE_FNS_LOCALES[locale] }));
 
     Promise.all([
       getCompanyEntriesInRange(supabase, companyId, monthFrom, monthTo),
@@ -133,7 +134,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, companyId, month]);
+  }, [supabase, companyId, month, locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,7 +191,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, companyId, month]);
+  }, [supabase, companyId, month, s.feed.loadError]);
 
   const allRows = useMemo(
     () =>
@@ -244,13 +245,12 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     });
   };
 
-
   const siteOptions: readonly SegmentedOption<string>[] = useMemo(
     () => [
       { value: SITE_FILTER_ALL, label: s.feed.filterSiteAll },
       ...sites.map((site) => ({ value: site.id, label: site.name })),
     ],
-    [sites],
+    [sites, s.feed.filterSiteAll],
   );
 
   const feedReports = useMemo(
@@ -494,6 +494,8 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
 }
 
 function ExportButton({ onClick, badge = 0 }: { onClick: () => void; badge?: number }) {
+  const t = useT();
+  const s = t.reportsUi;
   return (
     <Button
       variant="outline"

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { uk } from "@/lib/i18n";
 import { buildPdf } from "./pdf";
 
 describe("buildPdf", () => {
@@ -20,7 +21,8 @@ describe("buildPdf", () => {
           photoCount: 0,
         },
       ],
-      { companyName: "K group", periodTitle: "Жовтень 2026" },
+      { companyName: "VK group", periodTitle: "Жовтень 2026" },
+      uk,
     );
 
     const text = pdf.toString("latin1");

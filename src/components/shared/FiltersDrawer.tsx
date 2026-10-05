@@ -2,15 +2,9 @@
 
 import type { ReactNode } from "react";
 
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { ResponsiveSheet, SheetClose, SheetTitle } from "@/components/ui/responsive-sheet";
 import { Button } from "@/components/ui/button";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 interface FiltersDrawerProps {
@@ -32,23 +26,24 @@ export function FiltersDrawer({
   children,
   onReset,
 }: FiltersDrawerProps) {
+  const t = useT();
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent
-        // Описания у листа нет — гасим предупреждение Radix о aria-describedby
-        aria-describedby={undefined}
-        className={cn(
-          "mx-auto max-w-[430px] border-border bg-surface text-text",
-          // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
-          // В «телефоне по центру» под баром ещё 24px рамки — учитываем их.
-          "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
-        )}
-      >
-        <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-[20px] font-semibold text-text">
+    <ResponsiveSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      mobileClassName={cn(
+        "mx-auto max-w-[430px] border-border bg-surface text-text",
+        // Отступ снизу под таб-бар — он остаётся видимым поверх листа.
+        // В «телефоне по центру» под баром ещё 24px рамки — учитываем их.
+        "pb-[calc(56px+env(safe-area-inset-bottom))] phone:pb-[calc(56px+1.5rem)]",
+      )}
+      desktopClassName="border-border bg-surface"
+    >
+        <div className="flex flex-col gap-0.5 p-4 pb-2 text-center lg:text-left">
+          <SheetTitle className="text-[20px] font-semibold text-text">
             {t.common.filters}
-          </DrawerTitle>
-        </DrawerHeader>
+          </SheetTitle>
+        </div>
 
         <div className="max-h-[60dvh] overflow-y-auto px-4">{children}</div>
 
@@ -58,13 +53,12 @@ export function FiltersDrawer({
               {t.common.reset}
             </Button>
           )}
-          <DrawerClose asChild>
+          <SheetClose asChild>
             <Button size="lg" className="flex-1">
               {t.common.apply}
             </Button>
-          </DrawerClose>
+          </SheetClose>
         </div>
-      </DrawerContent>
-    </Drawer>
+    </ResponsiveSheet>
   );
 }

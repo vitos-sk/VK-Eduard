@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore } from "lucide-react";
 import { toast } from "sonner";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { setSiteArchived } from "@/modules/sites/actions";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +21,7 @@ export function ObjectArchiveButton({
   isArchived,
   className,
 }: ObjectArchiveButtonProps) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const Icon = isArchived ? ArchiveRestore : Archive;

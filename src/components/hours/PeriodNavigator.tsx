@@ -3,7 +3,7 @@
 import { CalendarDays } from "lucide-react";
 
 import { Stepper } from "@/components/ui/stepper";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 interface PeriodNavigatorProps {
@@ -16,6 +16,7 @@ interface PeriodNavigatorProps {
 
 /** Навигатор периода: стрелка назад, название периода, стрелка вперёд. */
 export function PeriodNavigator({ title, onPrev, onNext, className }: PeriodNavigatorProps) {
+  const t = useT();
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
       <Stepper direction="earlier" label={t.hours.prevPeriod} onClick={onPrev} />

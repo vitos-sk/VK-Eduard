@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { TeamManagementScreen } from "@/components/more/TeamManagementScreen";
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getPeriodRange } from "@/modules/dashboard/period";
@@ -15,6 +15,7 @@ import { dateKeyOf } from "@/modules/time/calc";
  * заведення нового співробітника, деактивація і денна норма.
  */
 export default async function TeamPage() {
+  const t = await getT();
   const profile = await requireProfile();
 
   if (profile.role !== "boss") {

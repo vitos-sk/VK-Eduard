@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { uploadSitePhoto } from "@/modules/media/photos";
 import type { Database } from "@/lib/supabase/types.gen";
@@ -59,6 +59,7 @@ export function SitePhotoUploader({
   photoUrl,
   className,
 }: SitePhotoUploaderProps) {
+  const t = useT();
   const supabase = useMemo(() => createClient(), []);
   const [isUploading, setIsUploading] = useState(false);
   const [path, setPath] = useState(photoPath);

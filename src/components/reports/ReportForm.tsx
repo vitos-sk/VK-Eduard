@@ -10,7 +10,7 @@ import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCat
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { Toggle } from "@/components/ui/toggle";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createReport } from "@/modules/reports/actions";
 import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
@@ -39,6 +39,7 @@ interface ReportFormProps {
  * добавить фото — до этого их физически некуда прикреплять.
  */
 export function ReportForm({ companyId, sites, categories, lastReport }: ReportFormProps) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

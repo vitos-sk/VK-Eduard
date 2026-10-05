@@ -1,6 +1,8 @@
+"use client";
+
 import { toast } from "sonner";
 
-import { reportsStrings as s } from "@/lib/i18n/parts/reports";
+import type { Dict } from "@/lib/i18n";
 import { buildExportUrl, type ExportFormat, type ExportKind } from "@/modules/export/formats";
 
 interface ShareExportParams {
@@ -9,6 +11,7 @@ interface ShareExportParams {
   format: ExportFormat;
   kind: ExportKind;
   workerIds?: readonly string[];
+  t: Dict;
 }
 
 function extractFileName(disposition: string | null, fallback: string): string {
@@ -22,7 +25,8 @@ function extractFileName(disposition: string | null, fallback: string): string {
  * коли файловий Web Share недоступний або `navigator.share()` впав (після
  * мережевого запиту user-activation могла згаснути). Файл на диску гарантований.
  */
-function downloadAndOpenWhatsApp(blob: Blob, fileName: string): void {
+function downloadAndOpenWhatsApp(blob: Blob, fileName: string, t: Dict): void {
+  const s = t.reportsUi;
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = objectUrl;
@@ -39,7 +43,8 @@ function downloadAndOpenWhatsApp(blob: Blob, fileName: string): void {
  * Готує той самий файл, що й «Завантажити», і віддає його в системне меню
  * «Поділитися» (Android Chrome, iOS Safari 15+); на десктопі — скачування + `wa.me`.
  */
-export async function shareExportFile({ from, to, format, kind, workerIds }: ShareExportParams): Promise<boolean> {
+export async function shareExportFile({ from, to, format, kind, workerIds, t }: ShareExportParams): Promise<boolean> {
+  const s = t.reportsUi;
   try {
     const response = await fetch(buildExportUrl({ from, to, format, kind, workerIds }));
     if (!response.ok) throw new Error("export failed");
@@ -53,12 +58,12 @@ export async function shareExportFile({ from, to, format, kind, workerIds }: Sha
         await navigator.share({ files: [file] });
       } catch (shareError) {
         if (shareError instanceof DOMException && shareError.name === "AbortError") return false;
-        downloadAndOpenWhatsApp(blob, fileName);
+        downloadAndOpenWhatsApp(blob, fileName, t);
       }
       return true;
     }
 
-    downloadAndOpenWhatsApp(blob, fileName);
+    downloadAndOpenWhatsApp(blob, fileName, t);
     return true;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") return false;
@@ -74,7 +79,9 @@ export async function downloadExportFile({
   format,
   kind,
   workerIds,
+  t,
 }: ShareExportParams): Promise<boolean> {
+  const s = t.reportsUi;
   try {
     const response = await fetch(buildExportUrl({ from, to, format, kind, workerIds }));
     if (!response.ok) throw new Error("export failed");

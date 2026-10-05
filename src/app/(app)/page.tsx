@@ -9,7 +9,7 @@ import { WeekStats, type WeekDay } from "@/components/home/WeekStats";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { formatDateLong, formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { initialsOf } from "@/components/shared/Thumb";
 import { requireProfile } from "@/modules/auth/session";
@@ -31,6 +31,8 @@ const HOME_OBJECTS_LIMIT = 6;
  * останній звіт. Ніяких таймерів і форм — години додаються через «+».
  */
 export default async function HomePage() {
+  const t = await getT();
+  const locale = await getLocale();
   const profile = await requireProfile();
   const supabase = await createClient();
 
@@ -130,7 +132,7 @@ export default async function HomePage() {
       <HomeHeader
         initials={initialsOf(profile.full_name)}
         title={<Greeting name={profile.full_name} />}
-        subtitle={formatDateLong(now)}
+        subtitle={formatDateLong(now, locale)}
       />
 
       <DayReportCard

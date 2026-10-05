@@ -1,7 +1,6 @@
 import { format, parse } from "date-fns";
-import { uk as ukLocale } from "date-fns/locale";
 
-import { t } from "@/lib/i18n";
+import { DATE_FNS_LOCALES, INTL_TAGS, type Locale } from "@/lib/i18n/locales";
 
 /**
  * Подставляет значения в плейсхолдеры вида `{name}`.
@@ -26,16 +25,6 @@ function pad(value: number): string {
   return String(Math.trunc(value)).padStart(2, "0");
 }
 
-/** Секунды → `05:42:18`. Для таймера на главной и деталей рабочего времени. */
-export function formatDuration(totalSec: number): string {
-  const safe = Math.max(0, Math.trunc(totalSec));
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = safe % 60;
-
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-}
-
 /** Минуты → `5:42`. Формат «ч:мм» везде в интерфейсе: `0:30`, `8:00`, `176:30`. */
 export function formatHoursShort(totalMin: number): string {
   const safe = Math.max(0, Math.trunc(totalMin));
@@ -45,38 +34,38 @@ export function formatHoursShort(totalMin: number): string {
   return `${hours}:${pad(minutes)}`;
 }
 
-/** Число → `25 200,50 €`. Калькулятор зарплати на екрані «Години». */
-export function formatCurrency(amount: number): string {
-  const formatted = amount.toLocaleString("uk-UA", {
+/** Число → `25 200,50 €` (разделители по языку). Калькулятор зарплати на екрані «Години». */
+export function formatCurrency(amount: number, locale: Locale): string {
+  const formatted = amount.toLocaleString(INTL_TAGS[locale], {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `${formatted} ${t.units.currency}`;
+  return `${formatted} €`;
 }
 
 /** `Середа, 30 липня` — заголовок даты под приветствием. */
-export function formatDateLong(date: Date): string {
-  return capitalize(format(date, "EEEE, d MMMM", { locale: ukLocale }));
+export function formatDateLong(date: Date, locale: Locale): string {
+  return capitalize(format(date, "EEEE, d MMMM", { locale: DATE_FNS_LOCALES[locale] }));
 }
 
 /** `Середа, 30 липня 2025` — навигатор периода на экране «Години». */
-export function formatDateFull(date: Date): string {
-  return capitalize(format(date, "EEEE, d MMMM yyyy", { locale: ukLocale }));
+export function formatDateFull(date: Date, locale: Locale): string {
+  return capitalize(format(date, "EEEE, d MMMM yyyy", { locale: DATE_FNS_LOCALES[locale] }));
 }
 
 /** `30.07.2025` — компактная дата в формах и карточках. */
-export function formatDateShort(date: Date): string {
-  return format(date, "dd.MM.yyyy", { locale: ukLocale });
+export function formatDateShort(date: Date, locale: Locale): string {
+  return format(date, "dd.MM.yyyy", { locale: DATE_FNS_LOCALES[locale] });
 }
 
 /** `30 липня` — заголовок группы отчётов за прошедшую дату. */
-export function formatDayMonth(date: Date): string {
-  return format(date, "d MMMM", { locale: ukLocale });
+export function formatDayMonth(date: Date, locale: Locale): string {
+  return format(date, "d MMMM", { locale: DATE_FNS_LOCALES[locale] });
 }
 
 /** `YYYY-MM-DD` → `30.07` — узкая колонка «Дата» в таблице «Зміни за місяць». */
-export function formatWorkDateShort(workDate: string): string {
-  return format(fromDateKey(workDate), "dd.MM", { locale: ukLocale });
+export function formatWorkDateShort(workDate: string, locale: Locale): string {
+  return format(fromDateKey(workDate), "dd.MM", { locale: DATE_FNS_LOCALES[locale] });
 }
 
 /** `14:58:00` → `14:58` — без секунд, для узких таблиц. */
@@ -86,7 +75,7 @@ export function formatTimeShort(time: string): string {
 
 /** `08:00`. */
 export function formatTime(date: Date): string {
-  return format(date, "HH:mm", { locale: ukLocale });
+  return format(date, "HH:mm");
 }
 
 /** `YYYY-MM-DD` — ключ, по которому связаны моки. */

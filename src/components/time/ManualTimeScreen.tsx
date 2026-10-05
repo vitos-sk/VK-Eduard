@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { createManualEntry, updateEntry } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
@@ -43,6 +43,7 @@ interface ManualTimeScreenProps {
  * нічого тихо не затирається, поки користувач не змінить кнопку сам.
  */
 export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

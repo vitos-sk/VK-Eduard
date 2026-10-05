@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
-import { getOpenEntry } from "@/modules/entries/queries";
 import { AVATARS_BUCKET } from "@/modules/media/photos";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 
@@ -16,13 +15,12 @@ import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const openEntry = await getOpenEntry(supabase, profile.id);
   const avatarUrl = profile.avatar_path
     ? ((await getSignedPhotoUrls(supabase, [profile.avatar_path], AVATARS_BUCKET).catch(() => new Map<string, string>())).get(profile.avatar_path) ?? null)
     : null;
 
   return (
-    <AppShell profile={profile} openEntry={openEntry} avatarUrl={avatarUrl}>
+    <AppShell profile={profile} avatarUrl={avatarUrl}>
       {children}
     </AppShell>
   );

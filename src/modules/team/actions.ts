@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { t } from "@/lib/i18n";
-import { companyStrings } from "@/lib/i18n/parts/company";
+import { getT } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types.gen";
 import { getProfile } from "@/modules/auth/session";
@@ -33,6 +32,7 @@ export async function createWorker(input: {
   password: string;
   role: UserRole;
 }): Promise<CreateWorkerState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -105,6 +105,7 @@ export async function setWorkerActive(
   workerId: string,
   active: boolean,
 ): Promise<DeactivateWorkerState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -146,6 +147,7 @@ export async function updateWorkerDailyNorm(
   workerId: string,
   minutes: number,
 ): Promise<UpdateDailyNormState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile || profile.role !== "boss") {
@@ -157,7 +159,7 @@ export async function updateWorkerDailyNorm(
     minutes < MIN_DAILY_NORM_MINUTES ||
     minutes > MAX_DAILY_NORM_MINUTES
   ) {
-    return { error: companyStrings.team.dailyNormInvalid };
+    return { error: t.companyUi.team.dailyNormInvalid };
   }
 
   const admin = createAdminClient();
@@ -168,7 +170,7 @@ export async function updateWorkerDailyNorm(
     .eq("company_id", profile.company_id);
 
   if (error) {
-    return { error: companyStrings.team.dailyNormError };
+    return { error: t.companyUi.team.dailyNormError };
   }
 
   revalidatePath("/more/team");

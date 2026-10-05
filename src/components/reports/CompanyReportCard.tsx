@@ -7,8 +7,7 @@ import { CardPhoto } from "@/components/ui/card-photo";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { DateStub, Ticket, TicketBody } from "@/components/ui/ticket";
 import { fmt } from "@/lib/format";
-import { reportsStrings as s } from "@/lib/i18n/parts/reports";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithNames } from "@/modules/reports/types";
 
@@ -26,6 +25,8 @@ interface CompanyReportCardProps {
  * щоб не вкладати інтерактивні елементи один в одного.
  */
 export function CompanyReportCard({ report, thumbUrl = null, onDeleted }: CompanyReportCardProps) {
+  const t = useT();
+  const s = t.reportsUi;
   const state = reportState(report, report.photo_count);
   const siteName = report.site_name ?? s.feed.noSite;
   const title = report.category_labels.join(", ") || report.description || t.home.lastReport.noDescription;

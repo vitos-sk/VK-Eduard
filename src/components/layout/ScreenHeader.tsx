@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -58,6 +60,7 @@ export function BackHeader({
   action,
   className,
 }: BackHeaderProps) {
+  const t = useT();
   return (
     <header
       className={cn(

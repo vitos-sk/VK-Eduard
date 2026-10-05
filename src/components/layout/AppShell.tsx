@@ -5,17 +5,14 @@ import type { ReactNode } from "react";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { OwnAvatarProvider } from "@/components/layout/OwnAvatar";
-import { ShiftProvider } from "@/components/layout/ShiftContext";
 import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
 import { QuickActionSheet } from "@/components/quick/QuickActionSheet";
 import { Toaster } from "@/components/ui/sonner";
 import type { Profile } from "@/modules/auth/profile";
-import type { WorkEntry } from "@/modules/entries/types";
 
 interface AppShellProps {
   profile: Profile;
-  openEntry: WorkEntry | null;
   /** Подписанная ссылка на своё фото. */
   avatarUrl: string | null;
   children: ReactNode;
@@ -34,12 +31,11 @@ interface AppShellProps {
  * `lg:hidden`/`hidden lg:flex`), поэтому состояние листа быстрых действий
  * держим здесь один раз — общее и для таб-бара, и для сайдбара.
  */
-export function AppShell({ profile, openEntry, avatarUrl, children }: AppShellProps) {
+export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
   const [isQuickOpen, setIsQuickOpen] = useState(false);
 
   return (
     <OwnAvatarProvider url={avatarUrl}>
-    <ShiftProvider openEntry={openEntry}>
       {/* Телефон и планшет */}
       <div className="lg:hidden">
         <PhoneFrame>
@@ -74,7 +70,6 @@ export function AppShell({ profile, openEntry, avatarUrl, children }: AppShellPr
       </div>
 
       <Toaster position="bottom-center" />
-    </ShiftProvider>
     </OwnAvatarProvider>
   );
 }

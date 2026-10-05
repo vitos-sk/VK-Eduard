@@ -7,8 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
 import { fmt, formatHoursShort, formatTimeShort, formatWorkDateShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { hoursStrings as s } from "@/lib/i18n/parts/hours";
+import { useLocale, useT } from "@/lib/i18n/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { breakMinutes } from "@/modules/time/calc";
 import { StampTag } from "@/components/ui/stamp-tag";
@@ -86,6 +85,7 @@ function HorizontalScrollbar({
 }: {
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const t = useT();
   const trackRef = useRef<HTMLDivElement>(null);
   const { thumb, scrollToLeftPct } = useHorizontalScrollThumb(scrollRef);
   const dragState = useRef<{ startX: number; startLeftPct: number } | null>(null);
@@ -170,6 +170,8 @@ export function MonthEntriesTable({
   isLoading = false,
   className,
 }: MonthEntriesTableProps) {
+  const t = useT();
+  const s = t.hoursUi;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Новий набір записів (інший місяць/фільтр) — знову з першої сторінки.
   const [prevEntries, setPrevEntries] = useState(entries);
@@ -241,6 +243,9 @@ function DesktopTable({
   showAuthor: boolean;
   onChanged: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
+  const s = t.hoursUi;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -273,7 +278,7 @@ function DesktopTable({
                     </TicketTableCell>
                   )}
                   <TicketTableCell className="tabular text-ink-2">
-                    {formatWorkDateShort(entry.work_date)}
+                    {formatWorkDateShort(entry.work_date, locale)}
                   </TicketTableCell>
                   <TicketTableCell className="tabular text-ink-2">
                     {formatTimeShort(entry.started_at)}–
@@ -319,6 +324,9 @@ function EntryRow({
   showAuthor: boolean;
   onChanged: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
+  const s = t.hoursUi;
   const pauseMinutes = breakMinutes(entry.break_start, entry.break_end);
   const isOngoing = entry.ended_at === null;
   const subtitle = [showAuthor ? entry.author_full_name : null, entry.site_name ?? t.hours.noObject]
@@ -328,7 +336,7 @@ function EntryRow({
   return (
     <li>
       <Ticket compact>
-        <TicketStub className="w-(--ticket-stub)" aria-label={formatWorkDateShort(entry.work_date)}>
+        <TicketStub className="w-(--ticket-stub)" aria-label={formatWorkDateShort(entry.work_date, locale)}>
           <span className="tabular text-[18px] leading-none font-semibold">
             {entry.work_date.slice(8, 10)}
           </span>
@@ -368,6 +376,7 @@ function EntryRow({
 }
 
 function EntryActions({ entry, onChanged }: { entry: WorkEntryWithNames; onChanged: () => void }) {
+  const t = useT();
   if (!entry.ended_at) return <span className="w-[64px] shrink-0 lg:hidden" aria-hidden />;
 
   return (

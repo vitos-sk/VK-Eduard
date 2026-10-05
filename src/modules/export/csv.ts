@@ -1,4 +1,4 @@
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
 import type { ExportRow } from "./types";
 
 /** Экранирует поле CSV: кавычки — двойными, оборачивает при спецсимволах. */
@@ -10,23 +10,27 @@ function csvField(value: string): string {
   return value;
 }
 
-const HEADER = [
-  "Дата",
-  "Робітник",
-  "Об'єкт",
-  "Початок",
-  "Кінець",
-  "Перерва (хв)",
-  "Всього (хв)",
-  "Відпрацьовано (хв)",
-  "Додатково (хв)",
-  "Опис",
-  "Фото",
-];
+function header(t: Dict): string[] {
+  const c = t.export.columns;
+
+  return [
+    c.date,
+    c.worker,
+    c.site,
+    c.start,
+    c.end,
+    c.breakMinutes,
+    c.totalMinutes,
+    c.workedMinutes,
+    c.overtimeMinutes,
+    c.description,
+    c.photos,
+  ];
+}
 
 /** CSV за диапазон дат — UTF-8 з BOM (інакше Excel ламає кирилицю). */
-export function buildCsv(rows: readonly ExportRow[]): string {
-  const lines = [HEADER.map(csvField).join(",")];
+export function buildCsv(rows: readonly ExportRow[], t: Dict): string {
+  const lines = [header(t).map(csvField).join(",")];
 
   for (const row of rows) {
     const cells = [

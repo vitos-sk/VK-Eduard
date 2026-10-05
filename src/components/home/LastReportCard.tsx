@@ -1,10 +1,12 @@
+"use client";
+
 import Link from "next/link";
 
 import { CardPhoto } from "@/components/ui/card-photo";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { DateStub, Ticket, TicketBody } from "@/components/ui/ticket";
 import { fmt, formatHoursShort } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 
 interface LastReportCardProps {
   reportId: string;
@@ -31,6 +33,7 @@ export function LastReportCard({
   thumbUrl = null,
   isReady,
 }: LastReportCardProps) {
+  const t = useT();
   const copy = t.home.lastReport;
 
   return (

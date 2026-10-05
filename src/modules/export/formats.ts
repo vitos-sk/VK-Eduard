@@ -1,6 +1,6 @@
 import { Download, FileSpreadsheet, FileText, type LucideIcon } from "lucide-react";
 
-import { t } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
 
 export type ExportFormat = "csv" | "xlsx" | "pdf";
 export type ExportKind = "hours" | "reports";
@@ -11,17 +11,21 @@ interface ExportFormatOption {
   icon: LucideIcon;
 }
 
-/** Список форматів для «Годин» — спільний для `TeamExportSheet`. */
-export const HOURS_FORMATS: readonly ExportFormatOption[] = [
-  { format: "csv", label: t.export.csv, icon: Download },
-  { format: "xlsx", label: t.export.xlsx, icon: FileSpreadsheet },
-  { format: "pdf", label: t.export.pdf, icon: FileText },
-];
+/**
+ * Список форматів для вибору в листі експорту (`TeamExportSheet`).
+ * Години — CSV, Excel, PDF-табель; звіти поки тільки CSV — xlsx/pdf під звіти не робили.
+ */
+export function getExportFormats(kind: ExportKind, t: Dict): readonly ExportFormatOption[] {
+  if (kind === "reports") {
+    return [{ format: "csv", label: t.export.csv, icon: Download }];
+  }
 
-/** Звіти поки експортуються тільки в CSV — xlsx/pdf під звіти не робили. */
-export const REPORTS_FORMATS: readonly ExportFormatOption[] = [
-  { format: "csv", label: t.export.csv, icon: Download },
-];
+  return [
+    { format: "csv", label: t.export.csv, icon: Download },
+    { format: "xlsx", label: t.export.xlsx, icon: FileSpreadsheet },
+    { format: "pdf", label: t.export.pdf, icon: FileText },
+  ];
+}
 
 interface BuildExportUrlParams {
   from: string;

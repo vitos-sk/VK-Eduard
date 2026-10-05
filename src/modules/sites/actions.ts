@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { t } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import type { WorkStatus } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
@@ -29,6 +29,7 @@ export interface SiteInput {
 export async function createSite(
   input: SiteInput,
 ): Promise<SiteActionState & { id?: string }> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -68,6 +69,7 @@ export async function updateSite(
   siteId: string,
   input: SiteInput,
 ): Promise<SiteActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -110,6 +112,7 @@ export async function setSiteArchived(
   siteId: string,
   archived: boolean,
 ): Promise<SiteActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
@@ -140,6 +143,7 @@ export async function setSiteArchived(
  * `site_id` в них становится null (`on delete set null` на FK).
  */
 export async function deleteSite(siteId: string): Promise<SiteActionState> {
+  const t = await getT();
   const profile = await getProfile();
 
   if (!profile) {
