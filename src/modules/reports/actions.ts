@@ -144,24 +144,31 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
     return { error: t.reportForm.otherRequired, reportId: null };
   }
 
-  const { data, error } = await supabase
+  const problemNote = input.problemNote?.trim() ?? "";
+  const baseRow = {
+    client_id: randomUUID(),
+    company_id: profile.company_id,
+    author_id: profile.id,
+    site_id: input.siteId,
+    work_date: input.workDate,
+    description: input.description,
+    other_text: otherText,
+  };
+
+  // Колонку `problem_note` добавляет миграция 0017. Пустую заметку не отправляем вовсе, а если база
+  // ещё без миграции и заметка есть — сохраняем отчёт без неё: потерять заметку лучше, чем не дать
+  // сохранить отчёт совсем.
+  let { data, error } = await supabase
     .from("site_reports")
-    .insert({
-      client_id: randomUUID(),
-      company_id: profile.company_id,
-      author_id: profile.id,
-      site_id: input.siteId,
-      work_date: input.workDate,
-      description: input.description,
-      other_text: otherText,
-      // Колонку добавляет миграция 0017: пустую заметку не отправляем, чтобы отчёт без неё
-      // сохранялся и на базе, где миграция ещё не накатана.
-      ...(input.problemNote?.trim() ? { problem_note: input.problemNote.trim() } : {}),
-    })
+    .insert({ ...baseRow, ...(problemNote ? { problem_note: problemNote } : {}) })
     .select("id")
     .single();
 
-  if (error) {
+  if (error && problemNote && /problem_note/i.test(`${error.message} ${error.details ?? ""}`)) {
+    ({ data, error } = await supabase.from("site_reports").insert(baseRow).select("id").single());
+  }
+
+  if (error || !data) {
     return { error: t.reportForm.saveError, reportId: null };
   }
 
