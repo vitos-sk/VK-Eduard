@@ -24,6 +24,10 @@ interface DeleteEntryButtonProps {
   /** Компактный вид — только иконка, без подписи; для рядка таблиці. */
   iconOnly?: boolean;
   className?: string;
+  /** Что вызвать для удаления; по умолчанию — запись рабочего времени. */
+  remove?: (id: string) => Promise<{ error: string | null }>;
+  /** Тексты подтверждения; по умолчанию — для записи рабочего времени. */
+  texts?: { title: string; body: string; deleted: string };
 }
 
 /**
@@ -37,6 +41,8 @@ export function DeleteEntryButton({
   onDeleted,
   iconOnly,
   className,
+  remove = deleteEntry,
+  texts,
 }: DeleteEntryButtonProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -44,7 +50,7 @@ export function DeleteEntryButton({
 
   const handleConfirm = () => {
     startTransition(async () => {
-      const result = await deleteEntry(entryId);
+      const result = await remove(entryId);
 
       if (result.error) {
         toast(result.error);
@@ -52,7 +58,7 @@ export function DeleteEntryButton({
       }
 
       setOpen(false);
-      toast(t.hours.entryDeleted);
+      toast(texts?.deleted ?? t.hours.entryDeleted);
       onDeleted();
     });
   };
@@ -74,8 +80,8 @@ export function DeleteEntryButton({
       <Modal open={open} onOpenChange={setOpen}>
         <ModalContent>
           <ModalHeader>
-            <ModalTitle>{t.hours.deleteConfirmTitle}</ModalTitle>
-            <ModalDescription>{t.hours.deleteConfirmBody}</ModalDescription>
+            <ModalTitle>{texts?.title ?? t.hours.deleteConfirmTitle}</ModalTitle>
+            <ModalDescription>{texts?.body ?? t.hours.deleteConfirmBody}</ModalDescription>
           </ModalHeader>
 
           <ModalFooter>

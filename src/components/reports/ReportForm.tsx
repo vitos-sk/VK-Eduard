@@ -8,8 +8,9 @@ import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/componen
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
-import { WorkTimeFields } from "@/components/time/WorkTimeFields";
+import { TimeField, WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { Toggle } from "@/components/ui/toggle";
+import { parseKm } from "@/modules/travel/km";
 import { useT } from "@/lib/i18n/client";
 import { clearOfflineCache } from "@/lib/offline/cache";
 import { createReport } from "@/modules/reports/actions";
@@ -24,7 +25,8 @@ import {
 } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
-import { UnderlineTextarea } from "@/components/ui/underline-field";
+import { UnderlineField, UnderlineTextarea } from "@/components/ui/underline-field";
+import { formatHoursShort } from "@/lib/format";
 
 interface ReportFormProps {
   companyId: string;
@@ -54,6 +56,11 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const [startAt, setStartAt] = useState("07:00");
   const [endAt, setEndAt] = useState("16:00");
   const [breakMin, setBreakMin] = useState(0);
+  // Дорога на объект — отдельно от рабочего времени (в часы и зарплату не входит).
+  const [withTravel, setWithTravel] = useState(false);
+  const [travelStart, setTravelStart] = useState("06:30");
+  const [travelEnd, setTravelEnd] = useState("07:30");
+  const [km, setKm] = useState("");
   const [isObjectPickerOpen, setIsObjectPickerOpen] = useState(false);
 
   const [createdReportId, setCreatedReportId] = useState<string | null>(null);
@@ -65,13 +72,19 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const breakEnd = breakMin > 0 ? minutesToTime(timeToMinutes(startAt) + breakMin) : null;
   const durationMin = totalMinutes(startAt, endAt, breakStart, breakEnd) ?? 0;
   const isDurationOk = isDurationValid(durationMin);
+  const travelMin = totalMinutes(travelStart, travelEnd, null, null) ?? 0;
+  const isTravelOk = isDurationValid(travelMin);
+  const kmValue = parseKm(km);
+  const isKmOk = !Number.isNaN(kmValue);
   const isOtherMissing = isOtherSelected(categories, categoryIds) && otherText.trim() === "";
-  const canSubmit = (!withTime || isDurationOk) && !isOtherMissing;
+  const canSubmit = (!withTime || isDurationOk) && (!withTravel || (isTravelOk && isKmOk)) && !isOtherMissing;
   const submitLabel = isOtherMissing
     ? t.reportForm.fillOther
-    : withTime && !isDurationOk
+    : (withTime && !isDurationOk) || (withTravel && !isTravelOk)
       ? t.reportForm.fixTime
-      : t.reportForm.submit;
+      : withTravel && !isKmOk
+        ? t.travel.errorKm
+        : t.reportForm.submit;
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
@@ -94,6 +107,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         otherText,
         problemNote,
         time: withTime ? { startedAt: startAt, endedAt: endAt, breakStart, breakEnd } : null,
+        travel: withTravel ? { startedAt: travelStart, endedAt: travelEnd, km: kmValue } : null,
       });
 
       if (result.error || !result.reportId) {
@@ -102,6 +116,7 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
       }
 
       toast(t.reportForm.saved);
+      if (result.warning === "travel") toast(t.travel.notSaved);
       // Записи времени и отчёты поменялись — сохранённые на телефоне копии экранов устарели.
       void clearOfflineCache();
       setCreatedReportId(result.reportId);
@@ -217,6 +232,45 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
               durationMin={durationMin}
               isDurationOk={isDurationOk}
             />
+          )}
+        </Ticket>
+
+        {/* Дорога на объект — отдельный блок в том же стиле; на рабочее время не влияет */}
+        <Ticket variant="sections">
+          <label className="flex cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5">
+            <span className="text-[14px] font-medium">{t.reportForm.addTravel}</span>
+            <Toggle checked={withTravel} onCheckedChange={setWithTravel} />
+          </label>
+
+          {withTravel && (
+            <div className="perf-t px-3.5 pt-2 pb-3">
+              <div className="grid grid-cols-2 gap-3">
+                <TimeField label={t.manualTime.start} value={travelStart} onChange={setTravelStart} invalid={!isTravelOk} />
+                <TimeField label={t.manualTime.finish} value={travelEnd} onChange={setTravelEnd} invalid={!isTravelOk} />
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-2 text-[13px]">
+                <span className="text-ink-2">{t.manualTime.duration}</span>
+                <span className="tabular font-semibold">{isTravelOk ? formatHoursShort(travelMin) : t.common.dash}</span>
+              </div>
+
+              <div className="mt-3">
+                <UnderlineField
+                  label={t.travel.kmLabel}
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.1"
+                  value={km}
+                  onChange={(event) => setKm(event.target.value)}
+                  placeholder={t.travel.kmPlaceholder}
+                  error={isKmOk ? undefined : t.travel.errorKm}
+                  className="tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+              </div>
+
+              <p className="mt-3 text-[12px] text-ink-2">{t.travel.note}</p>
+            </div>
           )}
         </Ticket>
       </div>

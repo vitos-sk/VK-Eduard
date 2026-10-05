@@ -341,6 +341,7 @@ export const en: Dict = {
     title: "Reports",
     searchPlaceholder: "Search reports...",
     createReport: "Create report",
+    addReport: "Add report",
     tabs: {
       all: "All",
       noDescription: "No description",
@@ -456,6 +457,7 @@ export const en: Dict = {
     repeatYesterday: "Repeat the last report",
     hint: "Describe what you did today — you can add photos right after saving",
     addHours: "Add hours worked",
+    addTravel: "Add travel time to the site",
     addHoursHint: "The hours go into the timesheet together with the report",
     submit: "Save report",
     fillOther: "Fill in “Other” to save",
@@ -655,6 +657,27 @@ export const en: Dict = {
     all: "All together",
     min: "min",
     hour: "h",
+  },
+
+  /** Время в дороге на объект (отдельно от рабочего времени). */
+  travel: {
+    title: "Travel",
+    kmLabel: "Kilometres (optional)",
+    kmPlaceholder: "For example: 42",
+    kmUnit: "km",
+    total: "Total",
+    tripsOne: "{n} trip",
+    tripsFew: "{n} trips",
+    tripsMany: "{n} trips",
+    empty: "No trips this month",
+    note: "Separate from work time — not included in hours or payroll",
+    deleteTitle: "Delete the trip?",
+    deleteBody: "This can't be undone.",
+    deleted: "Trip deleted",
+    deleteError: "Couldn't delete the trip. Please try again",
+    errorDuration: "Check the travel time — from 1 minute to 18 hours",
+    errorKm: "Check the kilometres",
+    notSaved: "Report saved, but the travel time wasn't saved. The database needs an update.",
   },
 
   /**

@@ -9,6 +9,7 @@ import { AddTimeButton } from "@/components/hours/AddTimeButton";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
 import { SalaryLink } from "@/components/hours/SalaryLink";
+import { TravelEntriesCard } from "@/components/hours/TravelEntriesCard";
 import { ALL_FILTER, HoursFilters } from "@/components/hours/HoursFilters";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
@@ -20,6 +21,7 @@ import type { Dict } from "@/lib/i18n";
 import { useT } from "@/lib/i18n/client";
 import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
+import { getTravelEntriesInRange, type TravelEntryWithNames } from "@/modules/travel/queries";
 import { getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { initialsOf } from "@/components/shared/Thumb";
@@ -61,6 +63,7 @@ export function HoursScreen({
   const [date, setDate] = useState<Date>(() => new Date(`${initialDate}T00:00:00`));
 
   const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
+  const [travelEntries, setTravelEntries] = useState<readonly TravelEntryWithNames[]>([]);
   const [loadedMonthKey, setLoadedMonthKey] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
 
@@ -103,6 +106,14 @@ export function HoursScreen({
     const from = dateKeyOf(startOfMonth(date));
     const to = dateKeyOf(endOfMonth(date));
 
+    // Дорога на объекты за месяц — отдельный блок, в часы не входит. Нет таблицы в базе — просто пусто.
+    loadWithCache({
+      key: `${profile.id}:travel:${from}:${to}`,
+      fetcher: () => getTravelEntriesInRange(supabase, profile.company_id, from, to),
+      onData: (data) => setTravelEntries(data),
+      isCancelled: () => cancelled,
+    }).catch(() => {});
+
     // Сначала последние сохранённые на телефоне записи месяца, затем свежие.
     loadWithCache({
       key: `${profile.id}:entries:${from}:${to}`,
@@ -133,6 +144,17 @@ export function HoursScreen({
       return true;
     });
   }, [isBoss, scope, monthEntries, workerFilter, siteFilter, profile.id]);
+  // Дорога — с теми же фильтрами, что и смены: рабочему и шефу в режиме «Я» — своя, шефу в команде — по фильтрам.
+  const visibleTravel = useMemo(() => {
+    if (!isBoss) return travelEntries;
+    if (scope === "self") return travelEntries.filter((entry) => entry.author_id === profile.id);
+
+    return travelEntries.filter((entry) => {
+      if (workerFilter !== ALL_FILTER && entry.author_id !== workerFilter) return false;
+      if (siteFilter !== ALL_FILTER && entry.site_id !== siteFilter) return false;
+      return true;
+    });
+  }, [isBoss, scope, travelEntries, workerFilter, siteFilter, profile.id]);
   const isFiltered = isTeamView && (workerFilter !== ALL_FILTER || siteFilter !== ALL_FILTER);
 
   const handleChanged = useCallback(() => {
@@ -237,18 +259,29 @@ export function HoursScreen({
           isLoading={isEntriesLoading}
           onChanged={handleChanged}
         />
+
+        <TravelEntriesCard
+          className="mt-3"
+          entries={visibleTravel}
+          showAuthor={isTeamView}
+          onChanged={handleChanged}
+        />
       </div>
 
       {/* Десктоп: таблиця змін — на всю ширину зліва, праворуч панель 320 px
           з діями дня, сумою та калькулятором. */}
       <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
-        <MonthEntriesTable
-          entries={visibleEntries}
-          showAuthor={isTeamView}
-          isFiltered={isFiltered}
-          isLoading={isEntriesLoading}
-          onChanged={handleChanged}
-        />
+        <div className="flex flex-col gap-3">
+          <MonthEntriesTable
+            entries={visibleEntries}
+            showAuthor={isTeamView}
+            isFiltered={isFiltered}
+            isLoading={isEntriesLoading}
+            onChanged={handleChanged}
+          />
+
+          <TravelEntriesCard entries={visibleTravel} showAuthor={isTeamView} onChanged={handleChanged} />
+        </div>
 
         <div className="flex flex-col gap-3">
           <AddTimeButton />

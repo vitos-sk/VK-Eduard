@@ -197,6 +197,68 @@ export type Database = {
           },
         ]
       }
+      travel_entries: {
+        Row: {
+          author_id: string
+          client_id: string
+          company_id: string
+          created_at: string
+          ended_at: string
+          id: string
+          km: number | null
+          minutes: number
+          site_id: string | null
+          started_at: string
+          work_date: string
+        }
+        Insert: {
+          author_id: string
+          client_id: string
+          company_id: string
+          created_at?: string
+          ended_at: string
+          id?: string
+          km?: number | null
+          site_id?: string | null
+          started_at: string
+          work_date: string
+        }
+        Update: {
+          author_id?: string
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          ended_at?: string
+          id?: string
+          km?: number | null
+          site_id?: string | null
+          started_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_entries_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_entries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_entries_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_reports: {
         Row: {
           author_id: string

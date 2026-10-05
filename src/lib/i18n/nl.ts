@@ -341,6 +341,7 @@ export const nl: Dict = {
     title: "Rapporten",
     searchPlaceholder: "Rapporten zoeken...",
     createReport: "Rapport maken",
+    addReport: "Rapport toevoegen",
     tabs: {
       all: "Alle",
       noDescription: "Zonder beschrijving",
@@ -456,6 +457,7 @@ export const nl: Dict = {
     repeatYesterday: "Laatste rapport herhalen",
     hint: "Beschrijf wat je vandaag hebt gedaan — foto's kun je direct na het opslaan toevoegen",
     addHours: "Gewerkte tijd invullen",
+    addTravel: "Reistijd naar het project invullen",
     addHoursHint: "De uren komen samen met het rapport in de urenstaat",
     submit: "Rapport opslaan",
     fillOther: "Vul “Overig” in om op te slaan",
@@ -655,6 +657,27 @@ export const nl: Dict = {
     all: "Allen samen",
     min: "min",
     hour: "u",
+  },
+
+  /** Время в дороге на объект (отдельно от рабочего времени). */
+  travel: {
+    title: "Reistijd",
+    kmLabel: "Kilometers (optioneel)",
+    kmPlaceholder: "Bijvoorbeeld: 42",
+    kmUnit: "km",
+    total: "Totaal",
+    tripsOne: "{n} rit",
+    tripsFew: "{n} ritten",
+    tripsMany: "{n} ritten",
+    empty: "Geen ritten deze maand",
+    note: "Los van werktijd — telt niet mee in uren of loonberekening",
+    deleteTitle: "Rit verwijderen?",
+    deleteBody: "Dit kan niet ongedaan worden gemaakt.",
+    deleted: "Rit verwijderd",
+    deleteError: "Rit verwijderen mislukt. Probeer het opnieuw",
+    errorDuration: "Controleer de reistijd — van 1 minuut tot 18 uur",
+    errorKm: "Controleer de kilometers",
+    notSaved: "Rapport opgeslagen, maar de reistijd niet. De database moet worden bijgewerkt.",
   },
 
   /**

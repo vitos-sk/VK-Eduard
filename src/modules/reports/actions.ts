@@ -35,7 +35,16 @@ export interface ReportInput {
   otherText: string;
 }
 
+/** Дорога на объект: отдельно от рабочего времени, километры — по желанию. */
+export interface ReportTravelInput {
+  startedAt: string;
+  endedAt: string;
+  km: number | null;
+}
+
 export interface CreateReportInput extends ReportInput {
+  /** Не задано — дорога не вносится. */
+  travel?: ReportTravelInput | null;
   /** Что забрало время (проблемное место) — необязательно. */
   problemNote?: string;
   /** Не задано — звіт без годин, як і раніше. */
@@ -44,6 +53,8 @@ export interface CreateReportInput extends ReportInput {
 
 export interface CreateReportState extends ReportActionState {
   reportId: string | null;
+  /** Отчёт сохранён, но дорогу записать не удалось (например, в базе ещё нет таблицы). */
+  warning?: "travel" | null;
 }
 
 type ServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -117,6 +128,7 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
   }
 
   const time = input.time ?? null;
+  const travel = input.travel ?? null;
 
   if (time) {
     const worked =
@@ -128,6 +140,10 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
     if (!isBreakPairValid(time.breakStart, time.breakEnd) || !isDurationValid(worked)) {
       return { error: t.manualTime.errorDuration, reportId: null };
     }
+  }
+
+  if (travel && !isDurationValid(minutesBetweenWrapped(travel.startedAt, travel.endedAt))) {
+    return { error: t.travel.errorDuration, reportId: null };
   }
 
   const supabase = await createClient();
@@ -198,9 +214,27 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
     return { error: t.reportForm.saveError, reportId: null };
   }
 
+  // Дорога — отдельная запись; не получилась — отчёт не откатываем, а предупреждаем.
+  let warning: "travel" | null = null;
+
+  if (travel) {
+    const { error: travelError } = await supabase.from("travel_entries").insert({
+      client_id: randomUUID(),
+      company_id: profile.company_id,
+      author_id: profile.id,
+      site_id: input.siteId,
+      work_date: input.workDate,
+      started_at: travel.startedAt,
+      ended_at: travel.endedAt,
+      km: travel.km,
+    });
+
+    if (travelError) warning = "travel";
+  }
+
   revalidatePath("/", "layout");
 
-  return { error: null, reportId: data.id };
+  return { error: null, reportId: data.id, warning };
 }
 
 /** Повна правка звіту — об'єкт, дата, опис, категорії. */

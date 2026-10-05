@@ -50,9 +50,10 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
         title={t.reports.title}
         action={
           <div className="flex items-center gap-2">
-            <Button asChild variant="primary" size="icon-sm" aria-label={t.reports.createReport}>
+            <Button asChild variant="primary" size="sm" aria-label={t.reports.createReport}>
               <Link href="/reports/new">
-              <Plus className="size-5" strokeWidth={1.9} aria-hidden />
+                <Plus className="size-4" strokeWidth={2} aria-hidden />
+                {t.reports.addReport}
               </Link>
             </Button>
             <AvatarLink initials={initialsOf(profile.full_name)} />
