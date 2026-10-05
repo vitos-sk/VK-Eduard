@@ -845,6 +845,8 @@ export const uk = {
 
   /** Дополнения экрана «Години»: фильтры, таблица, источник записи. */
   hoursUi: {
+    showTravel: "Час у дорозі",
+    showWork: "Робочий час",
     scopeLabel: "Чиї години",
     scopeSelf: "Я",
     scopeTeam: "Команда",

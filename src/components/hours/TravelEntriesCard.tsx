@@ -15,6 +15,8 @@ interface TravelEntriesCardProps {
   showAuthor: boolean;
   onChanged: () => void;
   className?: string;
+  /** Вместо пустоты показать подсказку «поїздок немає» (режим «Час у дорозі»). */
+  showEmpty?: boolean;
 }
 
 /**
@@ -22,11 +24,21 @@ interface TravelEntriesCardProps {
  * Живёт отдельно от «Зміни за місяць»: в рабочие часы, расчёт зарплаты и экспорт часов не входит.
  * Нет ни одной поездки (и нет таблицы в базе) — блок не показывается вовсе.
  */
-export function TravelEntriesCard({ entries, showAuthor, onChanged, className }: TravelEntriesCardProps) {
+export function TravelEntriesCard({ entries, showAuthor, onChanged, className, showEmpty }: TravelEntriesCardProps) {
   const t = useT();
   const locale = useLocale();
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    if (!showEmpty) return null;
+
+    return (
+      <Ticket asChild variant="flat">
+        <section className={className}>
+          <p className="text-[14px] text-ink-2">{t.travel.empty}</p>
+        </section>
+      </Ticket>
+    );
+  }
 
   const totalMinutes = entries.reduce((sum, entry) => sum + entry.minutes, 0);
   const totalKm = entries.reduce((sum, entry) => sum + (entry.km ?? 0), 0);

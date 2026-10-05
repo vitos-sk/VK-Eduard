@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { useRouter } from "next/navigation";
-import { Share2 } from "lucide-react";
+import { Clock, Route, Share2 } from "lucide-react";
 
 import { AddTimeButton } from "@/components/hours/AddTimeButton";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
@@ -68,6 +68,7 @@ export function HoursScreen({
   const [refreshToken, setRefreshToken] = useState(0);
 
   // Шеф: «Я / Команда» + фільтри по співробітнику й об'єкту.
+  const [showTravel, setShowTravel] = useState(false);
   const [scope, setScope] = useState<"self" | "team">("team");
   const [workerFilter, setWorkerFilter] = useState(ALL_FILTER);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -184,6 +185,27 @@ export function HoursScreen({
     );
   }, [date, isBoss, monthEntries, profile.daily_norm_minutes, t]);
 
+  // Калькулятор и переключатель «Робочий час / Час у дорозі» — две кнопки в ряд.
+  const actionsRow = (
+    <div className="grid grid-cols-2 gap-2">
+      <SalaryLink month={date} />
+      <Button
+        variant="outline"
+        block
+        className="h-auto min-h-ctl-lg justify-start px-3 py-1.5 text-left text-[13px] leading-tight whitespace-normal"
+        aria-pressed={showTravel}
+        onClick={() => setShowTravel((value) => !value)}
+      >
+        {showTravel ? (
+          <Clock className="size-4 shrink-0" strokeWidth={1.9} aria-hidden />
+        ) : (
+          <Route className="size-4 shrink-0" strokeWidth={1.9} aria-hidden />
+        )}
+        {showTravel ? s.showWork : s.showTravel}
+      </Button>
+    </div>
+  );
+
   return (
     <div className="pb-6">
       <ScreenHeader
@@ -252,44 +274,49 @@ export function HoursScreen({
           <PeriodView summary={monthSummary} />
         )}
 
-        <SalaryLink month={date} className="mt-3" />
+        <div className="mt-3">{actionsRow}</div>
 
-        <MonthEntriesTable
-          className="mt-3"
-          entries={visibleEntries}
-          showAuthor={isTeamView}
-          isFiltered={isFiltered}
-          isLoading={isEntriesLoading}
-          onChanged={handleChanged}
-        />
-
-        <TravelEntriesCard
-          className="mt-3"
-          entries={visibleTravel}
-          showAuthor={isTeamView}
-          onChanged={handleChanged}
-        />
-      </div>
-
-      {/* Десктоп: таблиця змін — на всю ширину зліва, праворуч панель 320 px
-          з діями дня, сумою та калькулятором. */}
-      <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
-        <div className="flex flex-col gap-3">
+        {showTravel ? (
+          <TravelEntriesCard
+            className="mt-3"
+            entries={visibleTravel}
+            showAuthor={isTeamView}
+            onChanged={handleChanged}
+            showEmpty
+          />
+        ) : (
           <MonthEntriesTable
+            className="mt-3"
             entries={visibleEntries}
             showAuthor={isTeamView}
             isFiltered={isFiltered}
             isLoading={isEntriesLoading}
             onChanged={handleChanged}
           />
+        )}
+      </div>
 
-          <TravelEntriesCard entries={visibleTravel} showAuthor={isTeamView} onChanged={handleChanged} />
+      {/* Десктоп: таблиця змін — на всю ширину зліва, праворуч панель 320 px
+          з діями дня, сумою та калькулятором. */}
+      <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+        <div className="flex flex-col gap-3">
+          {showTravel ? (
+            <TravelEntriesCard entries={visibleTravel} showAuthor={isTeamView} onChanged={handleChanged} showEmpty />
+          ) : (
+            <MonthEntriesTable
+              entries={visibleEntries}
+              showAuthor={isTeamView}
+              isFiltered={isFiltered}
+              isLoading={isEntriesLoading}
+              onChanged={handleChanged}
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
           {monthSummary && <PeriodView summary={monthSummary} />}
 
-          <SalaryLink month={date} />
+          {actionsRow}
         </div>
       </div>
     </div>

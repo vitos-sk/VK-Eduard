@@ -750,6 +750,8 @@ export const nl: Dict = {
   },
 
   hoursUi: {
+    showTravel: "Reistijd",
+    showWork: "Werktijd",
     scopeLabel: "Wiens uren",
     scopeSelf: "Ik",
     scopeTeam: "Team",
