@@ -4,6 +4,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { BottomNav } from "@/components/layout/BottomNav";
+import { OfflineSync } from "@/components/layout/OfflineSync";
+import { ServiceWorkerRegister } from "@/components/layout/ServiceWorkerRegister";
+import { SyncBanner } from "@/components/layout/SyncBanner";
 import { OwnAvatarProvider } from "@/components/layout/OwnAvatar";
 import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
@@ -42,6 +45,7 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
           {/* Бар — flex-элемент под скроллом, а не absolute: он всегда у низа
               фрейма, даже когда iOS меняет высоту вьюпорта. pb-6 — воздух под FAB. */}
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+            <SyncBanner userId={profile.id} />
             {children}
           </div>
 
@@ -65,10 +69,13 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
       <div className="hidden h-dvh bg-paper text-text lg:flex">
         <DesktopSidebar profile={profile} />
         <main className="min-w-0 flex-1 overflow-y-auto">
+          <SyncBanner userId={profile.id} />
           <div className="mx-auto max-w-[1240px] px-6 py-6">{children}</div>
         </main>
       </div>
 
+      <OfflineSync userId={profile.id} />
+      <ServiceWorkerRegister />
       <Toaster position="bottom-center" />
     </OwnAvatarProvider>
   );

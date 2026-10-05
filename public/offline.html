@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>VK group</title>
+    <style>
+      /* Цвета — зеркало design-system/tokens.css (статичный файл вне React, токены сюда не доходят). */
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #f3ecdc;
+        color: #1c2716;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        text-align: center;
+      }
+      h1 { margin: 0 0 8px; font-size: 22px; }
+      p { margin: 0 0 20px; max-width: 320px; color: #5e6049; line-height: 1.5; }
+      button {
+        height: 44px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 10px;
+        background: #1f5a17;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 id="title"></h1>
+      <p id="body"></p>
+      <button id="retry" type="button"></button>
+    </main>
+    <script>
+      var texts = {
+        uk: ["Немає зв'язку", "Ця сторінка ще не збережена на пристрої. Відкрийте її один раз з інтернетом.", "Спробувати ще раз"],
+        en: ["No connection", "This page isn't saved on the device yet. Open it once while online.", "Try again"],
+        nl: ["Geen verbinding", "Deze pagina is nog niet op het apparaat opgeslagen. Open haar één keer met internet.", "Opnieuw proberen"],
+      };
+      var match = document.cookie.match(/(?:^|; )locale=(uk|en|nl)/);
+      var lang = match ? match[1] : "uk";
+      document.documentElement.lang = lang;
+      document.getElementById("title").textContent = texts[lang][0];
+      document.getElementById("body").textContent = texts[lang][1];
+      var retry = document.getElementById("retry");
+      retry.textContent = texts[lang][2];
+      retry.onclick = function () { location.reload(); };
+    </script>
+  </body>
+</html>

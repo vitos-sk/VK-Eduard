@@ -260,7 +260,6 @@ function DesktopTable({
               <TicketTableHead>{t.hours.break}</TicketTableHead>
               <TicketTableHead>{t.hours.monthTableObjectColumn}</TicketTableHead>
               <TicketTableHead numeric>{s.monthTableHoursColumn}</TicketTableHead>
-              <TicketTableHead>{s.monthTableSourceColumn}</TicketTableHead>
               <TicketTableHead>{s.monthTableDescriptionColumn}</TicketTableHead>
               <TicketTableHead className="sticky right-0 bg-ticket" aria-hidden />
             </tr>
@@ -295,9 +294,6 @@ function DesktopTable({
                   <TicketTableCell numeric className="font-semibold">
                     {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
                   </TicketTableCell>
-                  <TicketTableCell className="text-ink-2">
-                    {entry.source === "timer" ? s.sourceTimer : <StampTag>{s.sourceManual}</StampTag>}
-                  </TicketTableCell>
                   <TicketTableCell className="max-w-[160px] truncate text-ink-2">
                     {entry.description || s.noDescription}
                   </TicketTableCell>
@@ -326,7 +322,6 @@ function EntryRow({
 }) {
   const t = useT();
   const locale = useLocale();
-  const s = t.hoursUi;
   const pauseMinutes = breakMinutes(entry.break_start, entry.break_end);
   const isOngoing = entry.ended_at === null;
   const subtitle = [showAuthor ? entry.author_full_name : null, entry.site_name ?? t.hours.noObject]
@@ -353,7 +348,6 @@ function EntryRow({
                 {entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
               </span>
               {isOngoing && <StampTag>{t.hours.entryOngoing}</StampTag>}
-              {entry.source === "manual" && <StampTag>{s.sourceManual}</StampTag>}
               {pauseMinutes > 0 && (
                 <span className="flex shrink-0 items-center gap-0.5 text-[12px] font-medium text-ink-2">
                   <Pause className="size-3 fill-current" aria-hidden />

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Logo } from "@/components/brand/Logo";
+import { OfflineReset } from "@/components/layout/OfflineReset";
 import { signIn, type SignInState } from "@/modules/auth/actions";
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export function LoginForm() {
       action={formAction}
       className="flex min-h-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+3rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
     >
+      <OfflineReset />
       <Logo size={30} />
 
       <h1 className="mt-10 text-[24px]/[1.15] font-semibold tracking-[-0.02em]">

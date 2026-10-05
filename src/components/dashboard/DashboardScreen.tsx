@@ -29,6 +29,7 @@ import {
 import { fmt, formatHoursShort } from "@/lib/format";
 import type { Dict } from "@/lib/i18n";
 import { useT } from "@/lib/i18n/client";
+import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/modules/auth/profile";
 import {
@@ -109,18 +110,19 @@ export function DashboardScreen({
     let cancelled = false;
     const { from, to } = getPeriodRange(period, referenceDate);
 
-    getCompanyEntriesInRange(supabase, profile.company_id, dateKeyOf(from), dateKeyOf(to))
-      .then((entries) => {
-        if (!cancelled) setPeriodEntries(entries);
-      })
-      .catch(() => {
-        // Мережа моргнула — лишаємо попередні дані на екрані.
-      });
+    loadWithCache({
+      key: `${profile.id}:company-entries:${dateKeyOf(from)}:${dateKeyOf(to)}`,
+      fetcher: () => getCompanyEntriesInRange(supabase, profile.company_id, dateKeyOf(from), dateKeyOf(to)),
+      onData: (entries) => setPeriodEntries(entries),
+      isCancelled: () => cancelled,
+    }).catch(() => {
+      // Мережа моргнула — лишаємо попередні дані на екрані.
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [supabase, profile.company_id, period, referenceDate]);
+  }, [supabase, profile.company_id, profile.id, period, referenceDate]);
 
   const overview = useMemo(() => buildOverview(periodEntries), [periodEntries]);
   const topSites = useMemo(() => buildTopSites(periodEntries), [periodEntries]);

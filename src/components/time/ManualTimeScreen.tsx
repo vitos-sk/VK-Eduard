@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -8,6 +8,7 @@ import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/componen
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { useT } from "@/lib/i18n/client";
+import { enqueueManualEntry, newClientId } from "@/lib/offline/outbox";
 import { createManualEntry, updateEntry } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
 import type { Site } from "@/modules/sites/queries";
@@ -29,6 +30,9 @@ const DEFAULT_END = "16:00";
 
 interface ManualTimeScreenProps {
   sites: readonly Site[];
+  /** Кто пишет запись — нужно, чтобы без интернета положить её в очередь на телефоне. */
+  userId: string;
+  companyId: string;
   /** Задано — режим редагування наявного запису замість створення нового. */
   entry?: WorkEntry;
 }
@@ -42,10 +46,12 @@ interface ManualTimeScreenProps {
  * початковий вибір рахується з наявних break_start/break_end запису, тож
  * нічого тихо не затирається, поки користувач не змінить кнопку сам.
  */
-export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
+export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTimeScreenProps) {
   const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // Один ключ на всё время работы с формой: повторная отправка той же записи не даст дубля.
+  const clientIdRef = useRef(newClientId());
 
   const [siteId, setSiteId] = useState<string | null>(entry?.site_id ?? null);
   const [date, setDate] = useState<Date>(() =>
@@ -92,11 +98,39 @@ export function ManualTimeScreen({ sites, entry }: ManualTimeScreenProps) {
         breakStart,
         breakEnd,
         description,
+        clientId: clientIdRef.current,
       };
 
-      const result = entry
-        ? await updateEntry(entry.id, input)
-        : await createManualEntry(input);
+      // Без интернета новая запись кладётся в очередь на телефоне и уходит, когда связь вернётся.
+      const saveOffline = async () => {
+        await enqueueManualEntry({ id: clientIdRef.current, userId, companyId, input });
+        toast(t.offline.saved);
+        router.push("/hours");
+      };
+
+      if (!entry && !navigator.onLine) {
+        await saveOffline();
+        return;
+      }
+
+      if (entry && !navigator.onLine) {
+        toast(t.offline.editNeedsNetwork);
+        return;
+      }
+
+      let result;
+
+      try {
+        result = entry ? await updateEntry(entry.id, input) : await createManualEntry(input);
+      } catch {
+        // Запрос не дошёл (связь пропала на ходу).
+        if (entry) {
+          toast(t.offline.editNeedsNetwork);
+        } else {
+          await saveOffline();
+        }
+        return;
+      }
 
       if (result.error) {
         toast(result.error);

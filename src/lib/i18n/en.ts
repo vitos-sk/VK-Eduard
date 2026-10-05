@@ -272,7 +272,6 @@ export const en: Dict = {
     break: "Break",
     entriesTitle: "Entries of the day",
     entryOngoing: "ongoing",
-    entryManualBadge: "manual",
     details: "Work time details",
     workTime: "Work time",
     objects: "Sites",
@@ -591,6 +590,21 @@ export const en: Dict = {
     ],
   },
 
+  /** Работа без интернета: баннер, очередь «не відправлено». */
+  offline: {
+    banner: "No connection. Hours you add will be saved on this device.",
+    saved: "Saved on this device — it will be sent when you're back online",
+    pending: "Not sent: {n}",
+    syncNow: "Send",
+    synced: "Entries sent",
+    rejected: "Couldn't send entries: {n}",
+    discard: "Delete",
+    editNeedsNetwork: "Editing is only available online",
+    pageTitle: "No connection",
+    pageBody: "This page isn't saved on the device yet. Open it once while online.",
+    pageRetry: "Try again",
+  },
+
   /**
    * Названия стандартных категорий работ. В базе они лежат по-украински (ключ — украинская
    * подпись); пользовательские категории шефа, которых здесь нет, показываются как введены.
@@ -667,10 +681,7 @@ export const en: Dict = {
     filterSiteAll: "All sites",
     resetFilters: "Reset filters",
     monthTableHoursColumn: "Hours",
-    monthTableSourceColumn: "Source",
     monthTableDescriptionColumn: "Description",
-    sourceTimer: "Timer",
-    sourceManual: "Manual",
     noDescription: "No description",
     emptyFilteredTitle: "No entries match these filters",
     emptyFilteredHint: "Try resetting the filters or choosing another month",

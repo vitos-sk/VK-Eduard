@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addMonths } from "date-fns";
 import { CalendarDays } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { LazyCalendar as Calendar, preloadCalendar } from "@/components/ui/lazy-calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Stepper } from "@/components/ui/stepper";
 import type { Dict } from "@/lib/i18n";
@@ -32,6 +32,11 @@ export function MonthNavigator({ date, onChange, className }: MonthNavigatorProp
   const t = useT();
   const locale = useLocale();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(preloadCalendar, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>

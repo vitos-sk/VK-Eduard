@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Pointer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { LazyCalendar as Calendar, preloadCalendar } from "@/components/ui/lazy-calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TicketSection } from "@/components/ui/ticket";
 import { formatDateLong } from "@/lib/format";
@@ -63,6 +63,12 @@ export function DatePickLink({
   const t = useT();
   const locale = useLocale();
   const [open, setOpen] = useState(false);
+
+  // Подтягиваем календарь заранее, в простое: к нажатию он уже загружен (и лежит в кэше для офлайна).
+  useEffect(() => {
+    const id = window.setTimeout(preloadCalendar, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

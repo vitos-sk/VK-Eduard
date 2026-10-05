@@ -18,6 +18,7 @@ import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
 import type { Dict } from "@/lib/i18n";
 import { useT } from "@/lib/i18n/client";
+import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
 import { getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
@@ -78,21 +79,23 @@ export function HoursScreen({
     if (!isBoss) return;
     let cancelled = false;
 
-    getCompanyWorkers(supabase, profile.company_id)
-      .then((data) => {
-        if (!cancelled) setWorkers(data);
-      })
-      .catch(() => {});
-    getAllSites(supabase)
-      .then((data) => {
-        if (!cancelled) setSites(data);
-      })
-      .catch(() => {});
+    loadWithCache({
+      key: `${profile.id}:workers`,
+      fetcher: () => getCompanyWorkers(supabase, profile.company_id),
+      onData: (data) => setWorkers(data),
+      isCancelled: () => cancelled,
+    }).catch(() => {});
+    loadWithCache({
+      key: `${profile.id}:sites:all`,
+      fetcher: () => getAllSites(supabase),
+      onData: (data) => setSites(data),
+      isCancelled: () => cancelled,
+    }).catch(() => {});
 
     return () => {
       cancelled = true;
     };
-  }, [isBoss, supabase, profile.company_id]);
+  }, [isBoss, supabase, profile.company_id, profile.id]);
 
   // Таблица «Зміни за місяць» внизу екрана — всегда за месяц выбранной даты.
   useEffect(() => {
@@ -100,20 +103,23 @@ export function HoursScreen({
     const from = dateKeyOf(startOfMonth(date));
     const to = dateKeyOf(endOfMonth(date));
 
-    getCompanyEntriesInRange(supabase, profile.company_id, from, to)
-      .then((entries) => {
-        if (cancelled) return;
+    // Сначала последние сохранённые на телефоне записи месяца, затем свежие.
+    loadWithCache({
+      key: `${profile.id}:entries:${from}:${to}`,
+      fetcher: () => getCompanyEntriesInRange(supabase, profile.company_id, from, to),
+      onData: (entries) => {
         setMonthEntries(entries);
         setLoadedMonthKey(from);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadedMonthKey(from);
-      });
+      },
+      isCancelled: () => cancelled,
+    }).catch(() => {
+      if (!cancelled) setLoadedMonthKey(from);
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [supabase, profile.company_id, date, refreshToken]);
+  }, [supabase, profile.company_id, profile.id, date, refreshToken]);
 
   const isEntriesLoading = loadedMonthKey !== dateKeyOf(startOfMonth(date));
 

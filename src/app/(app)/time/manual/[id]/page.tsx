@@ -18,7 +18,7 @@ export default async function EditManualTimePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = await createClient();
 
   const [entry, sites] = await Promise.all([
@@ -31,5 +31,5 @@ export default async function EditManualTimePage({
     notFound();
   }
 
-  return <ManualTimeScreen sites={sites} entry={entry} />;
+  return <ManualTimeScreen sites={sites} userId={profile.id} companyId={profile.company_id} entry={entry} />;
 }

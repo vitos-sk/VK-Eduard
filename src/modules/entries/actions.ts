@@ -25,6 +25,11 @@ export interface ManualEntryInput {
   breakStart: string | null;
   breakEnd: string | null;
   description: string;
+  /**
+   * Ключ идемпотентности записи. Задаёт клиент (он же кладёт запись в офлайн-очередь),
+   * поэтому повторная отправка той же записи не создаёт дубль.
+   */
+  clientId?: string;
 }
 
 export interface CreateManualEntryState extends EntryActionState {
@@ -68,7 +73,7 @@ export async function createManualEntry(
   const { data, error } = await supabase
     .from("work_entries")
     .insert({
-      client_id: randomUUID(),
+      client_id: input.clientId ?? randomUUID(),
       company_id: profile.company_id,
       author_id: profile.id,
       site_id: input.siteId,
@@ -84,6 +89,17 @@ export async function createManualEntry(
     .single();
 
   if (error) {
+    // Запись с этим client_id уже есть: предыдущая отправка дошла, а ответ потерялся.
+    if (error.code === "23505" && input.clientId) {
+      const { data: existing } = await supabase
+        .from("work_entries")
+        .select("id")
+        .eq("client_id", input.clientId)
+        .maybeSingle();
+
+      if (existing) return { error: null, entryId: existing.id };
+    }
+
     // `ended_at` тут всегда задан, поэтому индекс «одна открытая смена»
     // не участвует — реальная причина отказа почти наверняка не в нём.
     return { error: t.manualTime.saveError, entryId: null };

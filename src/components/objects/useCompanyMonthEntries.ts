@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { endOfMonth, startOfMonth } from "date-fns";
 
+import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
@@ -40,11 +41,15 @@ export function useCompanyMonthEntries(
 
     startTransition(async () => {
       try {
-        const data = await getCompanyEntriesInRange(supabase, companyId, from, to);
-        if (!cancelled) {
-          setEntries(data);
-          setLoaded(true);
-        }
+        await loadWithCache({
+          key: `${companyId}:company-entries:${from}:${to}`,
+          fetcher: () => getCompanyEntriesInRange(supabase, companyId, from, to),
+          onData: (data) => {
+            setEntries(data);
+            setLoaded(true);
+          },
+          isCancelled: () => cancelled,
+        });
       } catch {
         // Мережа моргнула — лишаємо попередні дані.
       }

@@ -5,6 +5,7 @@ import { Camera, Clock, Database, FileText, PlusCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
+import { OfflineReset } from "@/components/layout/OfflineReset";
 import { InstallHint } from "@/components/welcome/InstallHint";
 import { useT } from "@/lib/i18n/client";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function WelcomeScreen() {
   ];
   return (
     <div className="flex min-h-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+3rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+      <OfflineReset />
       <Logo size={30} />
 
       <h1 className="mt-10 text-[36px]/[1.05] font-semibold tracking-[-0.02em]">

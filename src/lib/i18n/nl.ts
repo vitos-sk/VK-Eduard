@@ -272,7 +272,6 @@ export const nl: Dict = {
     break: "Pauze",
     entriesTitle: "Registraties van de dag",
     entryOngoing: "bezig",
-    entryManualBadge: "handmatig",
     details: "Details werktijd",
     workTime: "Werktijd",
     objects: "Projecten",
@@ -591,6 +590,21 @@ export const nl: Dict = {
     ],
   },
 
+  /** Работа без интернета: баннер, очередь «не відправлено». */
+  offline: {
+    banner: "Geen verbinding. Toegevoegde uren worden op dit apparaat bewaard.",
+    saved: "Op dit apparaat bewaard — wordt verstuurd zodra je weer online bent",
+    pending: "Niet verstuurd: {n}",
+    syncNow: "Versturen",
+    synced: "Registraties verstuurd",
+    rejected: "Registraties versturen mislukt: {n}",
+    discard: "Verwijderen",
+    editNeedsNetwork: "Bewerken kan alleen met internet",
+    pageTitle: "Geen verbinding",
+    pageBody: "Deze pagina is nog niet op het apparaat opgeslagen. Open haar één keer met internet.",
+    pageRetry: "Opnieuw proberen",
+  },
+
   /**
    * Названия стандартных категорий работ. В базе они лежат по-украински (ключ — украинская
    * подпись); пользовательские категории шефа, которых здесь нет, показываются как введены.
@@ -667,10 +681,7 @@ export const nl: Dict = {
     filterSiteAll: "Alle projecten",
     resetFilters: "Filters herstellen",
     monthTableHoursColumn: "Uren",
-    monthTableSourceColumn: "Bron",
     monthTableDescriptionColumn: "Beschrijving",
-    sourceTimer: "Timer",
-    sourceManual: "Handmatig",
     noDescription: "Zonder beschrijving",
     emptyFilteredTitle: "Geen registraties gevonden met deze filters",
     emptyFilteredHint: "Herstel de filters of kies een andere maand",

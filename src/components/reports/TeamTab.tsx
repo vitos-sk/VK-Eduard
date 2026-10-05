@@ -21,6 +21,7 @@ import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
 import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
+import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
 import type { ExportKind } from "@/modules/export/formats";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
@@ -104,9 +105,11 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const [isOpenLoading, setIsOpenLoading] = useState(false);
 
   const refreshWorkers = useCallback(() => {
-    getCompanyWorkers(supabase, companyId)
-      .then((data) => setWorkers(data))
-      .catch(() => {});
+    loadWithCache({
+      key: `${companyId}:workers`,
+      fetcher: () => getCompanyWorkers(supabase, companyId),
+      onData: (data) => setWorkers(data),
+    }).catch(() => {});
   }, [supabase, companyId]);
 
   useEffect(() => {
@@ -120,16 +123,19 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     const weekFrom = dateKeyOf(startOfWeek(new Date(), { locale: DATE_FNS_LOCALES[locale] }));
     const weekTo = dateKeyOf(endOfWeek(new Date(), { locale: DATE_FNS_LOCALES[locale] }));
 
-    Promise.all([
-      getCompanyEntriesInRange(supabase, companyId, monthFrom, monthTo),
-      getCompanyEntriesInRange(supabase, companyId, weekFrom, weekTo),
-    ])
-      .then(([monthEntries, weekEntries]) => {
-        if (cancelled) return;
+    loadWithCache({
+      key: `${companyId}:team-entries:${monthFrom}:${monthTo}:${weekFrom}:${weekTo}`,
+      fetcher: () =>
+        Promise.all([
+          getCompanyEntriesInRange(supabase, companyId, monthFrom, monthTo),
+          getCompanyEntriesInRange(supabase, companyId, weekFrom, weekTo),
+        ]),
+      onData: ([monthEntries, weekEntries]) => {
         setMonthMinutes(sumMinutesByAuthor(monthEntries));
         setWeekMinutes(sumMinutesByAuthor(weekEntries));
-      })
-      .catch(() => {});
+      },
+      isCancelled: () => cancelled,
+    }).catch(() => {});
 
     return () => {
       cancelled = true;
@@ -139,17 +145,20 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   useEffect(() => {
     let cancelled = false;
 
-    getCompanyReportsInRange(
-      supabase,
-      companyId,
-      dateKeyOf(startOfMonth(month)),
-      dateKeyOf(endOfMonth(month)),
-      t,
-    )
-      .then((data) => {
+    const reportsFrom = dateKeyOf(startOfMonth(month));
+    const reportsTo = dateKeyOf(endOfMonth(month));
+
+    // Сначала сохранённые на телефоне отчёты месяца, затем свежие. Превью фото —
+    // только для свежих: ссылки на них временные и в кэше быстро протухли бы.
+    loadWithCache({
+      key: `${companyId}:team-reports:${locale}:${reportsFrom}:${reportsTo}`,
+      fetcher: () => getCompanyReportsInRange(supabase, companyId, reportsFrom, reportsTo, t),
+      isCancelled: () => cancelled,
+      onData: (data, source) => {
         if (cancelled) return;
         setCompanyReports(data);
         setLoadedFeedKey(dateKeyOf(startOfMonth(month)));
+        if (source === "cache") return;
 
         // Первое фото каждого звіту — для превью в карточке (одним запросом на весь месяц).
         const withPhotos = data.filter((report) => report.photo_count > 0).map((report) => report.id);
@@ -181,7 +190,8 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
             }
             setCompanyThumbUrls(byReport);
           }, () => {});
-      })
+      },
+    })
       .catch((error) => {
         if (cancelled) return;
         console.error("getCompanyReportsInRange failed", error);
@@ -192,7 +202,7 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, companyId, month, t, s.feed.loadError]);
+  }, [supabase, companyId, month, t, locale, s.feed.loadError]);
 
   const allRows = useMemo(
     () =>

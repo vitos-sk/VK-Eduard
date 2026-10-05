@@ -56,22 +56,34 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // Именно getUser(), а не getSession(): он проверяет токен на сервере Supabase.
-  // getSession() верит куке на слово, а куку можно подделать.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims(), а не getSession(): подпись токена проверяется по публичным ключам проекта
+  // (кэшируются), без похода в Supabase Auth на каждый запрос — это ~130 мс на каждый переход.
+  // Для проектов на старом симметричном ключе getClaims() сам откатывается на getUser().
+  // getSession() верит куке на слово, а куку можно подделать — его не используем.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  let userId = claimsData?.claims?.sub ?? null;
+
+  // Страховка: если токен локально не подтвердился (нет кук, протух, ключи не получены) —
+  // один раз спрашиваем сервер Supabase. Платят за это только невошедшие, а вошедший
+  // никогда не окажется выброшенным на /welcome из-за сбоя локальной проверки.
+  if (!userId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    userId = user?.id ?? null;
+  }
 
   const { pathname } = request.nextUrl;
 
-  if (!user && !isPublic(pathname)) {
+  if (!userId && !isPublic(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/welcome";
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  if (user && (pathname === "/welcome" || pathname === "/login")) {
+  if (userId && (pathname === "/welcome" || pathname === "/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
@@ -82,8 +94,8 @@ export async function proxy(request: NextRequest) {
   // его своим запросом, потому что `Headers.set` ниже всегда перезаписывает
   // то, что пришло снаружи.
   const requestHeaders = new Headers(request.headers);
-  if (user) {
-    requestHeaders.set("x-user-id", user.id);
+  if (userId) {
+    requestHeaders.set("x-user-id", userId);
   } else {
     requestHeaders.delete("x-user-id");
   }
@@ -103,9 +115,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Все пути, кроме статики и картинок. Иконки и манифест тоже исключены:
+     * Все пути, кроме статики и картинок. Иконки, манифест, сервис-воркер и запасная офлайн-страница тоже исключены:
      * гонять их через проверку сессии — лишний запрос к Supabase на каждый файл.
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
