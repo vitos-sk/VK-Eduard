@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { getReportEntries, getReportWithPhotos, getWorkCategories } from "@/modules/reports/queries";
-import { getSiteById } from "@/modules/sites/queries";
+import { getActiveSites, getSiteById } from "@/modules/sites/queries";
 
 export default async function ReportDetailPage({
   params,
@@ -23,7 +23,7 @@ export default async function ReportDetailPage({
     notFound();
   }
 
-  const [site, photoUrls, categories, entries] = await Promise.all([
+  const [site, photoUrls, categories, entries, sites] = await Promise.all([
     report.site_id ? getSiteById(supabase, report.site_id) : Promise.resolve(null),
     getSignedPhotoUrls(
       supabase,
@@ -31,6 +31,7 @@ export default async function ReportDetailPage({
     ),
     getWorkCategories(supabase, profile.company_id),
     getReportEntries(supabase, report).catch(() => []),
+    getActiveSites(supabase).catch(() => []),
   ]);
 
   // Картинка объекта — его фото из карточки объекта (если загружено).
@@ -55,6 +56,7 @@ export default async function ReportDetailPage({
       siteId={report.site_id}
       siteImageUrl={siteImageUrl}
       entries={entries}
+      sites={sites}
     />
   );
 }

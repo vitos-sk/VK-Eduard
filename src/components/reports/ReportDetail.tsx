@@ -16,7 +16,14 @@ import { fmt, formatDateShort, formatHoursShort, formatTimeShort } from "@/lib/f
 import { useLocale, useT } from "@/lib/i18n/client";
 import { sceneForId } from "@/lib/siteScene";
 import type { WorkEntry } from "@/modules/entries/types";
-import { updateReportCategories, updateReportDescription, updateReportProblem } from "@/modules/reports/actions";
+import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
+import type { Site } from "@/modules/sites/queries";
+import {
+  updateReportCategories,
+  updateReportDescription,
+  updateReportProblem,
+  updateReportSite,
+} from "@/modules/reports/actions";
 import { breakMinutes } from "@/modules/time/calc";
 import type { ReportPhoto, SiteReportDetail, WorkCategory } from "@/modules/reports/types";
 import { DateStub, Ticket, TicketBody, TicketFoot } from "@/components/ui/ticket";
@@ -37,6 +44,8 @@ interface ReportDetailProps {
   siteImageUrl: string | null;
   /** Смены автора за этот день на этом объекте — отработанное время по отчёту. */
   entries: readonly WorkEntry[];
+  /** Активные объекты компании — для выбора объекта отчёта. */
+  sites: readonly Site[];
 }
 
 /**
@@ -58,6 +67,7 @@ export function ReportDetail({
   siteId,
   siteImageUrl,
   entries,
+  sites,
 }: ReportDetailProps) {
   const t = useT();
   const locale = useLocale();
@@ -72,6 +82,9 @@ export function ReportDetail({
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [draft, setDraft] = useState(description);
 
+  const [isSitePending, startSiteTransition] = useTransition();
+  const [isSitePickerOpen, setIsSitePickerOpen] = useState(false);
+  const [currentSiteId, setCurrentSiteId] = useState<string | null>(siteId);
   const [isProblemPending, startProblemTransition] = useTransition();
   const [problem, setProblem] = useState(report.problem_note ?? "");
   const [isEditingProblem, setIsEditingProblem] = useState(false);
@@ -100,6 +113,26 @@ export function ReportDetail({
       toast(t.reportDetail.saved);
     });
   };
+
+  // Объект можно поставить или сменить и после создания отчёта; время и дорога переезжают вместе с ним.
+  const handleSiteSelect = (nextSiteId: string) => {
+    startSiteTransition(async () => {
+      const result = await updateReportSite(report.id, nextSiteId);
+
+      if (result.error) {
+        toast(result.error);
+        return;
+      }
+
+      setCurrentSiteId(nextSiteId);
+      toast(t.reportDetail.siteSaved);
+      router.refresh();
+    });
+  };
+
+  const currentSiteName = currentSiteId
+    ? (sites.find((site) => site.id === currentSiteId)?.name ?? (currentSiteId === siteId ? siteName : null))
+    : null;
 
   const handleSaveProblem = () => {
     startProblemTransition(async () => {
@@ -155,15 +188,33 @@ export function ReportDetail({
   const content = (
     <>
       {/* Картинка объекта: его фото или сцена-заглушка */}
-      {(siteId || siteImageUrl) && (
-        <Thumb scene={sceneForId(siteId ?? report.id)} photoUrl={siteImageUrl} size="cover" />
+      {(currentSiteId || siteImageUrl) && (
+        <Thumb scene={sceneForId(currentSiteId ?? report.id)} photoUrl={currentSiteId === siteId ? siteImageUrl : null} size="cover" />
       )}
 
       <Ticket asChild>
         <section>
           <DateStub date={report.work_date} />
           <TicketBody className="flex flex-col justify-center">
-            <h1 className="text-[18px] leading-tight font-semibold">{siteName ?? t.hours.noObject}</h1>
+            <div className="flex items-center justify-between gap-2">
+              <h1 className="text-[18px] leading-tight font-semibold">{currentSiteName ?? t.hours.noObject}</h1>
+
+              {canEdit && (
+                <Button
+                  variant={currentSiteId ? "ghost" : "outline"}
+                  size={currentSiteId ? "icon-sm" : "sm"}
+                  onClick={() => setIsSitePickerOpen(true)}
+                  loading={isSitePending}
+                  aria-label={currentSiteId ? t.reportDetail.changeSite : t.reportDetail.addSite}
+                >
+                  {currentSiteId ? (
+                    <Pencil className="size-4" strokeWidth={1.9} aria-hidden />
+                  ) : (
+                    t.reportDetail.addSite
+                  )}
+                </Button>
+              )}
+            </div>
             <p className="mt-1 text-[13px] text-ink-2">
               {fmt(t.reportDetail.createdBy, { name: authorName })} ·{" "}
               <span className="tabular">{formatDateShort(new Date(report.created_at), locale)}</span>
@@ -377,6 +428,16 @@ export function ReportDetail({
     </>
   );
 
+  const sitePicker = (
+    <ObjectPickerDrawer
+      open={isSitePickerOpen}
+      onOpenChange={setIsSitePickerOpen}
+      sites={sites}
+      value={currentSiteId}
+      onSelect={handleSiteSelect}
+    />
+  );
+
   const menu = canEdit && (
     <Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <PopoverTrigger asChild>
@@ -418,6 +479,7 @@ export function ReportDetail({
   return (
     <div className="pb-6">
       <BackHeader title={t.reportDetail.backTitle} href="/reports" action={menu} />
+      {sitePicker}
 
       <div className="space-y-3 px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8 lg:space-y-0 lg:px-0">
         <div className="space-y-3 lg:col-start-2 lg:row-start-1">{content}</div>

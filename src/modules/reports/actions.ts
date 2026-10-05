@@ -325,6 +325,67 @@ export async function updateReportDescription(
   return OK;
 }
 
+/**
+ * Меняет (или проставляет) объект уже созданного отчёта. Вместе с ним переезжают записи времени и
+ * дороги того же автора за ту же дату, которые стояли на прежнем объекте (или без объекта), — иначе
+ * часы остались бы «без объекта», а блок времени в отчёте опустел.
+ */
+export async function updateReportSite(
+  reportId: string,
+  siteId: string | null,
+): Promise<ReportActionState> {
+  const t = await getT();
+  const profile = await getProfile();
+
+  if (!profile) {
+    return { error: t.auth.noProfile };
+  }
+
+  const supabase = await createClient();
+
+  const { data: report, error: readError } = await supabase
+    .from("site_reports")
+    .select("author_id, work_date, site_id")
+    .eq("id", reportId)
+    .maybeSingle();
+
+  if (readError || !report) {
+    return { error: t.reportDetail.saveRejected };
+  }
+
+  if (report.site_id === siteId) return OK;
+
+  const { data, error } = await supabase
+    .from("site_reports")
+    .update({ site_id: siteId })
+    .eq("id", reportId)
+    .select("id");
+
+  if (error) {
+    return { error: t.reportDetail.saveError };
+  }
+
+  if (!data || data.length === 0) {
+    return { error: t.reportDetail.saveRejected };
+  }
+
+  // Время и дорога по этому отчёту: тот же автор, та же дата, прежний объект. Сбой здесь не отменяет
+  // смену объекта отчёта (дороги может не быть в базе вовсе).
+  for (const table of ["work_entries", "travel_entries"] as const) {
+    const query = supabase
+      .from(table)
+      .update({ site_id: siteId })
+      .eq("author_id", report.author_id)
+      .eq("work_date", report.work_date);
+
+    await (report.site_id ? query.eq("site_id", report.site_id) : query.is("site_id", null));
+  }
+
+  revalidatePath("/", "layout");
+
+  return OK;
+}
+
 /** Правка блока «Проблемное место» — что забрало время. Пустая строка очищает блок. */
 export async function updateReportProblem(
   reportId: string,
