@@ -72,6 +72,7 @@ export const nl: Dict = {
     backToLogin: "Terug naar inloggen",
     resetTitle: "Nieuw wachtwoord",
     resetSubtitle: "Kies een nieuw wachtwoord om mee in te loggen",
+    resetHint: "Gebruik je de geïnstalleerde app? Ga na het opslaan terug naar de app en log in met het nieuwe wachtwoord.",
     newPassword: "Nieuw wachtwoord",
     confirmPassword: "Herhaal wachtwoord",
     resetSubmit: "Wachtwoord opslaan",

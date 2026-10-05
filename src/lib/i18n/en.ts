@@ -72,6 +72,7 @@ export const en: Dict = {
     backToLogin: "Back to sign in",
     resetTitle: "New password",
     resetSubtitle: "Choose a new password for signing in",
+    resetHint: "If you use the installed app, after saving go back to it and sign in with the new password.",
     newPassword: "New password",
     confirmPassword: "Repeat password",
     resetSubmit: "Save password",

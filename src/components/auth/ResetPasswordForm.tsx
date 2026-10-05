@@ -26,6 +26,8 @@ export function ResetPasswordForm() {
 
       <h1 className="mt-10 text-[24px]/[1.15] font-semibold tracking-[-0.02em]">{t.auth.resetTitle}</h1>
       <p className="mt-1 text-[13px] text-ink-2">{t.auth.resetSubtitle}</p>
+      {/* Ссылка из письма открывается в браузере, а не в установленном приложении (у них раздельные сессии) */}
+      <p className="mt-1 text-[12px] text-ink-2">{t.auth.resetHint}</p>
 
       <div className="mt-6 flex flex-col gap-4">
         <UnderlineField
