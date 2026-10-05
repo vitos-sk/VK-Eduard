@@ -311,6 +311,8 @@ export const nl: Dict = {
     salaryCalcAmount: "Verdiensten deze maand",
     salaryCalcCopy: "Kopiëren",
     salaryCalcCopied: "Gekopieerd",
+    salaryCalcSelected: "Geselecteerd: {n}",
+    salaryCalcPreview: "Tekst om te kopiëren",
   },
 
   reports: {

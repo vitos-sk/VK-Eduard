@@ -336,6 +336,8 @@ export const uk = {
     salaryCalcAmount: "Заробіток за місяць",
     salaryCalcCopy: "Скопіювати",
     salaryCalcCopied: "Скопійовано",
+    salaryCalcSelected: "Обрано: {n}",
+    salaryCalcPreview: "Текст для копіювання",
   },
 
   /** Экран «Звіти». */

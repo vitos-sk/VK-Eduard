@@ -133,6 +133,19 @@ export function HoursScreen({
       return true;
     });
   }, [isBoss, scope, monthEntries, workerFilter, siteFilter, profile.id]);
+  // Калькулятор зарплаты выбирает сотрудников сам, поэтому ему нужны смены всех — отфильтрованные
+  // только по объекту (а не по сотруднику, как список выше).
+  const salaryEntries = useMemo(
+    () =>
+      isTeamView
+        ? monthEntries.filter((entry) => siteFilter === ALL_FILTER || entry.site_id === siteFilter)
+        : visibleEntries,
+    [isTeamView, monthEntries, visibleEntries, siteFilter],
+  );
+  const salaryWorkers = useMemo(
+    () => workers.map((worker) => ({ id: worker.id, name: worker.full_name })),
+    [workers],
+  );
   const isFiltered = isTeamView && (workerFilter !== ALL_FILTER || siteFilter !== ALL_FILTER);
 
   const handleChanged = useCallback(() => {
@@ -230,13 +243,12 @@ export function HoursScreen({
         <SalaryCalculator
           key={String(isTeamView)}
           className="mt-3"
-          monthTitle={getMonthTitle(date, t)}
+          month={date}
           selfId={profile.id}
+          selfName={profile.full_name}
           isBoss={isTeamView}
-          companyId={profile.company_id}
-          monthEntries={visibleEntries}
-          workerId={workerFilter}
-          onWorkerChange={setWorkerFilter}
+          workers={salaryWorkers}
+          monthEntries={salaryEntries}
         />
 
         <MonthEntriesTable
@@ -267,13 +279,12 @@ export function HoursScreen({
 
           <SalaryCalculator
             key={String(isTeamView)}
-            monthTitle={getMonthTitle(date, t)}
+            month={date}
             selfId={profile.id}
+            selfName={profile.full_name}
             isBoss={isTeamView}
-            companyId={profile.company_id}
-            monthEntries={visibleEntries}
-            workerId={workerFilter}
-            onWorkerChange={setWorkerFilter}
+            workers={salaryWorkers}
+            monthEntries={salaryEntries}
           />
         </div>
       </div>
