@@ -4,7 +4,11 @@ import { createServerClient } from "@supabase/ssr";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 
 /** Пути, открытые без входа. Всё остальное — за логином. */
-const PUBLIC_PATHS = ["/welcome", "/login", "/auth"];
+/**
+ * `/forgot-password` — запрос ссылки; `/reset-password` — ввод нового пароля (сама страница проверяет сессию
+ * после перехода по ссылке из письма); `/auth` — обработчик этой ссылки.
+ */
+const PUBLIC_PATHS = ["/welcome", "/login", "/auth", "/forgot-password", "/reset-password"];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some(

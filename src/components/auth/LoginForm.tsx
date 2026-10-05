@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import Link from "next/link";
 
 import { Logo } from "@/components/brand/Logo";
 import { OfflineReset } from "@/components/layout/OfflineReset";
@@ -14,8 +15,8 @@ import { UnderlineField } from "@/components/ui/underline-field";
 const initialState: SignInState = { error: null };
 
 /**
- * Единственная форма входа. Пароль восстанавливать пока негде —
- * забывшему его меняет шеф.
+ * Единственная форма входа. Забыл пароль — ссылка «Забули пароль?» ведёт на `/forgot-password`,
+ * оттуда на почту приходит ссылка для нового пароля.
  */
 export function LoginForm() {
   const t = useT();
@@ -53,6 +54,10 @@ export function LoginForm() {
           autoComplete="current-password"
         />
       </div>
+
+      <Link href="/forgot-password" className="mt-3 self-start text-[14px] font-medium text-primary">
+        {t.auth.forgotLink}
+      </Link>
 
       {/* aria-live: ошибку после отправки должен услышать и скринридер */}
       <p
