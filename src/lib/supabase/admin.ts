@@ -6,7 +6,8 @@ import { SUPABASE_URL } from "./env";
 import type { Database } from "./types.gen";
 
 function requireServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Или классический service_role, или новый секретный ключ (`sb_secret_…`) из интеграции Vercel.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 
   if (!key) {
     throw new Error(

@@ -37,6 +37,8 @@
 
 Секретный ключ никогда не кладётся в `NEXT_PUBLIC_*` и не коммитится.
 
+**Интеграция Vercel ↔ Supabase.** Если подключить базу кнопкой в Vercel (Storage / Integrations), переменные создаются под другими именами: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (или `SUPABASE_ANON_KEY`), `SUPABASE_SECRET_KEY` / `SUPABASE_SERVICE_ROLE_KEY`. Приложение понимает и их (`next.config.ts`, `src/lib/supabase/admin.ts`) — переименовывать не нужно.
+
 **Рекомендуется** включить асимметричные ключи подписи (Authentication → JWT Signing Keys): тогда `proxy.ts` проверяет вход локально, без запроса в Supabase на каждый переход (`getClaims`). Без них приложение работает, но каждый переход на ~100 мс дольше.
 
 ## 4. Хостинг (Vercel)
