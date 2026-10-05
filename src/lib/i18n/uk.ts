@@ -258,7 +258,7 @@ export const uk = {
       createTitle: "Новий об'єкт",
       editTitle: "Редагувати об'єкт",
       nameLabel: "Назва",
-      namePlaceholder: "Наприклад: Reimond",
+      namePlaceholder: "Наприклад: Будинок на Шевченка",
       kindLabel: "Вид робіт",
       kindPlaceholder: "Наприклад: Покрівля",
       addressLabel: "Адреса",

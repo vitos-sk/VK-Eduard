@@ -237,7 +237,7 @@ export const en: Dict = {
       createTitle: "New site",
       editTitle: "Edit site",
       nameLabel: "Name",
-      namePlaceholder: "For example: Reimond",
+      namePlaceholder: "For example: Main Street house",
       kindLabel: "Type of work",
       kindPlaceholder: "For example: Roofing",
       addressLabel: "Address",

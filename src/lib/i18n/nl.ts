@@ -237,7 +237,7 @@ export const nl: Dict = {
       createTitle: "Nieuw project",
       editTitle: "Project bewerken",
       nameLabel: "Naam",
-      namePlaceholder: "Bijvoorbeeld: Reimond",
+      namePlaceholder: "Bijvoorbeeld: Woonhuis Kerkstraat",
       kindLabel: "Soort werk",
       kindPlaceholder: "Bijvoorbeeld: Dakwerk",
       addressLabel: "Adres",
