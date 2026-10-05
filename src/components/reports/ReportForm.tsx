@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Car, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
@@ -216,7 +217,10 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
         <Ticket variant="sections">
           <label className="flex cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5">
-            <span className="text-[14px] font-medium">{t.reportForm.addHours}</span>
+            <span className="flex items-center gap-2.5 text-[14px] font-medium">
+              <Clock className="size-5 shrink-0 text-ink-2" strokeWidth={1.9} aria-hidden />
+              {t.reportForm.addHours}
+            </span>
             <Toggle checked={withTime} onCheckedChange={setWithTime} />
           </label>
 
@@ -238,7 +242,10 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         {/* Дорога на объект — отдельный блок в том же стиле; на рабочее время не влияет */}
         <Ticket variant="sections">
           <label className="flex cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5">
-            <span className="text-[14px] font-medium">{t.reportForm.addTravel}</span>
+            <span className="flex items-center gap-2.5 text-[14px] font-medium">
+              <Car className="size-5 shrink-0 text-ink-2" strokeWidth={1.9} aria-hidden />
+              {t.reportForm.addTravel}
+            </span>
             <Toggle checked={withTravel} onCheckedChange={setWithTravel} />
           </label>
 

@@ -188,7 +188,12 @@ export function HoursScreen({
     <div className="pb-6">
       <ScreenHeader
         title={t.hours.title}
-        action={<AvatarLink initials={initialsOf(profile.full_name)} />}
+        action={
+          <div className="flex items-center gap-2">
+            <AddTimeButton compact />
+            <AvatarLink initials={initialsOf(profile.full_name)} />
+          </div>
+        }
       />
 
       <MonthNavigator className="px-4 pb-3 lg:px-0" date={date} onChange={setDate} />
@@ -242,11 +247,9 @@ export function HoursScreen({
       )}
 
       <div className="px-4 lg:hidden">
-        <AddTimeButton />
-
         {/* Тільки сума годин рабочего; норма/дні/графік — у дашборді шефа. */}
         {monthSummary && (
-          <PeriodView className="mt-3" summary={monthSummary} />
+          <PeriodView summary={monthSummary} />
         )}
 
         <SalaryLink month={date} className="mt-3" />
@@ -284,8 +287,6 @@ export function HoursScreen({
         </div>
 
         <div className="flex flex-col gap-3">
-          <AddTimeButton />
-
           {monthSummary && <PeriodView summary={monthSummary} />}
 
           <SalaryLink month={date} />
