@@ -308,9 +308,12 @@ export function ReportDetail({
                         <span className="ml-2 text-[12px] text-ink-2">{fmt(t.reportDetail.timeBreak, { n: pause })}</span>
                       )}
                     </span>
-                    <span className="tabular text-ink-2">
-                      {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-                    </span>
+                    {/* Одна смена — её часы уже в итоге справа сверху, второй раз не повторяем */}
+                    {entries.length > 1 && (
+                      <span className="tabular text-ink-2">
+                        {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
+                      </span>
+                    )}
                   </li>
                 );
               })}
