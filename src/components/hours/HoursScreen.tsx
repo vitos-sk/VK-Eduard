@@ -8,7 +8,7 @@ import { Share2 } from "lucide-react";
 import { AddTimeButton } from "@/components/hours/AddTimeButton";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
-import { SalaryCalculator } from "@/components/hours/SalaryCalculator";
+import { SalaryLink } from "@/components/hours/SalaryLink";
 import { ALL_FILTER, HoursFilters } from "@/components/hours/HoursFilters";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
@@ -133,19 +133,6 @@ export function HoursScreen({
       return true;
     });
   }, [isBoss, scope, monthEntries, workerFilter, siteFilter, profile.id]);
-  // Калькулятор зарплаты выбирает сотрудников сам, поэтому ему нужны смены всех — отфильтрованные
-  // только по объекту (а не по сотруднику, как список выше).
-  const salaryEntries = useMemo(
-    () =>
-      isTeamView
-        ? monthEntries.filter((entry) => siteFilter === ALL_FILTER || entry.site_id === siteFilter)
-        : visibleEntries,
-    [isTeamView, monthEntries, visibleEntries, siteFilter],
-  );
-  const salaryWorkers = useMemo(
-    () => workers.map((worker) => ({ id: worker.id, name: worker.full_name })),
-    [workers],
-  );
   const isFiltered = isTeamView && (workerFilter !== ALL_FILTER || siteFilter !== ALL_FILTER);
 
   const handleChanged = useCallback(() => {
@@ -240,16 +227,7 @@ export function HoursScreen({
           <PeriodView className="mt-3" summary={monthSummary} />
         )}
 
-        <SalaryCalculator
-          key={String(isTeamView)}
-          className="mt-3"
-          month={date}
-          selfId={profile.id}
-          selfName={profile.full_name}
-          isBoss={isTeamView}
-          workers={salaryWorkers}
-          monthEntries={salaryEntries}
-        />
+        <SalaryLink month={date} className="mt-3" />
 
         <MonthEntriesTable
           className="mt-3"
@@ -277,15 +255,7 @@ export function HoursScreen({
 
           {monthSummary && <PeriodView summary={monthSummary} />}
 
-          <SalaryCalculator
-            key={String(isTeamView)}
-            month={date}
-            selfId={profile.id}
-            selfName={profile.full_name}
-            isBoss={isTeamView}
-            workers={salaryWorkers}
-            monthEntries={salaryEntries}
-          />
+          <SalaryLink month={date} />
         </div>
       </div>
     </div>

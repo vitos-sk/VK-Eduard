@@ -113,6 +113,11 @@ function totalsLines(minutes: number, rate: number | null, t: Dict, locale: Loca
   return lines;
 }
 
+/** Всего отработано выбранными людьми, в минутах. */
+export function payrollMinutes(entries: readonly PayrollEntry[], people: readonly PayrollPerson[]): number {
+  return people.reduce((sum, person) => sum + sumMinutes(entriesOf(entries, person.id)), 0);
+}
+
 /** Итоговая сумма к выплате по выбранным людям; `null`, пока ставка не введена. */
 export function payrollAmount(entries: readonly PayrollEntry[], people: readonly PayrollPerson[], rate: number | null): number | null {
   if (rate === null) return null;
