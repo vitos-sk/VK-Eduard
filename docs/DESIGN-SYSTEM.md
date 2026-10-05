@@ -1,4 +1,4 @@
-# Дизайн-система «K group» — маршрут B «Табель»
+# Дизайн-система «VK group» — маршрут B «Табель»
 
 Тёплая бумага, белые талоны с корешком и перфорацией, лесной зелёный (главное действие), жёлтый — только метка нормы на линейке и риска активной вкладки (≤ 3% площади). Светлая тема единственная. Без теней и без градиентов.
 
@@ -75,16 +75,26 @@ Tailwind-классы: `bg-paper`, `bg-ticket`, `bg-stub`, `border-edge`, `borde
 
 ## Компоненты — `src/components/ui/`
 
-Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare), `Input` / `Textarea`, `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select`, `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
+Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare), `Input` / `Textarea`, `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select`, `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром, отступ 60 px + безопасная зона). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
 
 Талонные:
 
 - `Ticket` — рамка `edge` 1 px, радиус 10, без тени. Варианты: `default` (корешок + тело + футер), `notch` (полукруги на границе корешка, только дневной талон на главной), `flat` (без корешка, отступы 12×14), `sections` (секции `TicketSection` разделены пунктиром); `compact` — корешок 64 px. Части: `TicketStub`, `DateStub` (день недели, число mono, месяц), `TicketBody`, `TicketFoot`, `TicketSection`.
 - `HoursRuler` — линейка 0–10 ч (расширяется до 12/14/16/18 при сумме > 9:30), деления каждые 0.5 ч, зелёная заливка, жёлтая метка нормы. `TimeRangeRuler` — шкала 06–18 с зелёными отметками начала и завершения.
 
-- `ObjectTicket`, `WeekMiniTicket`, `KpiTicket`, `TicketTable`, `ChartBars` (текущий день жёлтый).
+- `ObjectTicket`, `KpiTicket`, `TicketTable`, `ChartBars` (текущий день жёлтый).
+- `WeekMiniTicket` — клетка дня недели (семь в ряд на главной): день недели, число (сегодня — в зелёном кружке на `primary-tint`), часы mono, отметка звіту иконкой (галочка / точка `warn`); будущие дни приглушены.
 
-Навигация: `BottomNav` (84 px, пунктир сверху, жёлтая риска над активной вкладкой, `FabButton` 44 px), `DesktopSidebar` (232 px с подписями, пунктирная перфорация справа). Телефон — колонка; планшет 480–1023 px — та же колонка по центру до 560 px без рамки устройства; ПК от 1024 px — сайдбар и контент до 1240 px.
+Составные (`components/shared/`, `components/ui/`), появившиеся позже:
+
+- `ResponsiveSheet` (`SheetTitle`, `SheetClose`) — лист выбора: **нижний лист на телефоне, окно по центру от 1024 px**. Для выбора объекта, фильтров и экспорта; нижний лист на широком экране выглядит чужеродно.
+- `DateRangeField` — период «від — до»: две кнопки-поля, календарь раскрывается под ними (системный `input type=date` на iPhone выходит за края и показывает «мм/дд/гггг» — не используем).
+- `WorkerMultiSelect` — выбор нескольких сотрудников галочками («Усі» + список, поиск при > 7).
+- `PhotoLightbox` — просмотр фото на весь экран с листанием (свайп, стрелки, ← →).
+- `LazyCalendar` / `preloadCalendar` — календарь подгружается отдельным куском; предзагрузка кладёт его и в кэш сервис-воркера.
+- `StickyActionBar` — липкая панель главной кнопки формы; на телефоне опущена на 24 px отступа области прокрутки, чтобы под кнопкой не просвечивала форма.
+
+Навигация: `BottomNav` (60 px, пунктир сверху, жёлтая риска над активной вкладкой, `FabButton` 44 px), `DesktopSidebar` (232 px с подписями, пунктирная перфорация справа). Телефон — колонка; планшет 480–1023 px — та же колонка по центру до 560 px без рамки устройства; ПК от 1024 px — сайдбар и контент до 1240 px.
 
 ## Доступность
 
@@ -97,3 +107,7 @@ Tailwind-классы: `bg-paper`, `bg-ticket`, `bg-stub`, `border-edge`, `borde
 
 - `Card asChild interactive` и `Ticket asChild interactive` оборачивают нативный `<button>` / `<Link>` — карточка целиком кликабельна.
 - Подпись «НОВИЙ ВИД» и табель-сетка на дашборде не введены (нужно подтверждение владельца): «Години по співробітниках» — обычная таблица (Працівник · Години · Дні з записами · Без запису).
+
+## Названия и логотип
+
+В тексте приложение называется **«VK group»** (заголовок вкладки, название под иконкой, подпись панели, «Про додаток»). Графический логотип — знак «K» и слово «group.» с жёлтой точкой (`Logo`); текстом «K group» не пишем.

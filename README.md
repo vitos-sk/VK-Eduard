@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VK group — учёт рабочего времени и отчётов для строительных бригад
 
-## Getting Started
+Мобильное веб-приложение (PWA) для небольшой строительной или кровельной фирмы. Рабочий отмечает, **сколько и где он работал**, пишет отчёт с фото и при желании указывает дорогу на объект. Шеф видит всю команду, считает зарплату и выгружает данные.
 
-First, run the development server:
+Интерфейс на трёх языках: **украинский** (по умолчанию), **английский**, **нидерландский** — переключается на устройстве.
+
+## Что умеет
+
+- **Время:** ручной ввод смены (дата, начало, конец, перерыв, объект, описание). Таймера нет. Работает без интернета: запись ждёт в очереди на телефоне и уходит, когда связь вернётся.
+- **Отчёты:** объект, виды работ, описание, «проблемное место» (что забрало время), фото (до 6), необязательное время и дорога. Объект можно добавить или сменить позже.
+- **Дорога на объект:** время и километры (необязательно), отдельно от рабочего времени — в часы, зарплату и выгрузки часов не входит.
+- **Объекты:** карточки с фото, статусом, видом работ; архив; фильтры по статусу, периоду, сотруднику.
+- **Шеф:** команда (добавить, деактивировать, дневная норма), настройки фирмы (норма, категории работ), дашборд (месяц / квартал / год), калькулятор зарплаты, экспорт.
+- **Калькулятор зарплаты:** выбор сотрудников, ставка, готовый текст расчёта на языке приложения — копировать или поделиться.
+- **Экспорт:** CSV и Excel (с итогами и вкладкой по сотрудникам), PDF-табель, CSV отчётов. Всё на языке интерфейса.
+- **Вход:** email и пароль, восстановление пароля по почте. Регистрации нет — сотрудников заводит шеф.
+
+## Стек
+
+| Слой | Что |
+|---|---|
+| Фреймворк | Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict) |
+| Стили | Tailwind CSS 4, дизайн-токены в `src/design-system/tokens.css`, свои компоненты в `src/components/ui` |
+| База и вход | Supabase: Postgres + Row Level Security, Auth, Storage |
+| Хостинг | Vercel (регион `fra1`) |
+| Выгрузки | `exceljs` (Excel), `pdfkit` (PDF) |
+| Прочее | `date-fns`, `sonner` (уведомления), `vaul` (нижние листы), `lucide-react` (иконки) |
+| Тесты | Vitest (`npm test`) |
+
+> В Next.js 16 `middleware` переименован в `proxy` (`src/proxy.ts`). Подробности и другие отличия — в `node_modules/next/dist/docs/` (см. `AGENTS.md`).
+
+## Быстрый старт (разработка)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local      # подставьте ключи вашего проекта Supabase
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Нужны три переменные (`.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (только на сервере — заводит сотрудников).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Новая база и боевой запуск — пошагово в **[docs/DEPLOY.md](docs/DEPLOY.md)**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Команды
 
-## Learn More
+| Команда | Что делает |
+|---|---|
+| `npm run dev` | сервер разработки |
+| `npm run build` / `npm start` | боевая сборка и запуск |
+| `npm test` | все тесты |
+| `npm run lint` | ESLint |
+| `npm run icons` | пересобрать иконки приложения из логотипа |
 
-To learn more about Next.js, take a look at the following resources:
+## Устройство проекта
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+  app/            экраны и маршруты (группы: (app) за входом, (auth), (marketing))
+  components/     интерфейс: ui/ (дизайн-система), layout/, hours/, reports/, objects/, home/, more/, shared/
+  modules/        предметная логика: auth, entries, reports, sites, team, company, dashboard, export, payroll, travel, media, time
+  lib/            i18n/ (три словаря), offline/ (кэш и очередь), supabase/ (клиенты), format.ts
+  design-system/  токены цветов, радиусов, шрифтов
+public/           sw.js (сервис-воркер), offline.html, иконки
+supabase/         migrations/ (0001–0019), bootstrap.sql (первая фирма и шеф), seed.sql (демо для разработки)
+docs/             документация (читать с docs/README.md)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Документация
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Начинайте с **[docs/README.md](docs/README.md)** — там порядок чтения и статус проекта.
+Правила для работы в репозитории (дизайн-система, запреты) — в `CLAUDE.md`.
