@@ -136,9 +136,17 @@ export function PickerRow({
   );
 }
 
-/** Нижняя панель с главной кнопкой экрана-формы: липнет к низу области прокрутки. */
+/**
+ * Нижняя панель с главной кнопкой экрана-формы: липнет к низу области прокрутки.
+ *
+ * На телефоне у области прокрутки внизу отступ 24 px (`pb-6` в `AppShell`), и «липкая» панель
+ * останавливалась над ним — под кнопкой мелькало содержимое формы. Поэтому панель опущена на эти
+ * 24 px (`-bottom-6`) и сама добирает их своим нижним отступом: полоса под кнопкой закрыта фоном.
+ */
 export function StickyActionBar({ children }: { children: ReactNode }) {
   return (
-    <div className="perf-t sticky bottom-0 z-10 mt-4 bg-paper px-4 py-2.5 lg:px-0">{children}</div>
+    <div className="perf-t sticky -bottom-6 z-10 mt-4 bg-paper px-4 pt-2.5 pb-[calc(0.625rem+1.5rem)] lg:bottom-0 lg:px-0 lg:py-2.5">
+      {children}
+    </div>
   );
 }
