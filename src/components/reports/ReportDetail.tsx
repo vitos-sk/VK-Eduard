@@ -331,52 +331,6 @@ export function ReportDetail({
         </section>
       </Ticket>
 
-      {/* Отработанное время по отчёту */}
-      <Ticket asChild variant="flat">
-        <section>
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[15px] font-semibold">{t.reportDetail.timeTitle}</h2>
-            {entries.length > 0 && (
-              <span className="tabular text-[15px] font-semibold">{formatHoursShort(totalWorkedMinutes)}</span>
-            )}
-          </div>
-
-          {entries.length === 0 ? (
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-[14px] text-ink-2">{t.reportDetail.timeNone}</p>
-              {canEdit && (
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/time/manual">{t.reportDetail.timeAdd}</Link>
-                </Button>
-              )}
-            </div>
-          ) : (
-            <ul className="mt-2 space-y-1.5">
-              {entries.map((entry) => {
-                const pause = breakMinutes(entry.break_start, entry.break_end);
-
-                return (
-                  <li key={entry.id} className="flex items-baseline justify-between gap-3 text-[14px]">
-                    <span className="tabular">
-                      {formatTimeShort(entry.started_at)}–{entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
-                      {pause > 0 && (
-                        <span className="ml-2 text-[12px] text-ink-2">{fmt(t.reportDetail.timeBreak, { n: pause })}</span>
-                      )}
-                    </span>
-                    {/* Одна смена — её часы уже в итоге справа сверху, второй раз не повторяем */}
-                    {entries.length > 1 && (
-                      <span className="tabular text-ink-2">
-                        {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-      </Ticket>
-
       {/* Проблемное место: что забрало время */}
       {(canEdit || problem !== "") && (
         <Ticket asChild variant="flat">
@@ -429,6 +383,52 @@ export function ReportDetail({
           </section>
         </Ticket>
       )}
+
+      {/* Отработанное время по отчёту */}
+      <Ticket asChild variant="flat">
+        <section>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[15px] font-semibold">{t.reportDetail.timeTitle}</h2>
+            {entries.length > 0 && (
+              <span className="tabular text-[15px] font-semibold">{formatHoursShort(totalWorkedMinutes)}</span>
+            )}
+          </div>
+
+          {entries.length === 0 ? (
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-[14px] text-ink-2">{t.reportDetail.timeNone}</p>
+              {canEdit && (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/time/manual">{t.reportDetail.timeAdd}</Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <ul className="mt-2 space-y-1.5">
+              {entries.map((entry) => {
+                const pause = breakMinutes(entry.break_start, entry.break_end);
+
+                return (
+                  <li key={entry.id} className="flex items-baseline justify-between gap-3 text-[14px]">
+                    <span className="tabular">
+                      {formatTimeShort(entry.started_at)}–{entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
+                      {pause > 0 && (
+                        <span className="ml-2 text-[12px] text-ink-2">{fmt(t.reportDetail.timeBreak, { n: pause })}</span>
+                      )}
+                    </span>
+                    {/* Одна смена — её часы уже в итоге справа сверху, второй раз не повторяем */}
+                    {entries.length > 1 && (
+                      <span className="tabular text-ink-2">
+                        {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </Ticket>
 
       {/* Дорога на объект — только если время дороги записано; в рабочие часы не входит */}
       {travel.length > 0 && (
