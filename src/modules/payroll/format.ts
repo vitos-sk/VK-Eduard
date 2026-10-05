@@ -1,37 +1,23 @@
 import { formatHoursShort, formatTimeShort } from "@/lib/format";
+import type { Dict } from "@/lib/i18n";
+import { INTL_TAGS, type Locale } from "@/lib/i18n/locales";
 import { breakMinutes } from "@/modules/time/calc";
 
 /**
- * Текст «Lohnabrechnung» для копирования (бухгалтеру, в мессенджер).
- * Всегда по-немецки и в одном формате, независимо от языка интерфейса — это
- * документ для расчёта зарплаты, а не часть экрана:
+ * Текст расчёта зарплаты для копирования (бухгалтеру, в мессенджер) — на языке интерфейса:
  *
- *   Lohnabrechnung 01.–31. Oktober 2026
+ *   Payroll 01.–31. October 2026
  *
- *   01.10. Do. · 10:00–12:00 · -10min · Freiburg
+ *   01.10. Thu. · 10:00–12:00 · -10min · Freiburg
  *   ...
  *
- *   Gesamt: 11:05 h
- *   Stundenlohn: 15,00 €/h
- *   Lohn gesamt: 166,25 €
+ *   Total: 11:05 h
+ *   Hourly rate: 15.00 €/h
+ *   Total pay: 166.25 €
+ *
+ * Названия и единицы — из словаря (`t.payroll`), дни недели и месяцы — из `t.weekdays` / `t.months`,
+ * числа — по правилам языка (запятая или точка).
  */
-
-const WEEKDAYS_DE = ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."] as const;
-
-const MONTHS_DE = [
-  "Januar",
-  "Februar",
-  "März",
-  "April",
-  "Mai",
-  "Juni",
-  "Juli",
-  "August",
-  "September",
-  "Oktober",
-  "November",
-  "Dezember",
-] as const;
 
 export interface PayrollEntry {
   author_id: string | null;
@@ -56,32 +42,32 @@ function pad(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-/** `15,00` — число по-немецки, всегда две цифры после запятой. */
-export function formatDe(value: number): string {
-  return value.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** `15,00` / `15.00` — число с двумя знаками после запятой по правилам языка. */
+export function formatNumber(value: number, locale: Locale): string {
+  return value.toLocaleString(INTL_TAGS[locale], { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** `01.–31. Oktober 2026` для месяца, в который попадает `monthDate`. */
-export function payrollPeriod(monthDate: Date): string {
+/** `01.–31. October 2026` для месяца, в который попадает `monthDate`. */
+export function payrollPeriod(monthDate: Date, t: Dict): string {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   const lastDay = new Date(year, month + 1, 0).getDate();
 
-  return `01.–${pad(lastDay)}. ${MONTHS_DE[month]} ${year}`;
+  return `01.–${pad(lastDay)}. ${t.months.genitive[month]} ${year}`;
 }
 
-/** `01.10. Do. · 10:00–12:00 · -10min · Freiburg`. */
-export function payrollLine(entry: PayrollEntry): string {
+/** `01.10. Thu. · 10:00–12:00 · -10min · Freiburg`. */
+export function payrollLine(entry: PayrollEntry, t: Dict): string {
   const [year = 0, month = 1, day = 1] = entry.work_date.split("-").map(Number);
-  const weekday = WEEKDAYS_DE[new Date(year, month - 1, day).getDay()];
+  const weekday = t.weekdays.short[new Date(year, month - 1, day).getDay()];
   const pause = breakMinutes(entry.break_start, entry.break_end);
 
   const parts = [
-    `${pad(day)}.${pad(month)}. ${weekday}`,
+    `${pad(day)}.${pad(month)}. ${weekday}.`,
     `${formatTimeShort(entry.started_at)}–${entry.ended_at ? formatTimeShort(entry.ended_at) : ""}`,
   ];
 
-  if (pause > 0) parts.push(`-${pause}min`);
+  if (pause > 0) parts.push(`-${pause}${t.payroll.min}`);
   if (entry.site_name) parts.push(entry.site_name);
 
   return parts.join(" · ");
@@ -99,8 +85,10 @@ export interface PayrollOptions {
   people: readonly PayrollPerson[];
   /** Почасовая ставка; `null` — не введена (строки со ставкой и суммой пропускаются). */
   rate: number | null;
-  /** Подписывать блок именем («Mitarbeiter: …») — когда в расчёте не только сам пользователь. */
+  /** Подписывать блок именем сотрудника — когда в расчёте не только сам пользователь. */
   showNames: boolean;
+  t: Dict;
+  locale: Locale;
 }
 
 /** Закрытые смены человека по порядку даты и времени. */
@@ -113,12 +101,13 @@ function entriesOf(entries: readonly PayrollEntry[], personId: string): PayrollE
     );
 }
 
-function totalsLines(minutes: number, rate: number | null, label: { hours: string; pay: string }): string[] {
-  const lines = [`${label.hours}: ${formatHoursShort(minutes)} h`];
+function totalsLines(minutes: number, rate: number | null, t: Dict, locale: Locale): string[] {
+  const unit = t.payroll.hour;
+  const lines = [`${t.payroll.total}: ${formatHoursShort(minutes)} ${unit}`];
 
   if (rate !== null) {
-    lines.push(`Stundenlohn: ${formatDe(rate)} €/h`);
-    lines.push(`${label.pay}: ${formatDe((minutes / 60) * rate)} €`);
+    lines.push(`${t.payroll.rate}: ${formatNumber(rate, locale)} €/${unit}`);
+    lines.push(`${t.payroll.pay}: ${formatNumber((minutes / 60) * rate, locale)} €`);
   }
 
   return lines;
@@ -133,8 +122,8 @@ export function payrollAmount(entries: readonly PayrollEntry[], people: readonly
   return (minutes / 60) * rate;
 }
 
-export function buildPayrollText({ entries, monthDate, people, rate, showNames }: PayrollOptions): string {
-  const header = `Lohnabrechnung ${payrollPeriod(monthDate)}`;
+export function buildPayrollText({ entries, monthDate, people, rate, showNames, t, locale }: PayrollOptions): string {
+  const header = `${t.payroll.title} ${payrollPeriod(monthDate, t)}`;
   const blocks: string[] = [];
   let allMinutes = 0;
 
@@ -144,19 +133,17 @@ export function buildPayrollText({ entries, monthDate, people, rate, showNames }
     allMinutes += minutes;
 
     const lines = [header];
-    if (showNames) lines.push(`Mitarbeiter: ${person.name}`);
+    if (showNames) lines.push(`${t.payroll.employee}: ${person.name}`);
     lines.push("");
-    lines.push(...(own.length > 0 ? own.map(payrollLine) : ["Keine Einträge"]));
+    lines.push(...(own.length > 0 ? own.map((entry) => payrollLine(entry, t)) : [t.payroll.noEntries]));
     lines.push("");
-    lines.push(...totalsLines(minutes, rate, { hours: "Gesamt", pay: "Lohn gesamt" }));
+    lines.push(...totalsLines(minutes, rate, t, locale));
 
     blocks.push(lines.join("\n"));
   }
 
   if (people.length > 1) {
-    blocks.push(
-      ["Alle zusammen", ...totalsLines(allMinutes, rate, { hours: "Gesamt", pay: "Lohn gesamt" })].join("\n"),
-    );
+    blocks.push([t.payroll.all, ...totalsLines(allMinutes, rate, t, locale)].join("\n"));
   }
 
   return blocks.join("\n\n");

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPayrollText, formatDe, payrollAmount, payrollLine, payrollPeriod, type PayrollEntry } from "./format";
+import { uk } from "@/lib/i18n";
+import { en } from "@/lib/i18n/en";
+import { nl } from "@/lib/i18n/nl";
+
+import { buildPayrollText, formatNumber, payrollAmount, payrollLine, payrollPeriod, type PayrollEntry } from "./format";
 
 function entry(partial: Partial<PayrollEntry>): PayrollEntry {
   return {
@@ -24,52 +28,63 @@ const ENTRIES: PayrollEntry[] = [
 ];
 
 describe("payroll", () => {
-  it("период — первый и последний день месяца по-немецки", () => {
-    expect(payrollPeriod(new Date(2026, 9, 15))).toBe("01.–31. Oktober 2026");
-    expect(payrollPeriod(new Date(2026, 1, 3))).toBe("01.–28. Februar 2026");
+  it("период — первый и последний день месяца на языке интерфейса", () => {
+    expect(payrollPeriod(new Date(2026, 9, 15), en)).toBe("01.–31. October 2026");
+    expect(payrollPeriod(new Date(2026, 1, 3), nl)).toBe("01.–28. februari 2026");
+    expect(payrollPeriod(new Date(2026, 9, 15), uk)).toBe("01.–31. жовтня 2026");
   });
 
   it("строка смены: дата, день недели, время, перерыв, объект", () => {
-    expect(payrollLine(ENTRIES[0])).toBe("01.10. Do. · 10:00–12:00 · -10min · Freiburg");
-    expect(payrollLine(ENTRIES[1])).toBe("01.10. Do. · 16:50–17:45 · Freiburg");
-    expect(payrollLine(entry({ site_name: null }))).toBe("01.10. Do. · 10:00–12:00");
+    expect(payrollLine(ENTRIES[0], en)).toBe("01.10. Thu. · 10:00–12:00 · -10min · Freiburg");
+    expect(payrollLine(ENTRIES[1], nl)).toBe("01.10. Do. · 16:50–17:45 · Freiburg");
+    expect(payrollLine(entry({ site_name: null }), uk)).toBe("01.10. Чт. · 10:00–12:00");
   });
 
-  it("числа — по-немецки", () => {
-    expect(formatDe(15)).toBe("15,00");
-    expect(formatDe(166.25)).toBe("166,25");
+  it("числа — по правилам языка", () => {
+    expect(formatNumber(15, "nl")).toBe("15,00");
+    expect(formatNumber(166.25, "uk")).toBe("166,25");
+    expect(formatNumber(166.25, "en")).toBe("166.25");
   });
 
-  it("собирает расчёт ровно в заданном формате", () => {
+  it("собирает расчёт в заданном формате — английский", () => {
     const text = buildPayrollText({
       entries: ENTRIES,
       monthDate: new Date(2026, 9, 1),
       people: [{ id: "u1", name: "Eduard" }],
       rate: 15,
       showNames: false,
+      t: en,
+      locale: "en",
     });
 
     expect(text).toBe(
       [
-        "Lohnabrechnung 01.–31. Oktober 2026",
+        "Payroll 01.–31. October 2026",
         "",
-        "01.10. Do. · 10:00–12:00 · -10min · Freiburg",
-        "01.10. Do. · 16:50–17:45 · Freiburg",
-        "02.10. Fr. · 07:20–11:00 · Freiburg",
-        "05.10. Mo. · 07:30–12:20 · -10min · Freiburg",
+        "01.10. Thu. · 10:00–12:00 · -10min · Freiburg",
+        "01.10. Thu. · 16:50–17:45 · Freiburg",
+        "02.10. Fri. · 07:20–11:00 · Freiburg",
+        "05.10. Mon. · 07:30–12:20 · -10min · Freiburg",
         "",
-        "Gesamt: 11:05 h",
-        "Stundenlohn: 15,00 €/h",
-        "Lohn gesamt: 166,25 €",
+        "Total: 11:05 h",
+        "Hourly rate: 15.00 €/h",
+        "Total pay: 166.25 €",
       ].join("\n"),
     );
   });
 
-  it("без ставки — только часы", () => {
-    const text = buildPayrollText({ entries: ENTRIES, monthDate: new Date(2026, 9, 1), people: [{ id: "u1", name: "E" }], rate: null, showNames: false });
+  it("то же на нидерландском и украинском", () => {
+    const base = { entries: ENTRIES, monthDate: new Date(2026, 9, 1), people: [{ id: "u1", name: "E" }], rate: 15, showNames: false };
 
-    expect(text.endsWith("Gesamt: 11:05 h")).toBe(true);
-    expect(text).not.toContain("Stundenlohn");
+    expect(buildPayrollText({ ...base, t: nl, locale: "nl" })).toContain("Totaal: 11:05 u\nUurloon: 15,00 €/u\nTotaal loon: 166,25 €");
+    expect(buildPayrollText({ ...base, t: uk, locale: "uk" })).toContain("Разом: 11:05 год\nСтавка: 15,00 €/год\nДо виплати: 166,25 €");
+  });
+
+  it("без ставки — только часы", () => {
+    const text = buildPayrollText({ entries: ENTRIES, monthDate: new Date(2026, 9, 1), people: [{ id: "u1", name: "E" }], rate: null, showNames: false, t: en, locale: "en" });
+
+    expect(text.endsWith("Total: 11:05 h")).toBe(true);
+    expect(text).not.toContain("Hourly rate");
   });
 
   it("несколько человек: блок на каждого с именем и общий итог", () => {
@@ -83,12 +98,14 @@ describe("payroll", () => {
       ],
       rate: 10,
       showNames: true,
+      t: en,
+      locale: "en",
     });
 
-    expect(text).toContain("Mitarbeiter: Eduard");
-    expect(text).toContain("Mitarbeiter: Andriy");
-    expect(text).toContain("Keine Einträge");
-    expect(text).toContain("Alle zusammen\nGesamt: 12:05 h");
+    expect(text).toContain("Employee: Eduard");
+    expect(text).toContain("Employee: Andriy");
+    expect(text).toContain("No entries");
+    expect(text).toContain("All together\nTotal: 12:05 h");
   });
 
   it("незавершённые смены в расчёт не попадают", () => {
@@ -98,9 +115,11 @@ describe("payroll", () => {
       people: [{ id: "u1", name: "E" }],
       rate: 10,
       showNames: false,
+      t: en,
+      locale: "en",
     });
 
-    expect(text).toContain("Keine Einträge");
+    expect(text).toContain("No entries");
   });
 
   it("сумма к выплате", () => {

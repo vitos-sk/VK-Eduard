@@ -312,7 +312,6 @@ export const en: Dict = {
     salaryCalcCopy: "Copy",
     salaryCalcCopied: "Copied",
     salaryCalcSelected: "Selected: {n}",
-    salaryCalcPreview: "Text to copy",
   },
 
   reports: {
@@ -605,6 +604,19 @@ export const en: Dict = {
     pageTitle: "No connection",
     pageBody: "This page isn't saved on the device yet. Open it once while online.",
     pageRetry: "Try again",
+  },
+
+  /** Текст расчёта зарплаты для копирования (`modules/payroll`). */
+  payroll: {
+    title: "Payroll",
+    employee: "Employee",
+    noEntries: "No entries",
+    total: "Total",
+    rate: "Hourly rate",
+    pay: "Total pay",
+    all: "All together",
+    min: "min",
+    hour: "h",
   },
 
   /**

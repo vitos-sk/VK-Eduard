@@ -312,7 +312,6 @@ export const nl: Dict = {
     salaryCalcCopy: "Kopiëren",
     salaryCalcCopied: "Gekopieerd",
     salaryCalcSelected: "Geselecteerd: {n}",
-    salaryCalcPreview: "Tekst om te kopiëren",
   },
 
   reports: {
@@ -605,6 +604,19 @@ export const nl: Dict = {
     pageTitle: "Geen verbinding",
     pageBody: "Deze pagina is nog niet op het apparaat opgeslagen. Open haar één keer met internet.",
     pageRetry: "Opnieuw proberen",
+  },
+
+  /** Текст расчёта зарплаты для копирования (`modules/payroll`). */
+  payroll: {
+    title: "Loonberekening",
+    employee: "Medewerker",
+    noEntries: "Geen registraties",
+    total: "Totaal",
+    rate: "Uurloon",
+    pay: "Totaal loon",
+    all: "Allen samen",
+    min: "min",
+    hour: "u",
   },
 
   /**

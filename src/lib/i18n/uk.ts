@@ -337,7 +337,6 @@ export const uk = {
     salaryCalcCopy: "Скопіювати",
     salaryCalcCopied: "Скопійовано",
     salaryCalcSelected: "Обрано: {n}",
-    salaryCalcPreview: "Текст для копіювання",
   },
 
   /** Экран «Звіти». */
@@ -698,6 +697,19 @@ export const uk = {
     pageTitle: "Немає зв'язку",
     pageBody: "Ця сторінка ще не збережена на пристрої. Відкрийте її один раз з інтернетом.",
     pageRetry: "Спробувати ще раз",
+  },
+
+  /** Текст расчёта зарплаты для копирования (`modules/payroll`). */
+  payroll: {
+    title: "Розрахунок зарплати",
+    employee: "Працівник",
+    noEntries: "Немає записів",
+    total: "Разом",
+    rate: "Ставка",
+    pay: "До виплати",
+    all: "Усі разом",
+    min: "хв",
+    hour: "год",
   },
 
   /**

@@ -29,7 +29,7 @@ interface SalaryCalculatorProps {
 
 /**
  * Блок «Калькулятор зарплати» экрана «Години»: выбор сотрудников (несколько), ставка и
- * готовый текст «Lohnabrechnung» для копирования. Ставка нигде не хранится — только на время сессии.
+ * кнопка «Скопіювати» — копируется готовый текст расчёта (на языке интерфейса). Ставка нигде не хранится — только на время сессии.
  */
 export function SalaryCalculator({
   month,
@@ -76,8 +76,10 @@ export function SalaryCalculator({
         rate: rateOrNull,
         // Имя в расчёте нужно, когда он не только про самого пользователя.
         showNames: isBoss,
+        t,
+        locale,
       }),
-    [monthEntries, month, people, rateOrNull, isBoss],
+    [monthEntries, month, people, rateOrNull, isBoss, t, locale],
   );
 
   const handleCopy = () => {
@@ -125,14 +127,6 @@ export function SalaryCalculator({
           <span className="tabular text-[18px] font-semibold whitespace-nowrap">
             {formatCurrency(amount, locale)}
           </span>
-        </div>
-
-        <div>
-          <p className="text-[12px] text-ink-2">{t.hours.salaryCalcPreview}</p>
-          {/* select-text: на сайте выделение выключено, а этот текст пользователь может выделить вручную. */}
-          <pre className="tabular mt-1 max-h-64 overflow-auto rounded-ctl border border-edge bg-surface p-3 text-[12px] leading-relaxed whitespace-pre-wrap text-text select-text">
-            {text}
-          </pre>
         </div>
 
         <Button variant="outline" block onClick={handleCopy}>
