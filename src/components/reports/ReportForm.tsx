@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Car, Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -46,6 +46,13 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
   const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // Ключи на всё время работы с формой: повторное «Зберегти» (двойное нажатие, потерялся ответ)
+  // не создаёт второй звіт и вторую смену, а находит уже сохранённые.
+  const clientIdsRef = useRef({
+    report: crypto.randomUUID(),
+    time: crypto.randomUUID(),
+    travel: crypto.randomUUID(),
+  });
 
   const [siteId, setSiteId] = useState<string | null>(lastReport?.site_id ?? null);
   const [date, setDate] = useState<Date>(() => new Date());
@@ -107,6 +114,9 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         categoryIds,
         otherText,
         problemNote,
+        clientId: clientIdsRef.current.report,
+        timeClientId: clientIdsRef.current.time,
+        travelClientId: clientIdsRef.current.travel,
         time: withTime ? { startedAt: startAt, endedAt: endAt, breakStart, breakEnd } : null,
         travel: withTravel ? { startedAt: travelStart, endedAt: travelEnd, km: kmValue } : null,
       });

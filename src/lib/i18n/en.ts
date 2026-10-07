@@ -508,6 +508,8 @@ export const en: Dict = {
     saved: "Entry saved",
     updated: "Entry updated",
     errorDuration: "Check the time — the duration must be from 1 minute to 18 hours",
+    /** The same (or overlapping) time is already logged — duplicate protection. */
+    errorOverlap: "There is already an entry for this time — it can't be added twice. Check your hours list",
     durationValue: "{hours} h {minutes} min",
     saveError: "Couldn't save the entry. Please try again",
     customBreak: "Other break length",

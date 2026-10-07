@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
+import { findOverlappingEntry } from "@/modules/entries/queries";
 import { OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
 import {
   isBreakPairValid,
@@ -17,6 +18,9 @@ import {
 export type ReportActionState = { error: string | null };
 
 const OK: ReportActionState = { error: null };
+
+/** Код Postgres «нарушение уникальности»: запись с таким `client_id` уже есть. */
+const UNIQUE_VIOLATION = "23505";
 
 /** Відпрацьований час, внесений прямо у формі звіту — стає записом табеля. */
 export interface ReportTimeInput {
@@ -49,6 +53,13 @@ export interface CreateReportInput extends ReportInput {
   problemNote?: string;
   /** Не задано — звіт без годин, як і раніше. */
   time?: ReportTimeInput | null;
+  /**
+   * Ключи идемпотентности: форма создаёт их один раз и шлёт при каждой отправке. Повтор того же
+   * сохранения (двойное нажатие, потерялся ответ) находит уже созданные записи, а не плодит новые.
+   */
+  clientId?: string;
+  timeClientId?: string;
+  travelClientId?: string;
 }
 
 export interface CreateReportState extends ReportActionState {
@@ -148,6 +159,23 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
 
   const supabase = await createClient();
 
+  // Это же время уже внесено (через другой звіт или «Додати час») — не сохраняем ничего,
+  // иначе в «Годинах» появится дубль. Собственную прошлую отправку (тот же timeClientId) не считаем.
+  if (time) {
+    try {
+      const overlap = await findOverlappingEntry(
+        supabase,
+        profile.id,
+        { workDate: input.workDate, startedAt: time.startedAt, endedAt: time.endedAt },
+        { clientId: input.timeClientId },
+      );
+
+      if (overlap) return { error: t.manualTime.errorOverlap, reportId: null };
+    } catch {
+      return { error: t.reportForm.saveError, reportId: null };
+    }
+  }
+
   let otherText: string | null;
 
   try {
@@ -162,7 +190,7 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
 
   const problemNote = input.problemNote?.trim() ?? "";
   const baseRow = {
-    client_id: randomUUID(),
+    client_id: input.clientId ?? randomUUID(),
     company_id: profile.company_id,
     author_id: profile.id,
     site_id: input.siteId,
@@ -184,6 +212,16 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
     ({ data, error } = await supabase.from("site_reports").insert(baseRow).select("id").single());
   }
 
+  // Звіт с этим client_id уже есть: прошлая отправка дошла, а ответ потерялся (или нажали дважды).
+  // Берём его, а не создаём второй — иначе удвоятся и звіт, и часы.
+  if (error?.code === UNIQUE_VIOLATION && input.clientId) {
+    ({ data, error } = await supabase
+      .from("site_reports")
+      .select("id")
+      .eq("client_id", input.clientId)
+      .single());
+  }
+
   if (error || !data) {
     return { error: t.reportForm.saveError, reportId: null };
   }
@@ -193,7 +231,7 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
 
     if (time) {
       const { error: entryError } = await supabase.from("work_entries").insert({
-        client_id: randomUUID(),
+        client_id: input.timeClientId ?? randomUUID(),
         company_id: profile.company_id,
         author_id: profile.id,
         site_id: input.siteId,
@@ -206,7 +244,8 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
         source: "manual",
       });
 
-      if (entryError) throw entryError;
+      // Смена с этим client_id уже записана прошлой отправкой — это не ошибка.
+      if (entryError && !(entryError.code === UNIQUE_VIOLATION && input.timeClientId)) throw entryError;
     }
   } catch {
     await supabase.from("site_reports").delete().eq("id", data.id);
@@ -219,7 +258,7 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
 
   if (travel) {
     const { error: travelError } = await supabase.from("travel_entries").insert({
-      client_id: randomUUID(),
+      client_id: input.travelClientId ?? randomUUID(),
       company_id: profile.company_id,
       author_id: profile.id,
       site_id: input.siteId,
@@ -229,7 +268,7 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
       km: travel.km,
     });
 
-    if (travelError) warning = "travel";
+    if (travelError && !(travelError.code === UNIQUE_VIOLATION && input.travelClientId)) warning = "travel";
   }
 
   revalidatePath("/", "layout");

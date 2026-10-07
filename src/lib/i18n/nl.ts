@@ -508,6 +508,8 @@ export const nl: Dict = {
     saved: "Registratie opgeslagen",
     updated: "Registratie bijgewerkt",
     errorDuration: "Controleer de tijd — de duur moet tussen 1 minuut en 18 uur liggen",
+    /** Dezelfde (of overlappende) tijd is al geregistreerd — bescherming tegen dubbele invoer. */
+    errorOverlap: "Er staat al een registratie voor deze tijd — die kan niet twee keer worden toegevoegd. Controleer je urenlijst",
     durationValue: "{hours} u {minutes} min",
     saveError: "Registratie opslaan mislukt. Probeer het opnieuw",
     customBreak: "Andere pauzeduur",

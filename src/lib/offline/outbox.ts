@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { ManualEntryInput } from "@/modules/entries/actions";
+import { findOverlappingEntry } from "@/modules/entries/queries";
 
 import { idbAll, idbDelete, idbPut } from "./idb";
 import { classifyInsertError, OUTBOX_CHANGED_EVENT } from "./outbox-rules";
@@ -87,6 +88,30 @@ async function doFlush(userId: string): Promise<{ sent: number; rejected: number
     if (entry.rejected) continue;
 
     const { input } = entry;
+
+    // Это время уже внесено другим способом (например, через звіт, пока запись лежала в очереди) —
+    // отправка создала бы дубль. Такая запись сама не уйдёт: помечаем отклонённой, решает пользователь.
+    try {
+      const overlap = await findOverlappingEntry(
+        supabase,
+        entry.userId,
+        { workDate: input.workDate, startedAt: input.startedAt, endedAt: input.endedAt },
+        { clientId: entry.id },
+      );
+
+      if (overlap) {
+        await idbPut("outbox", entry.id, { ...entry, attempts: MAX_ATTEMPTS, rejected: true });
+        rejected += 1;
+        continue;
+      }
+    } catch (checkError) {
+      // Не удалось проверить: без связи ждём её возвращения, иначе пробуем в следующий раз.
+      const online = typeof navigator === "undefined" ? true : navigator.onLine;
+
+      if (classifyInsertError(checkError as { code?: string; message?: string }, online) === "offline") break;
+      continue;
+    }
+
     const { error } = await supabase.from("work_entries").insert({
       client_id: entry.id,
       company_id: entry.companyId,

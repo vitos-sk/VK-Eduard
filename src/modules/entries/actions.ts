@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
+import { findOverlappingEntry } from "@/modules/entries/queries";
 import {
   isBreakPairValid,
   isDurationValid,
@@ -70,6 +71,22 @@ export async function createManualEntry(
   }
 
   const supabase = await createClient();
+
+  try {
+    // То же (или пересекающееся) время уже внесено — например, через звіт. Свою же прошлую
+    // отправку (тот же clientId) за дубль не считаем: ниже она вернётся как «уже сохранено».
+    const overlap = await findOverlappingEntry(
+      supabase,
+      profile.id,
+      { workDate: input.workDate, startedAt: input.startedAt, endedAt: input.endedAt },
+      { clientId: input.clientId },
+    );
+
+    if (overlap) return { error: t.manualTime.errorOverlap, entryId: null };
+  } catch {
+    return { error: t.manualTime.saveError, entryId: null };
+  }
+
   const { data, error } = await supabase
     .from("work_entries")
     .insert({
@@ -150,6 +167,30 @@ export async function updateEntry(
   }
 
   const supabase = await createClient();
+
+  try {
+    // Шеф правит и чужие записи — пересечения ищем у автора записи, а не у того, кто правит.
+    const { data: current, error: readError } = await supabase
+      .from("work_entries")
+      .select("author_id")
+      .eq("id", entryId)
+      .maybeSingle();
+
+    if (readError) throw readError;
+    if (!current) return { error: t.reportDetail.saveRejected };
+
+    const overlap = await findOverlappingEntry(
+      supabase,
+      current.author_id,
+      { workDate: input.workDate, startedAt: input.startedAt, endedAt: input.endedAt },
+      { id: entryId },
+    );
+
+    if (overlap) return { error: t.manualTime.errorOverlap };
+  } catch {
+    return { error: t.manualTime.saveError };
+  }
+
   const { data, error } = await supabase
     .from("work_entries")
     .update({

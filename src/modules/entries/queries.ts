@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Tables } from "@/lib/supabase/types.gen";
+import { findOverlap, type ShiftSpan } from "@/modules/time/overlap";
 import type { WorkEntry, WorkEntryDetail, WorkEntryWithNames, WorkEntryWithPhotos } from "./types";
 
 type Client = SupabaseClient<Database>;
@@ -167,4 +168,49 @@ export async function getEntriesInRange(
   if (error) throw error;
 
   return data ?? [];
+}
+
+/** `YYYY-MM-DD` со сдвигом на `delta` дней. */
+function shiftDateKey(dateKey: string, delta: number): string {
+  const [year = 1970, month = 1, day = 1] = dateKey.split("-").map(Number);
+
+  return new Date(Date.UTC(year, month - 1, day + delta)).toISOString().slice(0, 10);
+}
+
+/**
+ * Закрытая смена автора, которая по времени пересекается с `candidate`, — или `null`.
+ * Это защита от дублей: то же время нельзя внести дважды (через отчёт и через «Додати час»,
+ * повторным нажатием, повтором из офлайн-очереди). Смотрим день до и день после: ночная смена
+ * заходит на соседние даты. `ignore.id` — запись, которую правят; `ignore.clientId` — запись, которую
+ * эта же отправка уже сохранила раньше (повтор после потерянного ответа).
+ *
+ * Если проверить не вышло (нет связи, нет доступа) — ошибка пробрасывается: лучше не сохранить
+ * и показать сообщение, чем молча пропустить дубль.
+ */
+export async function findOverlappingEntry(
+  supabase: Client,
+  authorId: string,
+  candidate: ShiftSpan,
+  ignore: { id?: string; clientId?: string } = {},
+): Promise<(ShiftSpan & { id: string }) | null> {
+  const { data, error } = await supabase
+    .from("work_entries")
+    .select("id, client_id, work_date, started_at, ended_at")
+    .eq("author_id", authorId)
+    .not("ended_at", "is", null)
+    .gte("work_date", shiftDateKey(candidate.workDate, -1))
+    .lte("work_date", shiftDateKey(candidate.workDate, 1));
+
+  if (error) throw error;
+
+  const existing = (data ?? [])
+    .filter((row) => row.client_id !== ignore.clientId)
+    .map((row) => ({
+    id: row.id,
+    workDate: row.work_date,
+    startedAt: row.started_at,
+    endedAt: row.ended_at,
+  }));
+
+  return findOverlap(candidate, existing, ignore.id);
 }
