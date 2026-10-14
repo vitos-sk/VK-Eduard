@@ -38,12 +38,15 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
 
   if (!userId) return null;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .eq("is_active", true)
     .maybeSingle();
+
+  // Сбой базы — это не «профиля нет»: иначе человека выбросит из аккаунта из-за секундной заминки.
+  if (error) throw new Error(`Не удалось загрузить профиль: ${error.message}`);
 
   return data;
 });
@@ -51,13 +54,17 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
 /**
  * Профиль или редирект — для экранов за логином, где `null` бессмыслен.
  * Неавторизованного до сюда не пускает `proxy.ts`; это второй рубеж
- * на случай, если пользователь есть в auth, а профиля в базе нет.
+ * на случай, если пользователь есть в auth, а профиля в базе нет (или он отключён).
+ *
+ * Такого человека нельзя слать на `/welcome`: прокси видит живую сессию и возвращает его на `/` —
+ * получался бесконечный круг (`ERR_TOO_MANY_REDIRECTS`). Поэтому сначала выходим из аккаунта
+ * (`/auth/signout`, прокси этот путь не трогает), и только потом — на `/welcome`.
  */
 export async function requireProfile(): Promise<Profile> {
   const profile = await getProfile();
 
   if (!profile) {
-    redirect("/welcome");
+    redirect("/auth/signout");
   }
 
   return profile;
