@@ -52,19 +52,21 @@ export function chatPreview(chat: ChatPreviewInput, meId: string, labels: ChatPr
 }
 
 /** Сообщения в переписке не изменились: опрос не должен перерисовывать экран и сбрасывать прокрутку зря. */
-export function sameMessages(
-  a: readonly { id: string; checklist: { done: number; total: number } | null }[],
-  b: readonly { id: string; checklist: { done: number; total: number } | null }[],
-): boolean {
+type ComparableMessage = {
+  id: string;
+  checklist: { done: number; total: number; items?: readonly { id: string; doneAt: string | null }[] } | null;
+};
+
+/** «Что отмечено» одной строкой: у карточки с пунктами важны отметки, а не только их число. */
+function cardSignature(message: ComparableMessage): string {
+  const list = message.checklist;
+  if (!list) return "";
+
+  return `${list.done}/${list.total}:${(list.items ?? []).map((item) => `${item.id}${item.doneAt ? 1 : 0}`).join(",")}`;
+}
+
+export function sameMessages(a: readonly ComparableMessage[], b: readonly ComparableMessage[]): boolean {
   if (a.length !== b.length) return false;
 
-  return a.every((message, index) => {
-    const other = b[index];
-
-    return (
-      message.id === other.id &&
-      message.checklist?.done === other.checklist?.done &&
-      message.checklist?.total === other.checklist?.total
-    );
-  });
+  return a.every((message, index) => message.id === b[index].id && cardSignature(message) === cardSignature(b[index]));
 }

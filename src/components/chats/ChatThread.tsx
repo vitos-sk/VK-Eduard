@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ListChecks, Paperclip, SendHorizontal } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, ExternalLink, ListChecks, MoreVertical, Paperclip, SendHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ChatAttachSheet } from "@/components/chats/ChatAttachSheet";
@@ -12,16 +12,21 @@ import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ProgressPips } from "@/components/ui/progress-pips";
+import { CheckMark } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/input";
+import { Modal, ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from "@/components/ui/modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ProgressPips } from "@/components/ui/progress-pips";
 import { fmt, formatTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
+import { useSessionState } from "@/lib/nav/useSessionState";
 import { cn } from "@/lib/utils";
-import { sendChatMessage } from "@/modules/chats/actions";
+import { deleteChatChecklist, sendChatMessage } from "@/modules/chats/actions";
 import { getChatMessages, type ChatHeader, type ChatMessageView } from "@/modules/chats/queries";
 import { normalizeMessage, sameMessages } from "@/modules/chats/rules";
 import { dayLabel, startsNewDay } from "@/modules/chats/time";
+import { setItemDone } from "@/modules/checklists/actions";
 
 /** Как часто спрашиваем новые сообщения, пока чат открыт и виден. */
 const POLL_MS = 4_000;
@@ -135,7 +140,9 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
   const roleLabel = chat.otherIsBoss ? t.chats.roleBoss : t.chats.roleWorker;
 
   return (
-    <div className="flex min-h-[calc(100dvh-60px-env(safe-area-inset-bottom)-1.5rem)] flex-col lg:min-h-[calc(100dvh-3rem)]">
+    // Телефон: страница на всю высоту области прокрутки, включая её нижний отступ (`pb-6` в `AppShell`, его гасит `-mb-6`),
+    // поэтому поле ввода стоит вплотную к нижней панели. Компьютер: высота окна минус отступы `main`.
+    <div className="-mb-6 flex min-h-[calc(100%+1.5rem)] flex-col lg:mb-0 lg:min-h-[calc(100dvh-3rem)]">
       <header className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 lg:mx-auto lg:w-full lg:max-w-[640px] lg:px-0 lg:pt-0">
         <Button asChild variant="ghost" size="icon-sm" className="-ml-1.5">
           <Link href="/chats" aria-label={t.common.back}>
@@ -168,7 +175,14 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
               )}
 
               {message.kind === "checklist" ? (
-                <ChecklistCard message={message} mine={mine} otherName={chat.otherName} meId={meId} time={formatTime(created)} />
+                <ChecklistCard
+                  message={message}
+                  mine={mine}
+                  otherName={chat.otherName}
+                  meId={meId}
+                  time={formatTime(created)}
+                  onChanged={reload}
+                />
               ) : (
                 <Bubble mine={mine} time={formatTime(created)}>
                   {message.body}
@@ -184,11 +198,11 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
           </Bubble>
         ))}
 
-        <div ref={endRef} />
       </div>
 
-      {/* Панель ввода липнет к низу; на телефоне опущена на отступ области прокрутки (как `StickyActionBar`). */}
-      <div className="perf-t sticky -bottom-6 z-10 bg-paper px-4 pt-2 pb-[calc(0.5rem+1.5rem)] lg:bottom-0 lg:pb-2">
+      {/* Панель ввода липнет к низу области прокрутки, прямо над нижней панелью. Смещение -bottom-6 гасит нижний отступ
+          области прокрутки (`pb-6` в `AppShell`): отступы «прилипания» считаются от содержимого, а не от края. */}
+      <div className="perf-t sticky -bottom-6 z-10 bg-paper px-4 py-2 lg:bottom-0">
         <div className="flex items-end gap-2 lg:mx-auto lg:max-w-[640px]">
           <Button variant="outline" size="icon" aria-label={t.chats.attach.open} onClick={() => setAttachOpen(true)}>
             <Paperclip className="size-5" strokeWidth={1.9} aria-hidden />
@@ -220,6 +234,9 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
         </div>
       </div>
 
+      {/* Конец переписки: сюда прокручиваем, чтобы последнее сообщение не оказалось под панелью ввода. */}
+      <div ref={endRef} />
+
       <ChatAttachSheet open={attachOpen} onOpenChange={setAttachOpen} meId={meId} otherId={chat.otherId} onSent={() => void reload()} />
     </div>
   );
@@ -246,51 +263,192 @@ function ChecklistCard({
   otherName,
   meId,
   time,
+  onChanged,
 }: {
   message: ChatMessageView;
   mine: boolean;
   otherName: string;
   meId: string;
   time: string;
+  /** Перечитать переписку: после отметки пункта или удаления карточки. */
+  onChanged: () => Promise<void>;
 }) {
   const t = useT();
   const c = t.chats.card;
   const list = message.checklist;
+  // Список открыт сразу; «Сховати» сворачивает его, и выбор помнится, пока открыто приложение.
+  const [collapsed, setCollapsed] = useSessionState<boolean>(`chat-card-collapsed:${message.id}`, false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  // Отметки, поставленные в этой карточке и ещё не подтверждённые перечитыванием: показываем их сразу.
+  const [pendingMarks, setPendingMarks] = useState<Record<string, boolean>>({});
+  const busy = useRef(new Set<string>());
 
-  if (!list) {
-    return (
-      <Bubble mine={mine} time={time} muted>
-        {c.deleted}
-      </Bubble>
-    );
+  // Копия принадлежит получателю: если она моя, отмечаю пункты прямо здесь; если нет, вижу прогресс коллеги.
+  const isMyCopy = list?.ownerId === meId;
+
+  async function handleToggle(itemId: string, doneNow: boolean) {
+    if (busy.current.has(itemId)) return;
+
+    busy.current.add(itemId);
+    setPendingMarks((current) => ({ ...current, [itemId]: !doneNow }));
+
+    try {
+      const result = await setItemDone(itemId, !doneNow);
+      if (result.error) toast(result.error);
+    } catch {
+      toast(t.checklists.view.toggleError);
+    } finally {
+      // Сначала свежие данные, потом убираем «подмену»: иначе галочка на миг мигнёт назад.
+      await onChanged();
+      setPendingMarks((current) => {
+        const next = { ...current };
+        delete next[itemId];
+
+        return next;
+      });
+      busy.current.delete(itemId);
+    }
   }
 
-  // Копия принадлежит получателю: если она моя, открываю и отмечаю; если нет, смотрю прогресс коллеги.
-  const isMyCopy = list.ownerId === meId;
-  const finished = list.total > 0 && list.done === list.total;
+  async function handleDelete() {
+    setIsDeleting(true);
+
+    const result = await deleteChatChecklist(message.id).catch(() => ({ error: c.deleteError }));
+    setIsDeleting(false);
+
+    if (result.error) {
+      toast(result.error);
+      return;
+    }
+
+    setDeleteOpen(false);
+    toast(c.removed);
+    await onChanged();
+  }
+
+  const items = (list?.items ?? []).map((item) => ({
+    ...item,
+    done: item.id in pendingMarks ? pendingMarks[item.id] : item.doneAt !== null,
+  }));
+  const done = list ? items.filter((item) => item.done).length : 0;
+  const total = list?.total ?? 0;
+  const finished = total > 0 && done === total;
   const progressText = isMyCopy
-    ? fmt(c.mine, { done: list.done, total: list.total })
-    : fmt(c.progress, { name: otherName, done: list.done, total: list.total });
+    ? fmt(c.mine, { done, total })
+    : fmt(c.progress, { name: otherName, done, total });
 
   return (
-    <div className={cn("w-[88%] rounded-card border border-edge bg-ticket p-3", mine ? "self-end" : "self-start")}>
+    <div className={cn("w-[92%] rounded-card border border-edge bg-ticket p-3", mine ? "self-end" : "self-start")}>
       <div className="flex items-center gap-2.5">
         <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-md border border-edge bg-stub text-primary">
           <ListChecks className="size-[18px]" strokeWidth={1.9} />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{list.title}</span>
-        {isMyCopy && list.done === 0 && <Badge variant="accent">{c.newBadge}</Badge>}
+        <span className={cn("min-w-0 flex-1 truncate text-[15px] font-semibold", !list && "font-medium text-ink-2")}>
+          {list ? list.title : c.deleted}
+        </span>
+        {isMyCopy && done === 0 && <Badge variant="accent">{c.newBadge}</Badge>}
         {finished && <Badge variant="success">{c.doneBadge}</Badge>}
+
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={c.menu} className="-mr-1.5 text-text-muted">
+              <MoreVertical className="size-[18px]" strokeWidth={1.9} aria-hidden />
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
+            {list && (
+              <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
+                <Link href={`/checklists/${list.id}`} onClick={() => setMenuOpen(false)}>
+                  <ExternalLink className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
+                  {isMyCopy ? c.open : c.view}
+                </Link>
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              block
+              className="justify-start rounded-sm px-2 text-danger-fg hover:bg-danger/10"
+              onClick={() => {
+                setMenuOpen(false);
+                setDeleteOpen(true);
+              }}
+            >
+              <Trash2 className="size-[16px]" strokeWidth={1.9} aria-hidden />
+              {c.delete}
+            </Button>
+          </PopoverContent>
+        </Popover>
       </div>
 
-      <ProgressPips className="mt-2.5" done={list.done} total={list.total} label={progressText} />
-      <p className="mt-1.5 text-[13px] text-ink-2">{progressText}</p>
+      {list && (
+        <>
+          <ProgressPips className="mt-2.5" done={done} total={total} label={progressText} />
 
-      <Button asChild size="sm" variant={isMyCopy ? "primary" : "outline"} block className="mt-2.5">
-        <Link href={`/checklists/${list.id}`}>{isMyCopy ? c.open : c.view}</Link>
-      </Button>
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <p className="min-w-0 text-[13px] text-ink-2">{progressText}</p>
+            <button
+              type="button"
+              aria-expanded={!collapsed}
+              onClick={() => setCollapsed((current) => !current)}
+              className="relative -mr-1 flex shrink-0 items-center gap-0.5 rounded-sm px-1 text-[13px] font-semibold text-primary outline-none before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              {collapsed ? c.show : c.hide}
+              {collapsed ? <ChevronDown className="size-4" strokeWidth={1.9} aria-hidden /> : <ChevronUp className="size-4" strokeWidth={1.9} aria-hidden />}
+            </button>
+          </div>
+
+          {!collapsed && (
+            <ul className="mt-2 border-t border-dashed border-perf">
+              {items.map((item) => (
+                <li key={item.id} className="not-first:border-t not-first:border-dashed not-first:border-perf">
+                  {isMyCopy ? (
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={item.done}
+                      onClick={() => void handleToggle(item.id, item.done)}
+                      className="flex min-h-11 w-full items-center gap-3 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring"
+                    >
+                      <CheckMark checked={item.done} />
+                      <span className={cn("min-w-0 flex-1 text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                    </button>
+                  ) : (
+                    <div className="flex min-h-10 items-center gap-3">
+                      <CheckMark checked={item.done} />
+                      <span className={cn("min-w-0 flex-1 text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
 
       <span className="tabular mt-1 block text-right text-[11px] text-ink-3">{time}</span>
+
+      <Modal open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>{c.deleteTitle}</ModalTitle>
+            <ModalDescription>{isMyCopy ? c.deleteBodyMine : c.deleteBodySent}</ModalDescription>
+          </ModalHeader>
+
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button variant="danger" onClick={() => void handleDelete()} loading={isDeleting}>
+              {c.delete}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

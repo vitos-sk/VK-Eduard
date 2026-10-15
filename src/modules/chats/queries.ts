@@ -86,15 +86,22 @@ export interface ChatMessageView {
   kind: "text" | "checklist";
   body: string | null;
   createdAt: string;
-  /** Для карточки чеклиста: копия получателя и её прогресс. `null` — копию удалили. */
-  checklist: { id: string; title: string; ownerId: string; done: number; total: number } | null;
+  /** Для карточки чеклиста: копия получателя, её пункты и прогресс. `null` — копию удалили. */
+  checklist: {
+    id: string;
+    title: string;
+    ownerId: string;
+    done: number;
+    total: number;
+    items: { id: string; text: string; doneAt: string | null }[];
+  } | null;
 }
 
 /** Сообщения чата по возрастанию времени (старые сверху, как в переписке). */
 export async function getChatMessages(supabase: Client, chatId: string): Promise<ChatMessageView[]> {
   const { data, error } = await supabase
     .from("chat_messages")
-    .select("id, sender_id, kind, body, created_at, checklists(id, title, owner_id, checklist_items(done_at))")
+    .select("id, sender_id, kind, body, created_at, checklists(id, title, owner_id, checklist_items(id, text, sort_order, done_at))")
     .eq("chat_id", chatId)
     .order("created_at", { ascending: false })
     .limit(MESSAGES_LIMIT);
@@ -114,6 +121,9 @@ export async function getChatMessages(supabase: Client, chatId: string): Promise
             ownerId: row.checklists.owner_id,
             done: row.checklists.checklist_items.filter((item) => item.done_at !== null).length,
             total: row.checklists.checklist_items.length,
+            items: [...row.checklists.checklist_items]
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((item) => ({ id: item.id, text: item.text, doneAt: item.done_at })),
           }
         : null,
     }))

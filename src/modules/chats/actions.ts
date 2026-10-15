@@ -72,3 +72,40 @@ export async function sendChatMessage(input: SendMessageInput): Promise<SendMess
 
   return { error: null };
 }
+
+export type DeleteCardState = { error: string | null };
+
+/**
+ * Удаляет карточку чеклиста из чата (у обоих участников). Если копия чеклиста принадлежит удаляющему
+ * (он получатель), она удаляется тоже: чеклист исчезает и из его списка. Копию коллеги отправитель не трогает.
+ */
+export async function deleteChatChecklist(messageId: string): Promise<DeleteCardState> {
+  const t = await getT();
+  const profile = await getProfile();
+  if (!profile) return { error: t.auth.noProfile };
+
+  const supabase = await createClient();
+
+  const { data: message } = await supabase
+    .from("chat_messages")
+    .select("id, checklist_id")
+    .eq("id", messageId)
+    .eq("kind", "checklist")
+    .maybeSingle();
+  if (!message) return { error: t.chats.card.deleteError };
+
+  // Сначала карточка: если права на удаление нет (миграция не применена), копию не трогаем.
+  const { data: removed, error } = await supabase.from("chat_messages").delete().eq("id", message.id).select("id");
+  if (error || !removed || removed.length === 0) return { error: t.chats.card.deleteError };
+
+  if (message.checklist_id) {
+    // Удалится, только если копия моя (RLS и условие по владельцу); чужую копию эта команда не заденет.
+    await supabase.from("checklists").delete().eq("id", message.checklist_id).eq("owner_id", profile.id);
+  }
+
+  revalidatePath("/chats");
+  revalidatePath("/checklists");
+  revalidatePath("/");
+
+  return { error: null };
+}

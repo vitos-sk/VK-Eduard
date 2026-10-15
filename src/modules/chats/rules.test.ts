@@ -96,4 +96,21 @@ describe("sameMessages", () => {
     expect(sameMessages([card(1)], [card(2)])).toBe(false);
     expect(sameMessages([card(2)], [card(2)])).toBe(true);
   });
+
+  it("в карточке отметили другой пункт при том же числе отмеченных — не то же", () => {
+    const withItems = (first: string | null, second: string | null) => ({
+      id: "c",
+      checklist: {
+        done: 1,
+        total: 2,
+        items: [
+          { id: "i1", doneAt: first },
+          { id: "i2", doneAt: second },
+        ],
+      },
+    });
+
+    expect(sameMessages([withItems("t", null)], [withItems(null, "t")])).toBe(false);
+    expect(sameMessages([withItems("t", null)], [withItems("t", null)])).toBe(true);
+  });
 });
