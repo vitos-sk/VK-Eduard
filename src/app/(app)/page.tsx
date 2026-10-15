@@ -1,7 +1,9 @@
 import { eachDayOfInterval, endOfWeek, startOfWeek } from "date-fns";
 
+import { ChatBell } from "@/components/chats/ChatBell";
 import { DayReportCard } from "@/components/home/DayReportCard";
 import { Greeting } from "@/components/home/Greeting";
+import { HomeChecklists } from "@/components/home/HomeChecklists";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeObjectCard } from "@/components/home/HomeObjectCard";
 import { LastReportCard } from "@/components/home/LastReportCard";
@@ -13,6 +15,8 @@ import { getLocale, getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { initialsOf } from "@/components/shared/Thumb";
 import { requireProfile } from "@/modules/auth/session";
+import { pickForHome } from "@/modules/checklists/filter";
+import { getMyChecklists } from "@/modules/checklists/queries";
 import { getEntriesFeed } from "@/modules/entries/queries";
 import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { categoryLabelsOf } from "@/modules/reports/categoryLabels";
@@ -26,6 +30,9 @@ import { dateKeyOf, sumTotalMinutes } from "@/modules/time/calc";
 /** Сколько объектов показывать в ленте «Мої об'єкти» на главной. */
 const HOME_OBJECTS_LIMIT = 6;
 
+/** Сколько чеклистов показывать в блоке «Чеклисти» на главной. */
+const HOME_CHECKLISTS_LIMIT = 2;
+
 /**
  * Головна працівника: подати звіт за день, мої об'єкти, підсумок тижня,
  * останній звіт. Ніяких таймерів і форм — години додаються через «+».
@@ -36,11 +43,13 @@ export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [entries, companyReports, sites, categories] = await Promise.all([
+  const [entries, companyReports, sites, categories, checklists] = await Promise.all([
     getEntriesFeed(supabase, profile.id),
     getCompanyReportsWithPhotos(supabase, profile.company_id),
     getActiveSites(supabase),
     getWorkCategories(supabase, profile.company_id),
+    // Блок чеклистов не должен ронять главную, если миграция ещё не применена или база ответила ошибкой.
+    getMyChecklists(supabase, profile.id).catch(() => []),
   ]);
 
   const now = new Date();
@@ -133,6 +142,7 @@ export default async function HomePage() {
         initials={initialsOf(profile.full_name)}
         title={<Greeting name={profile.full_name} />}
         subtitle={formatDateLong(now, locale)}
+        trailing={<ChatBell />}
       />
 
       <DayReportCard
@@ -143,6 +153,8 @@ export default async function HomePage() {
         siteName={todaySiteName}
         reportId={todayReport?.id ?? null}
       />
+
+      <HomeChecklists className="mt-[18px]" entries={pickForHome(checklists, HOME_CHECKLISTS_LIMIT)} />
 
       <SectionHeader
         className="mt-[18px]"

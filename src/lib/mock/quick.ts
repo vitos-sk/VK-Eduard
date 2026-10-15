@@ -17,6 +17,12 @@ export function getQuickActions(t: Dict): readonly QuickAction[] {
       href: "/reports/new",
     },
     {
+      id: "create_checklist",
+      title: t.quick.createChecklist.title,
+      description: t.quick.createChecklist.description,
+      href: "/checklists/new",
+    },
+    {
       id: "dashboard",
       title: t.quick.dashboard.title,
       description: t.quick.dashboard.description,

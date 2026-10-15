@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/modules/auth/redirect";
 import { getProfile } from "@/modules/auth/session";
 
 export type SignInState = { error: string | null };
@@ -35,7 +36,7 @@ export async function signIn(
     return { error: t.auth.failed };
   }
 
-  redirect("/");
+  redirect(safeNextPath(String(formData.get("next") ?? ""), "/"));
 }
 
 export async function signOut(): Promise<void> {

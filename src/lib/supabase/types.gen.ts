@@ -19,6 +19,250 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          body: string | null
+          chat_id: string
+          checklist_id: string | null
+          client_id: string
+          created_at: string
+          id: string
+          kind: string
+          sender_id: string
+        }
+        Insert: {
+          body?: string | null
+          chat_id: string
+          checklist_id?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          sender_id: string
+        }
+        Update: {
+          body?: string | null
+          chat_id?: string
+          checklist_id?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_reads: {
+        Row: {
+          chat_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reads_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_user_a_fkey"
+            columns: ["user_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_user_b_fkey"
+            columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_items: {
+        Row: {
+          checklist_id: string
+          done_at: string | null
+          id: string
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          checklist_id: string
+          done_at?: string | null
+          id?: string
+          sort_order?: number
+          text: string
+        }
+        Update: {
+          checklist_id?: string
+          done_at?: string | null
+          id?: string
+          sort_order?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklists: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          origin_id: string | null
+          owner_id: string
+          sent_by: string | null
+          share_token: string
+          site_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          origin_id?: string | null
+          owner_id: string
+          sent_by?: string | null
+          share_token?: string
+          site_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          origin_id?: string | null
+          owner_id?: string
+          sent_by?: string | null
+          share_token?: string
+          site_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklists_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_origin_id_fkey"
+            columns: ["origin_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklists_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string
@@ -124,6 +368,38 @@ export type Database = {
             foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_prefs: {
+        Row: {
+          chat_checklists: boolean
+          chat_messages: boolean
+          checklist_done: boolean
+          report_reminder: boolean
+          user_id: string
+        }
+        Insert: {
+          chat_checklists?: boolean
+          chat_messages?: boolean
+          checklist_done?: boolean
+          report_reminder?: boolean
+          user_id: string
+        }
+        Update: {
+          chat_checklists?: boolean
+          chat_messages?: boolean
+          checklist_done?: boolean
+          report_reminder?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -588,7 +864,55 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      accept_checklist: {
+        Args: { p_token: string }
+        Returns: {
+          out_chat: string
+          out_copy: string
+          out_created: boolean
+        }[]
+      }
+      checklist_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          out_author: string
+          out_id: string
+          out_items: string[]
+          out_my_copy: string
+          out_owner: string
+          out_site: string
+          out_title: string
+        }[]
+      }
+      mark_chat_read: {
+        Args: { p_chat: string }
+        Returns: undefined
+      }
+      my_chats: {
+        Args: never
+        Returns: {
+          out_chat: string
+          out_last_at: string
+          out_last_body: string
+          out_last_kind: string
+          out_last_sender: string
+          out_last_title: string
+          out_other: string
+          out_unread: number
+        }[]
+      }
+      open_chat: {
+        Args: { p_other: string }
+        Returns: string
+      }
+      send_checklist: {
+        Args: { p_checklist: string; p_recipients: string[] }
+        Returns: {
+          out_chat: string
+          out_copy: string
+          out_recipient: string
+        }[]
+      }
     }
     Enums: {
       entry_source: "timer" | "manual"

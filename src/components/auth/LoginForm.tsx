@@ -18,7 +18,7 @@ const initialState: SignInState = { error: null };
  * Единственная форма входа. Забыл пароль — ссылка «Забули пароль?» ведёт на `/forgot-password`,
  * оттуда на почту приходит ссылка для нового пароля.
  */
-export function LoginForm() {
+export function LoginForm({ next = "" }: { next?: string }) {
   const t = useT();
   const [state, formAction] = useActionState(signIn, initialState);
 
@@ -28,6 +28,8 @@ export function LoginForm() {
       className="flex min-h-full flex-col px-4 pt-[calc(env(safe-area-inset-top)+3rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
     >
       <OfflineReset />
+      {/* Куда вернуть после входа (ссылка из WhatsApp и т.п.); сервер перепроверяет его через `safeNextPath`. */}
+      <input type="hidden" name="next" value={next} />
       <Logo size={30} />
 
       <h1 className="mt-10 text-[24px]/[1.15] font-semibold tracking-[-0.02em]">

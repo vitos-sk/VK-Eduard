@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, ListChecks, LogOut, MessageCircle, Settings } from "lucide-react";
 
+import { useChatUnread } from "@/components/chats/ChatUnreadProvider";
 import { Logo } from "@/components/brand/Logo";
 import { getNavItems } from "@/components/layout/BottomNav";
 import { useOwnAvatarUrl } from "@/components/layout/OwnAvatar";
@@ -12,6 +13,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/modules/auth/profile";
+import { badgeLabel } from "@/modules/chats/rules";
 import { signOut } from "@/modules/auth/actions";
 import { Button } from "@/components/ui/button";
 
@@ -28,9 +30,13 @@ export function DesktopSidebar({ profile }: DesktopSidebarProps) {
   const t = useT();
   const pathname = usePathname();
   const avatarUrl = useOwnAvatarUrl();
+  const { count: unreadChats } = useChatUnread();
 
+  // На телефоне чеклисты открываются с главной и из «+», чат — значком в шапке; в боковой панели им хватает места на виду.
   const items = [
     ...getNavItems(t),
+    { href: "/checklists", label: t.nav.checklists, icon: ListChecks },
+    { href: "/chats", label: t.nav.chats, icon: MessageCircle },
     ...(profile.role === "boss"
       ? [{ href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard }]
       : []),
@@ -64,6 +70,11 @@ export function DesktopSidebar({ profile }: DesktopSidebarProps) {
               )}
               <Icon className="size-5 shrink-0" strokeWidth={1.9} aria-hidden />
               {item.label}
+              {item.href === "/chats" && unreadChats > 0 && (
+                <span className="tabular ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-on-primary">
+                  {badgeLabel(unreadChats)}
+                </span>
+              )}
             </Link>
           );
         })}

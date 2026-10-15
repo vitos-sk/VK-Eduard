@@ -2,6 +2,7 @@ import "server-only";
 
 import webpush from "web-push";
 
+import { configureWebPush } from "@/lib/push/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { brusselsClock, isReminderHour, pickRecipients, type Candidate } from "./schedule";
@@ -18,18 +19,6 @@ export interface ReminderResult {
   removed: number;
   /** Режим проверки: кому ушло бы, без отправки. */
   dryRun: boolean;
-}
-
-function configureWebPush() {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT;
-
-  if (!publicKey || !privateKey || !subject) {
-    throw new Error("Не заданы NEXT_PUBLIC_VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_SUBJECT.");
-  }
-
-  webpush.setVapidDetails(subject, publicKey, privateKey);
 }
 
 /**
@@ -63,21 +52,27 @@ export async function sendReportReminders(
 
   const userIds = [...new Set(subs.map((sub) => sub.user_id))];
 
-  const [{ data: profiles, error: profilesError }, { data: reports, error: reportsError }] = await Promise.all([
-    admin.from("profiles").select("id, is_active").in("id", userIds),
-    admin.from("site_reports").select("author_id").eq("work_date", dateKey).in("author_id", userIds),
-  ]);
+  const [{ data: profiles, error: profilesError }, { data: reports, error: reportsError }, { data: muted, error: mutedError }] =
+    await Promise.all([
+      admin.from("profiles").select("id, is_active").in("id", userIds),
+      admin.from("site_reports").select("author_id").eq("work_date", dateKey).in("author_id", userIds),
+      // Кто выключил «Нагадування про звіт» в настройках уведомлений (нет строки — включено).
+      admin.from("notification_prefs").select("user_id").eq("report_reminder", false).in("user_id", userIds),
+    ]);
   if (profilesError) throw new Error(`profiles: ${profilesError.message}`);
   if (reportsError) throw new Error(`site_reports: ${reportsError.message}`);
+  if (mutedError) throw new Error(`notification_prefs: ${mutedError.message}`);
 
   const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
   const reported = new Set(reports.map((report) => report.author_id));
+  const mutedUsers = new Set(muted.map((row) => row.user_id));
 
   // Решение «слать ли человеку» — по каждому устройству отдельно только в части «уже слали сегодня».
   const targets = subs.filter((sub) => {
     const profile = profileById.get(sub.user_id);
     if (!profile) return false;
     if (isTest) return profile.is_active;
+    if (mutedUsers.has(sub.user_id)) return false;
 
     const candidate: Candidate = {
       userId: sub.user_id,

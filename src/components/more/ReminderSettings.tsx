@@ -23,7 +23,8 @@ type State =
   | { kind: "ready"; enabled: boolean };
 
 /**
- * Переключатель «Нагадування про звіт» на странице «Сповіщення».
+ * Переключатель «Сповіщення на цьому пристрої» на странице «Сповіщення»: подписывает телефон на push.
+ * Какие именно уведомления слать (напоминание о звіте, чаты, чеклисты) выбирает `NotificationKinds`.
  * Разрешение браузер спрашивает только здесь, по нажатию человека — иначе его почти всегда отклоняют.
  */
 export function ReminderSettings({ vapidPublicKey }: { vapidPublicKey: string }) {
@@ -96,10 +97,10 @@ export function ReminderSettings({ vapidPublicKey }: { vapidPublicKey: string })
     <Ticket variant="sections">
       <label className="flex min-h-14 cursor-pointer items-center gap-3 px-3.5">
         <span className="flex flex-1 flex-col">
-          <span className="text-[14px] font-medium text-text">{n.reminderLabel}</span>
-          <span className="text-[12px] text-ink-2">{n.reminderHint}</span>
+          <span className="text-[14px] font-medium text-text">{n.deviceLabel}</span>
+          <span className="text-[12px] text-ink-2">{n.deviceHint}</span>
         </span>
-        <Toggle checked={state.enabled} disabled={isPending} onCheckedChange={toggle} aria-label={n.reminderLabel} />
+        <Toggle checked={state.enabled} disabled={isPending} onCheckedChange={toggle} aria-label={n.deviceLabel} />
       </label>
     </Ticket>
   );

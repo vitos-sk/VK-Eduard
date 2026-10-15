@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
  *
  * Кнопка ведёт на вход; пока экрана входа нет — на главную.
  */
-export function WelcomeScreen() {
+export function WelcomeScreen({ next = "" }: { next?: string }) {
   const t = useT();
   const features: { icon: LucideIcon; label: string }[] = [
     { icon: Clock, label: t.welcome.features.hours },
@@ -54,7 +54,7 @@ export function WelcomeScreen() {
       {/* Отступ фиксированный, как на макете: кнопка идёт сразу за списком, а не прижимается к низу экрана */}
       <div className="mt-10 pb-2">
         <Button asChild block>
-          <Link href="/login">{t.welcome.start}</Link>
+          <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}>{t.welcome.start}</Link>
         </Button>
 
         <InstallHint />

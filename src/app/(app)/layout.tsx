@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ChatUnreadProvider } from "@/components/chats/ChatUnreadProvider";
 import { AppShell } from "@/components/layout/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
@@ -20,8 +21,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     : null;
 
   return (
-    <AppShell profile={profile} avatarUrl={avatarUrl}>
-      {children}
-    </AppShell>
+    <ChatUnreadProvider>
+      <AppShell profile={profile} avatarUrl={avatarUrl}>
+        {children}
+      </AppShell>
+    </ChatUnreadProvider>
   );
 }

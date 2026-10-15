@@ -1,0 +1,238 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { MoreVertical, Pencil, Send, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { SendChecklistSheet } from "@/components/checklists/SendChecklistSheet";
+import { BackHeader } from "@/components/layout/ScreenHeader";
+import { StickyActionBar } from "@/components/shared/FormParts";
+import { Button } from "@/components/ui/button";
+import { CheckMark } from "@/components/ui/checkbox";
+import { Modal, ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from "@/components/ui/modal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ProgressPips } from "@/components/ui/progress-pips";
+import { Ticket, TicketSection } from "@/components/ui/ticket";
+import { fmt } from "@/lib/format";
+import { useT } from "@/lib/i18n/client";
+import { cn } from "@/lib/utils";
+import type { Colleague } from "@/modules/chats/queries";
+import { deleteChecklist, setItemDone } from "@/modules/checklists/actions";
+import { countProgress, isComplete } from "@/modules/checklists/progress";
+import type { ChecklistDetail } from "@/modules/checklists/queries";
+
+interface ChecklistViewProps {
+  detail: ChecklistDetail;
+  /** Свой чеклист (можно отмечать, править, отправлять). Копию коллеги, открытую из чата, можно только смотреть. */
+  isOwner: boolean;
+  colleagues: Colleague[];
+  /** Открыть лист «Надіслати» сразу (после «Зберегти й надіслати»). */
+  openSend: boolean;
+}
+
+/** `/checklists/[id]`: пункты с галочками и прогрессом, меню «⋮», кнопка «Надіслати». */
+export function ChecklistView({ detail, isOwner, colleagues, openSend }: ChecklistViewProps) {
+  const t = useT();
+  const v = t.checklists.view;
+  const router = useRouter();
+  const [, startDeleteTransition] = useTransition();
+
+  const [items, setItems] = useState(detail.items);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [sendOpen, setSendOpen] = useState(openSend);
+  // Пункты, по которым запрос ещё идёт: повторное нажатие в это время игнорируем, чтобы ответы не перепутались.
+  const busy = useRef(new Set<string>());
+
+  const progress = countProgress(items.map((item) => ({ done_at: item.doneAt })));
+  const complete = isComplete(progress);
+
+  async function handleToggle(itemId: string) {
+    if (!isOwner || busy.current.has(itemId)) return;
+
+    const before = items.find((item) => item.id === itemId);
+    if (!before) return;
+
+    const nextDone = before.doneAt === null;
+    const mark = (doneAt: string | null) =>
+      setItems((current) => current.map((item) => (item.id === itemId ? { ...item, doneAt } : item)));
+
+    busy.current.add(itemId);
+    mark(nextDone ? new Date().toISOString() : null);
+
+    try {
+      const result = await setItemDone(itemId, nextDone);
+
+      if (result.error) {
+        mark(before.doneAt);
+        toast(result.error);
+      }
+    } catch {
+      mark(before.doneAt);
+      toast(v.toggleError);
+    } finally {
+      busy.current.delete(itemId);
+    }
+  }
+
+  function handleDelete() {
+    setIsDeleting(true);
+
+    startDeleteTransition(async () => {
+      const result = await deleteChecklist(detail.id);
+
+      if (result.error) {
+        setIsDeleting(false);
+        toast(result.error);
+        return;
+      }
+
+      toast(v.deleted);
+      router.push("/checklists");
+    });
+  }
+
+  const subtitle = isOwner
+    ? [detail.isReceived ? (detail.senderName ? fmt(v.fromLine, { name: detail.senderName }) : null) : v.mineLine, detail.siteName]
+    : [fmt(v.readOnlyLine, { name: detail.ownerName }), detail.siteName];
+
+  return (
+    <div className="pb-2 lg:mx-auto lg:max-w-[640px]">
+      <BackHeader
+        title={detail.title}
+        href="/checklists"
+        action={
+          isOwner ? (
+            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label={v.menu} className="text-text-muted">
+                  <MoreVertical className="size-[18px]" strokeWidth={1.9} aria-hidden />
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
+                {!detail.isReceived && (
+                  <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
+                    <Link href={`/checklists/${detail.id}/edit`} onClick={() => setMenuOpen(false)}>
+                      <Pencil className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
+                      {v.edit}
+                    </Link>
+                  </Button>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  block
+                  className="justify-start rounded-sm px-2 text-danger-fg hover:bg-danger/10"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="size-[16px]" strokeWidth={1.9} aria-hidden />
+                  {v.delete}
+                </Button>
+              </PopoverContent>
+            </Popover>
+          ) : null
+        }
+      />
+
+      <div className="space-y-3 px-4 lg:px-0">
+        <p className="text-[13px] text-ink-2">{subtitle.filter(Boolean).join(" · ")}</p>
+
+        <Ticket variant="flat" className="space-y-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[14px] font-semibold">{complete ? v.allDone : v.done}</span>
+            <span className="tabular text-[15px] font-semibold">{fmt(v.progress, { done: progress.done, total: progress.total })}</span>
+          </div>
+          <ProgressPips size="md" done={progress.done} total={progress.total} label={fmt(v.progress, { done: progress.done, total: progress.total })} />
+        </Ticket>
+
+        {items.length === 0 ? (
+          <p className="py-6 text-center text-[14px] text-ink-2">{v.emptyItems}</p>
+        ) : (
+          <Ticket variant="sections">
+            {items.map((item) => {
+              const isDone = item.doneAt !== null;
+              const text = (
+                <>
+                  <CheckMark checked={isDone} />
+                  <span className={cn("min-w-0 flex-1 text-[15px] font-medium", isDone && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                </>
+              );
+
+              return (
+                <TicketSection key={item.id} className="p-0">
+                  {isOwner ? (
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={isDone}
+                      onClick={() => handleToggle(item.id)}
+                      className="flex min-h-12 w-full items-center gap-3 px-3.5 py-2 text-left outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {text}
+                    </button>
+                  ) : (
+                    <div className="flex min-h-12 items-center gap-3 px-3.5 py-2">{text}</div>
+                  )}
+                </TicketSection>
+              );
+            })}
+          </Ticket>
+        )}
+
+        {!isOwner && <p className="text-[13px] text-ink-2">{v.readOnlyHint}</p>}
+      </div>
+
+      {isOwner && (
+        <StickyActionBar>
+          <Button block onClick={() => setSendOpen(true)}>
+            <Send className="size-[18px]" strokeWidth={1.9} aria-hidden />
+            {v.send}
+          </Button>
+        </StickyActionBar>
+      )}
+
+      {isOwner && (
+        <>
+          <SendChecklistSheet
+            open={sendOpen}
+            onOpenChange={setSendOpen}
+            checklist={{
+              id: detail.id,
+              title: detail.title,
+              siteName: detail.siteName,
+              items: detail.items.map((item) => item.text),
+              shareToken: detail.shareToken,
+            }}
+            colleagues={colleagues}
+          />
+
+          <Modal open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <ModalContent>
+              <ModalHeader>
+                <ModalTitle>{v.deleteTitle}</ModalTitle>
+                <ModalDescription>{v.deleteBody}</ModalDescription>
+              </ModalHeader>
+
+              <ModalFooter>
+                <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+                  {t.common.cancel}
+                </Button>
+                <Button variant="danger" onClick={handleDelete} loading={isDeleting}>
+                  {v.deleteConfirm}
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </>
+      )}
+    </div>
+  );
+}

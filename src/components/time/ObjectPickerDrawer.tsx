@@ -21,6 +21,9 @@ interface ObjectPickerDrawerProps {
   /** Выбранный объект или `null`, пока он не указан. */
   value: string | null;
   onSelect: (siteId: string) => void;
+  /** Объект необязателен: с этим обработчиком вверху списка появляется строка «без объекта» (`clearLabel`). */
+  onClear?: () => void;
+  clearLabel?: string;
 }
 
 /** Лист со списком объектов компании — выбор для поля «Об'єкт» (нижний лист на телефоне, окно на ПК). */
@@ -30,6 +33,8 @@ export function ObjectPickerDrawer({
   sites,
   value,
   onSelect,
+  onClear,
+  clearLabel,
 }: ObjectPickerDrawerProps) {
   const t = useT();
   const router = useRouter();
@@ -99,6 +104,29 @@ export function ObjectPickerDrawer({
               <Plus className="size-5" strokeWidth={1.9} aria-hidden />
               {t.objects.addObject}
             </Button>
+          )}
+
+          {onClear && (
+            <Ticket
+              asChild
+              variant="flat"
+              interactive
+              className={cn("flex w-full items-center gap-3 py-2.5", value === null && "border-primary bg-primary-tint")}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  onClear();
+                  onOpenChange(false);
+                }}
+              >
+                <span className="min-w-0 flex-1 truncate text-left text-[14px] font-medium">{clearLabel}</span>
+
+                {value === null && (
+                  <Check className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
+                )}
+              </button>
+            </Ticket>
           )}
 
           {sites.length === 0 && (

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
+import { returnPathAfterLogin } from "@/modules/auth/redirect";
 
 /** Пути, открытые без входа. Всё остальное — за логином. */
 /**
@@ -82,8 +83,11 @@ export async function proxy(request: NextRequest) {
 
   if (!userId && !isPublic(pathname)) {
     const url = request.nextUrl.clone();
+    // Откуда пришёл человек (ссылка на чеклист из WhatsApp, уведомление): после входа вернём его туда.
+    const back = returnPathAfterLogin(pathname, request.nextUrl.search);
     url.pathname = "/welcome";
     url.search = "";
+    if (back) url.searchParams.set("next", back);
     return NextResponse.redirect(url);
   }
 

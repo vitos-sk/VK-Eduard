@@ -6,17 +6,21 @@ import { cn } from "@/lib/utils";
 
 /**
  * Шапка главной: приветствие 22 / 600, под ним дата 13 px, справа аватар-инициалы.
- * Слева маленький знак логотипа (на десктопе его заменяет логотип в сайдбаре), колокольчика нет.
+ * Слева маленький знак логотипа (на десктопе его заменяет логотип в сайдбаре). Справа: значок чатов и аватар;
+ * на десктопе оба заменяет боковая панель.
  */
 export function HomeHeader({
   initials,
   title,
   subtitle,
+  trailing,
   className,
 }: {
   initials: string;
   title: ReactNode;
   subtitle: string;
+  /** Что стоит левее аватара: значок чатов с числом непрочитанных. */
+  trailing?: ReactNode;
   className?: string;
 }) {
   return (
@@ -33,7 +37,10 @@ export function HomeHeader({
         </h1>
         <p className="mt-0.5 text-[13px] text-ink-2">{subtitle}</p>
       </div>
-      <AvatarLink initials={initials} className="mt-0.5 lg:hidden" />
+      <div className="mt-0.5 flex shrink-0 items-center gap-2.5 lg:hidden">
+        {trailing}
+        <AvatarLink initials={initials} />
+      </div>
     </header>
   );
 }

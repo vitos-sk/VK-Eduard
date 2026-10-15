@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { safeNextPath } from "./redirect";
+import { returnPathAfterLogin, safeNextPath } from "./redirect";
 
 describe("safeNextPath", () => {
   it("пропускает пути внутри сайта", () => {
@@ -15,5 +15,21 @@ describe("safeNextPath", () => {
     expect(safeNextPath(null)).toBe("/");
     expect(safeNextPath("")).toBe("/");
     expect(safeNextPath("relative", "/login")).toBe("/login");
+  });
+});
+
+describe("returnPathAfterLogin", () => {
+  it("с главной возвращать некуда", () => {
+    expect(returnPathAfterLogin("/", "")).toBeNull();
+    expect(returnPathAfterLogin("/", "?x=1")).toBeNull();
+  });
+
+  it("ссылка из WhatsApp: путь сохраняется", () => {
+    expect(returnPathAfterLogin("/c/8fa2c91d0b3e7a64", "")).toBe("/c/8fa2c91d0b3e7a64");
+  });
+
+  it("параметры запроса сохраняются, служебный _rsc отбрасывается", () => {
+    expect(returnPathAfterLogin("/checklists/abc", "?send=1&_rsc=xyz")).toBe("/checklists/abc?send=1");
+    expect(returnPathAfterLogin("/chats/abc", "?_rsc=xyz")).toBe("/chats/abc");
   });
 });
