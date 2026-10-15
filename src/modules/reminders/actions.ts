@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 
-export type PushResult = { ok: true } | { ok: false; reason: "no-profile" | "boss" | "invalid" | "error" };
+export type PushResult = { ok: true } | { ok: false; reason: "no-profile" | "invalid" | "error" };
 
 export interface PushSubscriptionInput {
   endpoint: string;
@@ -29,12 +29,11 @@ function isValid(input: PushSubscriptionInput): boolean {
 
 /**
  * Сохраняет push-подписку устройства за текущим человеком (или переносит на него, если телефон общий).
- * Язык берём из куки — уведомление придёт на языке интерфейса. Шефам не пишем: им напоминаний нет.
+ * Язык берём из куки — уведомление придёт на языке интерфейса. Подписаться может любой сотрудник, включая шефа, — это его личный выбор.
  */
 export async function savePushSubscription(input: PushSubscriptionInput, userAgent?: string): Promise<PushResult> {
   const profile = await getProfile();
   if (!profile) return { ok: false, reason: "no-profile" };
-  if (profile.role === "boss") return { ok: false, reason: "boss" };
   if (!isValid(input)) return { ok: false, reason: "invalid" };
 
   // Сервисный ключ: строка с этим endpoint могла принадлежать прошлому владельцу телефона,

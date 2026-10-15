@@ -64,7 +64,7 @@ export async function sendReportReminders(
   const userIds = [...new Set(subs.map((sub) => sub.user_id))];
 
   const [{ data: profiles, error: profilesError }, { data: reports, error: reportsError }] = await Promise.all([
-    admin.from("profiles").select("id, role, is_active").in("id", userIds),
+    admin.from("profiles").select("id, is_active").in("id", userIds),
     admin.from("site_reports").select("author_id").eq("work_date", dateKey).in("author_id", userIds),
   ]);
   if (profilesError) throw new Error(`profiles: ${profilesError.message}`);
@@ -81,7 +81,6 @@ export async function sendReportReminders(
 
     const candidate: Candidate = {
       userId: sub.user_id,
-      role: profile.role,
       isActive: profile.is_active,
       reportedToday: reported.has(sub.user_id),
       lastSentOn: sub.last_sent_on,

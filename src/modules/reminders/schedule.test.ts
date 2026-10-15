@@ -36,7 +36,6 @@ describe("isReminderHour", () => {
 
 const base: Candidate = {
   userId: "u1",
-  role: "worker",
   isActive: true,
   reportedToday: false,
   lastSentOn: null,
@@ -47,10 +46,6 @@ describe("pickRecipients", () => {
 
   it("рабочему без отчёта — напоминаем", () => {
     expect(pickRecipients([base], today)).toEqual(["u1"]);
-  });
-
-  it("шефам не шлём", () => {
-    expect(pickRecipients([{ ...base, role: "boss" }], today)).toEqual([]);
   });
 
   it("отключённым сотрудникам не шлём", () => {

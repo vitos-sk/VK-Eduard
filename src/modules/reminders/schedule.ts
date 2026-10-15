@@ -36,7 +36,6 @@ export function isReminderHour(now: Date): boolean {
 
 export interface Candidate {
   userId: string;
-  role: "boss" | "worker";
   isActive: boolean;
   /** Уже есть отчёт на сегодняшнюю дату. */
   reportedToday: boolean;
@@ -44,12 +43,12 @@ export interface Candidate {
   lastSentOn: string | null;
 }
 
-/** Кому слать: рабочим (не шефам), активным, без отчёта за сегодня и без напоминания сегодня. */
+/** Кому слать: тем, кто сам включил напоминание, активным, без отчёта за сегодня и без напоминания сегодня. */
 export function pickRecipients(candidates: readonly Candidate[], todayKey: string): string[] {
   const ids = new Set<string>();
 
   for (const c of candidates) {
-    if (c.role === "boss" || !c.isActive || c.reportedToday || c.lastSentOn === todayKey) continue;
+    if (!c.isActive || c.reportedToday || c.lastSentOn === todayKey) continue;
     ids.add(c.userId);
   }
 

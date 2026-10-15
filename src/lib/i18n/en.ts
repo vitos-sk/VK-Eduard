@@ -120,7 +120,6 @@ export const en: Dict = {
       body: "Every day at 18:00 Belgian time we'll remind you to submit your report — if you haven't done so yet today.",
       reminderLabel: "Report reminder",
       reminderHint: "Every day at 18:00",
-      bossNote: "Managers don't receive reminders.",
       unsupported: "This browser doesn't support notifications.",
       iosInstall: "On iPhone, notifications only work in the installed app: tap Share → Add to Home Screen, then open the app from its icon.",
       devOnly: "Notifications only work in the production version of the app.",

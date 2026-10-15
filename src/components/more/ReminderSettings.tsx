@@ -18,7 +18,6 @@ import { removePushSubscription, savePushSubscription } from "@/modules/reminder
 
 type State =
   | { kind: "loading" }
-  | { kind: "boss" }
   | { kind: "dev" }
   | { kind: "blocked"; why: "unsupported" | "ios-needs-install" | "denied" }
   | { kind: "ready"; enabled: boolean };
@@ -27,7 +26,7 @@ type State =
  * Переключатель «Нагадування про звіт» на странице «Сповіщення».
  * Разрешение браузер спрашивает только здесь, по нажатию человека — иначе его почти всегда отклоняют.
  */
-export function ReminderSettings({ isBoss, vapidPublicKey }: { isBoss: boolean; vapidPublicKey: string }) {
+export function ReminderSettings({ vapidPublicKey }: { vapidPublicKey: string }) {
   const t = useT();
   const n = t.profile.notificationsPage;
   const [state, setState] = useState<State>({ kind: "loading" });
@@ -37,7 +36,6 @@ export function ReminderSettings({ isBoss, vapidPublicKey }: { isBoss: boolean; 
     let cancelled = false;
 
     async function detect(): Promise<State> {
-      if (isBoss) return { kind: "boss" };
       if (process.env.NODE_ENV !== "production" || !vapidPublicKey) return { kind: "dev" };
 
       const support: PushSupport = pushSupport();
@@ -56,7 +54,7 @@ export function ReminderSettings({ isBoss, vapidPublicKey }: { isBoss: boolean; 
     return () => {
       cancelled = true;
     };
-  }, [isBoss, vapidPublicKey]);
+  }, [vapidPublicKey]);
 
   function toggle(next: boolean) {
     startTransition(async () => {
@@ -86,7 +84,6 @@ export function ReminderSettings({ isBoss, vapidPublicKey }: { isBoss: boolean; 
 
   if (state.kind === "loading") return null;
 
-  if (state.kind === "boss") return <p>{n.bossNote}</p>;
   if (state.kind === "dev") return <p>{n.devOnly}</p>;
 
   if (state.kind === "blocked") {
