@@ -1,30 +1,38 @@
 "use client";
 
-import { X } from "lucide-react";
+import { MapPin, Users, X } from "lucide-react";
 
+import { initialsOf } from "@/components/shared/Thumb";
+import { Avatar } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
-  SelectItem,
+  SelectGroup,
+  SelectLabel,
+  SelectRichItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useT } from "@/lib/i18n/client";
+import { formatHoursShort, pluralize } from "@/lib/format";
+import { useLocale, useT } from "@/lib/i18n/client";
+import type { FilterStat } from "@/modules/entries/filterStats";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export const ALL_FILTER = "all";
 
-const triggerClassName = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[13px] font-medium text-text";
-
-interface Option {
+/** Пункт списку фільтра; `shifts`/`minutes` — скільки змін і годин за поточний місяць. */
+export interface FilterOption extends Partial<FilterStat> {
   id: string;
   name: string;
 }
 
 interface HoursFiltersProps {
-  workers: readonly Option[];
-  sites: readonly Option[];
+  workers: readonly FilterOption[];
+  sites: readonly FilterOption[];
+  /** Підсумок для пункту «Усі співробітники» / «Усі об'єкти». */
+  workersTotal?: FilterStat;
+  sitesTotal?: FilterStat;
   workerId: string;
   siteId: string;
   onWorkerChange: (id: string) => void;
@@ -32,10 +40,71 @@ interface HoursFiltersProps {
   className?: string;
 }
 
+interface FilterSelectProps {
+  kind: "worker" | "site";
+  label: string;
+  allLabel: string;
+  value: string;
+  onChange: (id: string) => void;
+  options: readonly FilterOption[];
+  total?: FilterStat;
+}
+
+/** Компактне поле без підпису (іконка + значення) і випадашка: аватар, назва, «8 змін · 66:40». */
+function FilterSelect({ kind, label, allLabel, value, onChange, options, total }: FilterSelectProps) {
+  const t = useT();
+  const locale = useLocale();
+  const s = t.hoursUi;
+  const Icon = kind === "worker" ? Users : MapPin;
+  const isActive = value !== ALL_FILTER;
+
+  const describe = (stat?: Partial<FilterStat>) =>
+    stat?.shifts === undefined || stat.minutes === undefined
+      ? undefined
+      : `${pluralize(stat.shifts, locale, { one: s.shiftsOne, few: s.shiftsFew, many: s.shiftsMany })} · ${formatHoursShort(stat.minutes)}`;
+
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger size="compact" active={isActive} aria-label={label}>
+        <Icon className={cn("size-4", isActive ? "text-primary" : "text-ink-2")} strokeWidth={1.9} aria-hidden />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="start" collisionPadding={16} className="min-w-64">
+        <SelectGroup>
+          <SelectLabel>{label}</SelectLabel>
+          <SelectRichItem
+            value={ALL_FILTER}
+            title={allLabel}
+            description={describe(total)}
+            leading={<Avatar icon={<Icon strokeWidth={1.9} />} />}
+          />
+          {options.map((option) => (
+            <SelectRichItem
+              key={option.id}
+              value={option.id}
+              title={option.name}
+              description={describe(option)}
+              leading={
+                kind === "worker" ? (
+                  <Avatar initials={initialsOf(option.name)} />
+                ) : (
+                  <Avatar icon={<Icon strokeWidth={1.9} />} />
+                )
+              }
+            />
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
 /** Фільтри записів команди: співробітник + об'єкт (паритет з колишньою адмінкою). */
 export function HoursFilters({
   workers,
   sites,
+  workersTotal,
+  sitesTotal,
   workerId,
   siteId,
   onWorkerChange,
@@ -48,44 +117,25 @@ export function HoursFilters({
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-[12px] text-ink-2">
-            {s.filterWorkerLabel}
-          </label>
-          <Select value={workerId} onValueChange={onWorkerChange}>
-            <SelectTrigger className={triggerClassName}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_FILTER}>{s.filterWorkerAll}</SelectItem>
-              {workers.map((worker) => (
-                <SelectItem key={worker.id} value={worker.id}>
-                  {worker.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-[12px] text-ink-2">
-            {s.filterSiteLabel}
-          </label>
-          <Select value={siteId} onValueChange={onSiteChange}>
-            <SelectTrigger className={triggerClassName}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_FILTER}>{s.filterSiteAll}</SelectItem>
-              {sites.map((site) => (
-                <SelectItem key={site.id} value={site.id}>
-                  {site.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-2 gap-2">
+        <FilterSelect
+          kind="worker"
+          label={s.filterWorkerLabel}
+          allLabel={s.filterWorkerAll}
+          value={workerId}
+          onChange={onWorkerChange}
+          options={workers}
+          total={workersTotal}
+        />
+        <FilterSelect
+          kind="site"
+          label={s.filterSiteLabel}
+          allLabel={s.filterSiteAll}
+          value={siteId}
+          onChange={onSiteChange}
+          options={sites}
+          total={sitesTotal}
+        />
       </div>
 
       {isActive && (

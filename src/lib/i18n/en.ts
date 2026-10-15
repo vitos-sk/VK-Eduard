@@ -1001,6 +1001,8 @@ export const en: Dict = {
     shiftsOne: "{n} shift",
     shiftsFew: "{n} shifts",
     shiftsMany: "{n} shifts",
+    editShort: "Edit",
+    deleteShort: "Delete",
     exportHint: "Timesheet for the selected month",
   },
 

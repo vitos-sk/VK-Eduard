@@ -28,6 +28,7 @@ import { initialsOf } from "@/components/shared/Thumb";
 import type { Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
+import { EMPTY_FILTER_STAT, tallyEntries } from "@/modules/entries/filterStats";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { dateKeyOf } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
@@ -158,6 +159,25 @@ export function HoursScreen({
   }, [isBoss, scope, travelEntries, workerFilter, siteFilter, profile.id]);
   const isFiltered = isTeamView && (workerFilter !== ALL_FILTER || siteFilter !== ALL_FILTER);
 
+  // Підписи в списках фільтрів: скільки змін і годин зараз дадуть сам по собі співробітник чи об'єкт
+  // (з урахуванням другого фільтра, щоб цифри збігалися з тим, що побачить шеф після вибору).
+  const workerStats = useMemo(
+    () =>
+      tallyEntries(
+        monthEntries.filter((entry) => siteFilter === ALL_FILTER || entry.site_id === siteFilter),
+        (entry) => entry.author_id,
+      ),
+    [monthEntries, siteFilter],
+  );
+  const siteStats = useMemo(
+    () =>
+      tallyEntries(
+        monthEntries.filter((entry) => workerFilter === ALL_FILTER || entry.author_id === workerFilter),
+        (entry) => entry.site_id,
+      ),
+    [monthEntries, workerFilter],
+  );
+
   const handleChanged = useCallback(() => {
     setRefreshToken((token) => token + 1);
     router.refresh();
@@ -237,8 +257,18 @@ export function HoursScreen({
             <>
               <HoursFilters
                 className="lg:w-[460px]"
-                workers={workers.map((w) => ({ id: w.id, name: w.full_name }))}
-                sites={sites.map((site) => ({ id: site.id, name: site.name }))}
+                workers={workers.map((w) => ({
+                  id: w.id,
+                  name: w.full_name,
+                  ...(workerStats.byKey.get(w.id) ?? EMPTY_FILTER_STAT),
+                }))}
+                sites={sites.map((site) => ({
+                  id: site.id,
+                  name: site.name,
+                  ...(siteStats.byKey.get(site.id) ?? EMPTY_FILTER_STAT),
+                }))}
+                workersTotal={workerStats.total}
+                sitesTotal={siteStats.total}
                 workerId={workerFilter}
                 siteId={siteFilter}
                 onWorkerChange={setWorkerFilter}

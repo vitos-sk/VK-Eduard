@@ -1099,6 +1099,9 @@ export const uk = {
     shiftsOne: "{n} зміна",
     shiftsFew: "{n} зміни",
     shiftsMany: "{n} змін",
+    /** Короткі підписи кнопок у розкритому рядку зміни (телефон). */
+    editShort: "Редагувати",
+    deleteShort: "Видалити",
     exportHint: "Табель за обраний місяць",
   },
 

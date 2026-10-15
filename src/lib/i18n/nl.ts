@@ -1001,6 +1001,8 @@ export const nl: Dict = {
     shiftsOne: "{n} dienst",
     shiftsFew: "{n} diensten",
     shiftsMany: "{n} diensten",
+    editShort: "Bewerken",
+    deleteShort: "Verwijderen",
     exportHint: "Urenstaat van de gekozen maand",
   },
 

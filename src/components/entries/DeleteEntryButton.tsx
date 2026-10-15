@@ -23,6 +23,8 @@ interface DeleteEntryButtonProps {
   onDeleted: () => void;
   /** Компактный вид — только иконка, без подписи; для рядка таблиці. */
   iconOnly?: boolean;
+  /** Низкая кнопка с короткой подписью «Видалити» — для розкритого рядка зміни на телефоні. */
+  compact?: boolean;
   className?: string;
   /** Что вызвать для удаления; по умолчанию — запись рабочего времени. */
   remove?: (id: string) => Promise<{ error: string | null }>;
@@ -40,6 +42,7 @@ export function DeleteEntryButton({
   entryId,
   onDeleted,
   iconOnly,
+  compact,
   className,
   remove = deleteEntry,
   texts,
@@ -67,14 +70,14 @@ export function DeleteEntryButton({
     <>
       <Button
         variant={iconOnly ? "ghost" : "danger"}
-        size={iconOnly ? "icon-sm" : "lg"}
+        size={iconOnly ? "icon-sm" : compact ? "sm" : "lg"}
         block={!iconOnly}
         onClick={() => setOpen(true)}
         aria-label={t.hours.deleteEntry}
         className={cn(iconOnly && "text-danger-fg", className)}
       >
-        <Trash2 className="size-[18px]" strokeWidth={1.9} aria-hidden />
-        {!iconOnly && t.hours.deleteEntry}
+        <Trash2 className={compact ? "size-4" : "size-[18px]"} strokeWidth={1.9} aria-hidden />
+        {!iconOnly && (compact ? t.hoursUi.deleteShort : t.hours.deleteEntry)}
       </Button>
 
       <Modal open={open} onOpenChange={setOpen}>

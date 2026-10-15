@@ -1,17 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { Pause, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
-import { fmt, formatHoursShort, formatTimeShort, formatWorkDateShort, pluralize } from "@/lib/format";
+import {
+  fmt,
+  formatHoursShort,
+  formatTimeShort,
+  formatWorkDateShort,
+  fromDateKey,
+  pluralize,
+} from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { breakMinutes } from "@/modules/time/calc";
 import { StampTag } from "@/components/ui/stamp-tag";
-import { Ticket, TicketBody, TicketStub } from "@/components/ui/ticket";
+import { Ticket } from "@/components/ui/ticket";
+import { TicketRow } from "@/components/ui/ticket-row";
 import {
   TicketTable,
   TicketTableCell,
@@ -155,12 +163,13 @@ interface MonthEntriesTableProps {
 }
 
 /**
- * «Зміни за місяць». На телефоні — список: одна зміна = один рядок (дата,
- * час, об'єкт, перерва, години, дії), без горизонтального скролу. Від `lg` —
- * таблиця з усіма колонками. Що саме потрапить у `entries` (свої зміни чи
- * вся компанія), вирішує RLS на запиті `getCompanyEntriesInRange`, тож
- * редагування/видалення показуємо завжди: `entries_update`/`entries_delete`
- * дозволяють це для будь-якого рядка, який тут узагалі можна побачити.
+ * «Зміни за місяць». На телефоні — тонкі згорнуті рядки (дата, хто, час,
+ * години); дотик розкриває об'єкт, перерву, опис і кнопки «Редагувати» /
+ * «Видалити». Горизонтального скролу немає. Від `lg` — таблиця з усіма
+ * колонками. Що саме потрапить у `entries` (свої зміни чи вся компанія),
+ * вирішує RLS на запиті `getCompanyEntriesInRange`, тож редагування/видалення
+ * показуємо завжди: `entries_update`/`entries_delete` дозволяють це для
+ * будь-якого рядка, який тут узагалі можна побачити.
  */
 export function MonthEntriesTable({
   entries,
@@ -189,9 +198,9 @@ export function MonthEntriesTable({
   return (
     <Ticket asChild variant="flat"><section className={className}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[15px] font-semibold">{t.hours.monthTableTitle}</h2>
+        <h2 className="text-[15px] font-semibold whitespace-nowrap">{t.hours.monthTableTitle}</h2>
         {entries.length > 0 && (
-          <p className="tabular shrink-0 text-[13px] text-ink-2">
+          <p className="tabular shrink-0 text-[12px] text-ink-2 lg:text-[13px]">
             {fmt(s.entriesTotal, {
               total: `${formatHoursShort(totalMinutes)} ${t.units.hoursShort}`,
               n: pluralize(entries.length, locale, { one: s.shiftsOne, few: s.shiftsFew, many: s.shiftsMany }),
@@ -203,7 +212,7 @@ export function MonthEntriesTable({
       {isLoading && entries.length === 0 ? (
         <div className="mt-3 space-y-2" aria-hidden>
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-[52px] rounded-card" />
+            <Skeleton key={index} className="h-10 rounded-card" />
           ))}
         </div>
       ) : entries.length === 0 ? (
@@ -212,7 +221,7 @@ export function MonthEntriesTable({
         </p>
       ) : (
         <>
-          <ul className="mt-3 space-y-2 lg:hidden">
+          <ul className="-mx-3.5 mt-3 lg:hidden">
             {visibleEntries.map((entry) => (
               <EntryRow key={entry.id} entry={entry} showAuthor={showAuthor} onChanged={onChanged} />
             ))}
@@ -325,57 +334,69 @@ function EntryRow({
   onChanged: () => void;
 }) {
   const t = useT();
-  const locale = useLocale();
+  const s = t.hoursUi;
   const pauseMinutes = breakMinutes(entry.break_start, entry.break_end);
   const isOngoing = entry.ended_at === null;
-  const subtitle = [showAuthor ? entry.author_full_name : null, entry.site_name ?? t.hours.noObject]
-    .filter(Boolean)
-    .join(" · ");
+  const weekday = t.weekdays.short[fromDateKey(entry.work_date).getDay()];
+  const description = entry.description?.trim();
+  // Шеф бачить, чия це зміна; працівник — де він працював.
+  const title = showAuthor ? entry.author_full_name : (entry.site_name ?? t.hours.noObject);
 
   return (
-    <li>
-      <Ticket compact>
-        <TicketStub className="w-(--ticket-stub)" aria-label={formatWorkDateShort(entry.work_date, locale)}>
-          <span className="tabular text-[18px] leading-none font-semibold">
-            {entry.work_date.slice(8, 10)}
+    <TicketRow
+      summary={
+        <>
+          <span className="tabular w-[38px] shrink-0 text-[12px] text-ink-2">
+            <span className="font-semibold text-text">{entry.work_date.slice(8, 10)}</span> {weekday}
           </span>
-          <span className="tabular text-[12px] leading-none text-ink-2">
-            {entry.work_date.slice(5, 7)}
+          <span className="flex min-w-0 flex-1 items-center gap-1.5 font-semibold">
+            <span className="truncate">{title}</span>
+            {isOngoing && <StampTag>{t.hours.entryOngoing}</StampTag>}
           </span>
-        </TicketStub>
-
-        <TicketBody className="flex items-center gap-2.5 py-2.5">
-          <div className="min-w-0 flex-1">
-            <p className="tabular flex flex-wrap items-center gap-1.5 text-[14px] font-semibold">
-              <span className="truncate">
-                {formatTimeShort(entry.started_at)}–
-                {entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
-              </span>
-              {isOngoing && <StampTag>{t.hours.entryOngoing}</StampTag>}
-              {pauseMinutes > 0 && (
-                <span className="flex shrink-0 items-center gap-0.5 text-[12px] font-medium text-ink-2">
-                  <Pause className="size-3 fill-current" aria-hidden />
-                  {formatHoursShort(pauseMinutes)}
-                </span>
-              )}
-            </p>
-            <p className="truncate text-[12px] text-ink-2">{subtitle}</p>
-          </div>
-
-          <p className="tabular shrink-0 text-[15px] font-semibold">
+          <span className="tabular shrink-0 text-[13px] text-ink-2">
+            {formatTimeShort(entry.started_at)}–{entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
+          </span>
+          <span className="tabular w-[46px] shrink-0 text-right text-[15px] font-semibold">
             {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-          </p>
+          </span>
+        </>
+      }
+    >
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
+        <dt className="text-ink-2">{t.hours.monthTableObjectColumn}</dt>
+        <dd className="min-w-0 break-words">{entry.site_name ?? t.hours.noObject}</dd>
+        {pauseMinutes > 0 && (
+          <>
+            <dt className="text-ink-2">{t.hours.break}</dt>
+            <dd className="tabular">{formatHoursShort(pauseMinutes)}</dd>
+          </>
+        )}
+        {description && (
+          <>
+            <dt className="text-ink-2">{s.monthTableDescriptionColumn}</dt>
+            <dd className="min-w-0 break-words">{description}</dd>
+          </>
+        )}
+      </dl>
 
-          <EntryActions entry={entry} onChanged={onChanged} />
-        </TicketBody>
-      </Ticket>
-    </li>
+      {!isOngoing && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button asChild variant="outline" size="sm" block>
+            <Link href={`/time/manual/${entry.id}`}>
+              <Pencil className="size-4" strokeWidth={1.9} aria-hidden />
+              {s.editShort}
+            </Link>
+          </Button>
+          <DeleteEntryButton entryId={entry.id} onDeleted={onChanged} compact />
+        </div>
+      )}
+    </TicketRow>
   );
 }
 
 function EntryActions({ entry, onChanged }: { entry: WorkEntryWithNames; onChanged: () => void }) {
   const t = useT();
-  if (!entry.ended_at) return <span className="w-[64px] shrink-0 lg:hidden" aria-hidden />;
+  if (!entry.ended_at) return null;
 
   return (
     <div className="flex shrink-0 items-center justify-end gap-0.5">

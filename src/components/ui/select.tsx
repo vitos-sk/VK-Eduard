@@ -31,20 +31,28 @@ function SelectValue({
   return <SelectPrimitive.Value data-slot="select-value" {...props} />
 }
 
+/**
+ * Размеры: `default` (32 px) и `sm` — обычные; `compact` — поле фильтра на всю ширину
+ * колонки (36 px, зона нажатия 44 px): слева иконка, значение, справа стрелка.
+ * `active` — выбрано не «всё»: зелёная рамка и фон `primary-tint`.
+ */
 function SelectTrigger({
   className,
   size = "default",
+  active = false,
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  size?: "sm" | "default"
+  size?: "sm" | "default" | "compact"
+  active?: boolean
 }) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-border-strong bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger-fg aria-invalid:ring-3 aria-invalid:ring-danger/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-border-strong bg-field py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger-fg aria-invalid:ring-3 aria-invalid:ring-danger/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-[size=compact]:relative data-[size=compact]:h-9 data-[size=compact]:w-full data-[size=compact]:rounded-ctl data-[size=compact]:px-2 data-[size=compact]:py-0 data-[size=compact]:text-[13px] data-[size=compact]:font-medium data-[size=compact]:before:absolute data-[size=compact]:before:inset-x-0 data-[size=compact]:before:-inset-y-1 data-[size=compact]:before:content-[''] data-[size=compact]:*:data-[slot=select-value]:block data-[size=compact]:*:data-[slot=select-value]:flex-1 data-[size=compact]:*:data-[slot=select-value]:truncate data-[size=compact]:*:data-[slot=select-value]:text-left data-[state=open]:border-primary *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        active && "border-primary bg-primary-tint",
         className
       )}
       {...props}
@@ -129,6 +137,47 @@ function SelectItem({
   )
 }
 
+/**
+ * Пункт с описанием: слева `leading` (аватар / иконка), название жирным, под ним
+ * строка-подсказка mono (сколько смен и часов). В поле выбора показывается только
+ * название — в `ItemText` лежит оно одно. Выбранный пункт подсвечен `primary-tint`.
+ */
+function SelectRichItem({
+  className,
+  leading,
+  title,
+  description,
+  ...props
+}: Omit<React.ComponentProps<typeof SelectPrimitive.Item>, "children"> & {
+  leading?: React.ReactNode
+  title: string
+  description?: string
+}) {
+  return (
+    <SelectPrimitive.Item
+      data-slot="select-item"
+      className={cn(
+        "relative flex w-full cursor-default items-center gap-2.5 rounded-md py-1.5 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-surface-2 focus:text-text data-[state=checked]:bg-primary-tint data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        className
+      )}
+      {...props}
+    >
+      <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <CheckIcon className="pointer-events-none size-4 text-primary" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      {leading}
+      <span className="flex min-w-0 flex-col">
+        <SelectPrimitive.ItemText>{title}</SelectPrimitive.ItemText>
+        {description && (
+          <span className="tabular truncate text-[12px] text-ink-2">{description}</span>
+        )}
+      </span>
+    </SelectPrimitive.Item>
+  )
+}
+
 function SelectSeparator({
   className,
   ...props
@@ -186,6 +235,7 @@ export {
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectRichItem,
   SelectScrollDownButton,
   SelectScrollUpButton,
   SelectSeparator,
