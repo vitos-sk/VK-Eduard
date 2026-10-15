@@ -24,7 +24,6 @@ import { UnderlineField } from "@/components/ui/underline-field";
 interface ObjectFormProps {
   /** Не задан — форма створення, задан — редагування цього об'єкта. */
   site?: Site;
-  companyId: string;
   /** Підписане посилання на поточне фото об'єкта (якщо є). */
   photoUrl?: string | null;
   /** Категорії робіт компанії — з них обирається «Вид робіт» об'єкта. */
@@ -32,7 +31,7 @@ interface ObjectFormProps {
 }
 
 /** Форма `/objects/new` і `/objects/[id]/edit` — доступна тільки boss (RLS). */
-export function ObjectForm({ site, companyId, photoUrl = null, categories }: ObjectFormProps) {
+export function ObjectForm({ site, photoUrl = null, categories }: ObjectFormProps) {
   const t = useT();
   const STATUS_OPTIONS: readonly SegmentedOption<WorkStatus>[] = [
     { value: "not_started", label: t.status.not_started },
@@ -99,7 +98,7 @@ export function ObjectForm({ site, companyId, photoUrl = null, categories }: Obj
 
         <div className="mt-4 px-4 lg:px-0">
           <Ticket variant="flat">
-            <SitePhotoUploader companyId={companyId} siteId={createdSiteId} photoPath={null} photoUrl={null} />
+            <SitePhotoUploader siteId={createdSiteId} photoPath={null} photoUrl={null} />
           </Ticket>
         </div>
 
@@ -123,7 +122,6 @@ export function ObjectForm({ site, companyId, photoUrl = null, categories }: Obj
         {site && (
           <Ticket variant="flat">
             <SitePhotoUploader
-              companyId={companyId}
               siteId={site.id}
               photoPath={site.photo_path}
               photoUrl={photoUrl}

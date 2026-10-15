@@ -1,19 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
+import { useSiteCoverUpload } from "@/components/objects/useSiteCoverUpload";
 import { useT } from "@/lib/i18n/client";
-import { createClient } from "@/lib/supabase/client";
-import { uploadSitePhoto } from "@/modules/media/photos";
-import { createSignedUrlWithRetry } from "@/modules/media/signedUrls";
 import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface SitePhotoUploaderProps {
-  companyId: string;
   siteId: string;
   photoPath: string | null;
   photoUrl: string | null;
@@ -22,20 +19,19 @@ interface SitePhotoUploaderProps {
 
 /**
  * Фото об'єкта на формі: квадратне прев'ю, тап відкриває
- * камеру/галерею. Нове фото одразу вантажиться і заміняє попереднє —
- * старий файл прибирається з Storage вже після успішного заміщення
- * (`photos.ts`: спочатку новий шлях у базі, потім видалення старого),
- * щоб при невдачі не лишити об'єкт зовсім без фото.
+ * камеру/галерею. Нове фото одразу вантажиться і заміняє попереднє.
+ * Усе робить сервер (`modules/sites/photoActions.ts`): записує нове фото й лише
+ * після цього прибирає старе, тож при невдачі об'єкт не лишається без фото.
+ * Працює для будь-якого співробітника, не тільки для шефа й автора об'єкта.
  */
 export function SitePhotoUploader({
-  companyId,
   siteId,
   photoPath,
   photoUrl,
   className,
 }: SitePhotoUploaderProps) {
   const t = useT();
-  const supabase = useMemo(() => createClient(), []);
+  const uploadCover = useSiteCoverUpload(siteId);
   const [isUploading, setIsUploading] = useState(false);
   const [path, setPath] = useState(photoPath);
   const [url, setUrl] = useState(photoUrl);
@@ -44,18 +40,13 @@ export function SitePhotoUploader({
     if (!file) return;
 
     setIsUploading(true);
-    const previousPath = path;
 
     try {
-      const newPath = await uploadSitePhoto(supabase, { companyId, siteId }, file);
-      const signedUrl = await createSignedUrlWithRetry(supabase, "site-photos", newPath);
+      // Сервер сам записує фото обкладинкою і прибирає попереднє, тут лишається тільки показати результат.
+      const uploaded = await uploadCover(file);
 
-      setPath(newPath);
-      setUrl(signedUrl);
-
-      if (previousPath) {
-        await supabase.storage.from("site-photos").remove([previousPath]);
-      }
+      setPath(uploaded.path);
+      setUrl(uploaded.url);
     } catch {
       toast(t.objects.form.uploadPhotoError);
     } finally {

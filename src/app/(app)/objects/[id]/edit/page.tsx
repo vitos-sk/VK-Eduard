@@ -37,5 +37,5 @@ export default async function EditObjectPage({
       ) ?? null)
     : null;
 
-  return <ObjectForm site={site} companyId={profile.company_id} photoUrl={photoUrl} categories={categories} />;
+  return <ObjectForm site={site} photoUrl={photoUrl} categories={categories} />;
 }

@@ -9,5 +9,5 @@ export default async function NewObjectPage() {
   const supabase = await createClient();
   const categories = await getWorkCategories(supabase, profile.company_id);
 
-  return <ObjectForm companyId={profile.company_id} categories={categories} />;
+  return <ObjectForm categories={categories} />;
 }

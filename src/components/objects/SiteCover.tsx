@@ -1,20 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { Thumb } from "@/components/shared/Thumb";
 import { Button } from "@/components/ui/button";
+import { useSiteCoverUpload } from "@/components/objects/useSiteCoverUpload";
 import { useT } from "@/lib/i18n/client";
 import type { SiteScene } from "@/lib/siteScene";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { compressImage } from "@/modules/media/compress";
-import { createSignedUrlWithRetry } from "@/modules/media/signedUrls";
-import { createSitePhotoUpload, setSitePhoto } from "@/modules/sites/photoActions";
-import { SITE_PHOTOS_BUCKET } from "@/modules/sites/photoPath";
 
 interface SiteCoverProps {
   siteId: string;
@@ -31,7 +27,7 @@ interface SiteCoverProps {
  */
 export function SiteCover({ siteId, scene, photoUrl, className }: SiteCoverProps) {
   const t = useT();
-  const supabase = useMemo(() => createClient(), []);
+  const uploadCover = useSiteCoverUpload(siteId);
   const [isUploading, setIsUploading] = useState(false);
   // Новое фото показываем сразу, не дожидаясь, пока страница перечитается с сервера.
   const [localUrl, setLocalUrl] = useState<string | null>(null);
@@ -43,20 +39,7 @@ export function SiteCover({ siteId, scene, photoUrl, className }: SiteCoverProps
     setIsUploading(true);
 
     try {
-      const { blob } = await compressImage(file);
-
-      const upload = await createSitePhotoUpload(siteId);
-      if (upload.error !== null) throw new Error(upload.error);
-
-      const { error: uploadError } = await supabase.storage
-        .from(SITE_PHOTOS_BUCKET)
-        .uploadToSignedUrl(upload.path, upload.token, blob, { contentType: "image/webp" });
-      if (uploadError) throw uploadError;
-
-      const saved = await setSitePhoto(siteId, upload.path);
-      if (saved.error) throw new Error(saved.error);
-
-      setLocalUrl(await createSignedUrlWithRetry(supabase, SITE_PHOTOS_BUCKET, upload.path));
+      setLocalUrl((await uploadCover(file)).url);
     } catch {
       toast(t.objects.form.uploadPhotoError);
     } finally {
