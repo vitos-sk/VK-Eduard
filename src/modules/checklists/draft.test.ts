@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ITEMS_MAX, ITEM_MAX, TITLE_MAX, cleanItems, validateDraft } from "./draft";
+import { ITEMS_MAX, ITEM_MAX, TITLE_MAX, cleanItems, mapItemIds, validateDraft } from "./draft";
 
 const item = (text: string, id: string | null = null) => ({ id, text });
 
@@ -46,5 +46,29 @@ describe("validateDraft", () => {
     const result = validateDraft({ title: "н".repeat(TITLE_MAX + 10), items: [item("Бус")] });
 
     expect(result.ok && result.draft.title.length).toBe(TITLE_MAX);
+  });
+});
+
+describe("mapItemIds", () => {
+  it("n-й непустой строке достаётся n-й id; пустые строки пропускаются", () => {
+    const rows = [
+      { key: 1, text: "Бус" },
+      { key: 2, text: "   " },
+      { key: 3, text: "Пальник" },
+      { key: 4, text: "" },
+    ];
+
+    expect([...mapItemIds(rows, ["a", "b"])]).toEqual([
+      [1, "a"],
+      [3, "b"],
+    ]);
+  });
+
+  it("если id меньше, чем строк, лишние строки остаются без id", () => {
+    expect([...mapItemIds([{ key: 1, text: "Бус" }, { key: 2, text: "Пальник" }], ["a"])]).toEqual([[1, "a"]]);
+  });
+
+  it("нет строк — пустой результат", () => {
+    expect(mapItemIds([], []).size).toBe(0);
   });
 });

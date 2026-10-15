@@ -20,10 +20,19 @@ export interface SaveChecklistInput {
   items: DraftItem[];
 }
 
-export type SaveChecklistState = { error: string | null; id: string | null };
+/** `itemIds` — id сохранённых пунктов в порядке списка: форма запоминает их, чтобы следующее автосохранение правило те же пункты. */
+export type SaveChecklistState = { error: string | null; id: string | null; itemIds: string[] };
 export type SimpleState = { error: string | null };
 
 type Texts = Awaited<ReturnType<typeof getT>>;
+type ServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/** Id пунктов чеклиста в порядке списка (`sort_order`). */
+async function orderedItemIds(supabase: ServerClient, checklistId: string): Promise<string[]> {
+  const { data } = await supabase.from("checklist_items").select("id").eq("checklist_id", checklistId).order("sort_order", { ascending: true });
+
+  return (data ?? []).map((row) => row.id);
+}
 
 /** Проверка формы + понятное сообщение об ошибке на языке интерфейса. */
 function checkDraft(input: SaveChecklistInput, t: Texts): { draft: ChecklistDraft } | { error: string } {
@@ -41,10 +50,10 @@ function checkDraft(input: SaveChecklistInput, t: Texts): { draft: ChecklistDraf
 export async function createChecklist(input: SaveChecklistInput): Promise<SaveChecklistState> {
   const t = await getT();
   const profile = await getProfile();
-  if (!profile) return { error: t.auth.noProfile, id: null };
+  if (!profile) return { error: t.auth.noProfile, id: null, itemIds: [] };
 
   const checked = checkDraft(input, t);
-  if ("error" in checked) return { error: checked.error, id: null };
+  if ("error" in checked) return { error: checked.error, id: null, itemIds: [] };
 
   const supabase = await createClient();
   const { data: list, error } = await supabase
@@ -53,7 +62,7 @@ export async function createChecklist(input: SaveChecklistInput): Promise<SaveCh
     .select("id")
     .single();
 
-  if (error || !list) return { error: t.checklists.form.errors.save, id: null };
+  if (error || !list) return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
 
   const { error: itemsError } = await supabase
     .from("checklist_items")
@@ -63,13 +72,13 @@ export async function createChecklist(input: SaveChecklistInput): Promise<SaveCh
     // Без пунктов чеклист бессмысленен, а повторное «Зберегти» создало бы второй: убираем заготовку.
     await supabase.from("checklists").delete().eq("id", list.id);
 
-    return { error: t.checklists.form.errors.save, id: null };
+    return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
   }
 
   revalidatePath("/checklists");
   revalidatePath("/");
 
-  return { error: null, id: list.id };
+  return { error: null, id: list.id, itemIds: await orderedItemIds(supabase, list.id) };
 }
 
 /**
@@ -79,10 +88,10 @@ export async function createChecklist(input: SaveChecklistInput): Promise<SaveCh
 export async function updateChecklist(id: string, input: SaveChecklistInput): Promise<SaveChecklistState> {
   const t = await getT();
   const profile = await getProfile();
-  if (!profile) return { error: t.auth.noProfile, id: null };
+  if (!profile) return { error: t.auth.noProfile, id: null, itemIds: [] };
 
   const checked = checkDraft(input, t);
-  if ("error" in checked) return { error: checked.error, id: null };
+  if ("error" in checked) return { error: checked.error, id: null, itemIds: [] };
 
   const supabase = await createClient();
   const { data: updated, error } = await supabase
@@ -94,11 +103,11 @@ export async function updateChecklist(id: string, input: SaveChecklistInput): Pr
     .select("id")
     .maybeSingle();
 
-  if (error) return { error: t.checklists.form.errors.save, id: null };
-  if (!updated) return { error: t.checklists.form.errors.notFound, id: null };
+  if (error) return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
+  if (!updated) return { error: t.checklists.form.errors.notFound, id: null, itemIds: [] };
 
   const { data: existing, error: existingError } = await supabase.from("checklist_items").select("id").eq("checklist_id", id);
-  if (existingError) return { error: t.checklists.form.errors.save, id: null };
+  if (existingError) return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
 
   const existingIds = new Set((existing ?? []).map((row) => row.id));
   const kept = checked.draft.items.map((item, index) => ({ item, index })).filter(({ item }) => item.id !== null && existingIds.has(item.id));
@@ -108,7 +117,7 @@ export async function updateChecklist(id: string, input: SaveChecklistInput): Pr
 
   if (removed.length > 0) {
     const { error: deleteError } = await supabase.from("checklist_items").delete().in("id", removed);
-    if (deleteError) return { error: t.checklists.form.errors.save, id: null };
+    if (deleteError) return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
   }
 
   if (kept.length > 0) {
@@ -116,20 +125,20 @@ export async function updateChecklist(id: string, input: SaveChecklistInput): Pr
     const { error: upsertError } = await supabase
       .from("checklist_items")
       .upsert(kept.map(({ item, index }) => ({ id: item.id as string, checklist_id: id, text: item.text, sort_order: index })), { onConflict: "id" });
-    if (upsertError) return { error: t.checklists.form.errors.save, id: null };
+    if (upsertError) return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
   }
 
   if (added.length > 0) {
     const { error: insertError } = await supabase
       .from("checklist_items")
       .insert(added.map(({ item, index }) => ({ checklist_id: id, text: item.text, sort_order: index })));
-    if (insertError) return { error: t.checklists.form.errors.save, id: null };
+    if (insertError) return { error: t.checklists.form.errors.save, id: null, itemIds: [] };
   }
 
   revalidatePath("/checklists");
   revalidatePath(`/checklists/${id}`);
 
-  return { error: null, id };
+  return { error: null, id, itemIds: await orderedItemIds(supabase, id) };
 }
 
 /** Удаляет свой чеклист (или свою копию). Копии, разосланные коллегам, остаются у них. */

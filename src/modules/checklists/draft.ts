@@ -40,3 +40,23 @@ export function validateDraft(input: ChecklistDraft): DraftResult {
 
   return { ok: true, draft: { title, items } };
 }
+
+/**
+ * Какие id пунктов вернул сервер для каких строк формы. Сервер сохраняет только непустые строки и отдаёт id
+ * в том же порядке: n-й непустой строке достаётся n-й id. Нужно, чтобы следующее автосохранение правило те же пункты,
+ * а не создавало их заново (иначе сбросились бы галочки).
+ */
+export function mapItemIds<K>(rows: readonly { key: K; text: string }[], itemIds: readonly string[]): Map<K, string> {
+  const result = new Map<K, string>();
+  let next = 0;
+
+  for (const row of rows) {
+    if (squash(row.text) === "") continue;
+    if (next >= itemIds.length) break;
+
+    result.set(row.key, itemIds[next]);
+    next += 1;
+  }
+
+  return result;
+}

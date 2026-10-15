@@ -22,6 +22,7 @@ export default async function EditChecklistPage({ params }: { params: Promise<{ 
     <ChecklistForm
       key={detail.id}
       sites={sites}
+      defaultTitle={detail.title}
       initial={{ id: detail.id, title: detail.title, siteId: detail.siteId, items: detail.items.map((item) => ({ id: item.id, text: item.text })) }}
     />
   );

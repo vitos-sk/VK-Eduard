@@ -550,8 +550,16 @@ export const nl: Dict = {
           items: ["Afval opruimen", "Resultaat fotograferen", "Handtekening klant", "Rapport in de app", "Sleutels teruggeven"],
         },
       ],
-      save: "Opslaan",
-      saveAndSend: "Opslaan en versturen",
+      defaultTitle: "Checklist · {date}",
+      autosave: {
+        needsItem: "Voeg minstens één punt toe en de checklist wordt vanzelf opgeslagen",
+        needsTitle: "Vul een naam in en de checklist wordt vanzelf opgeslagen",
+        saving: "Opslaan…",
+        saved: "Opgeslagen",
+        error: "Opslaan mislukt",
+        retry: "Opnieuw",
+        leaveError: "De laatste wijzigingen zijn niet opgeslagen. Controleer je verbinding",
+      },
       errors: {
         title: "Vul een naam in",
         items: "Voeg minstens één punt toe",

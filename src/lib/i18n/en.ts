@@ -550,8 +550,16 @@ export const en: Dict = {
           items: ["Clean up the waste", "Photograph the result", "Client signature", "Report in the app", "Return the keys"],
         },
       ],
-      save: "Save",
-      saveAndSend: "Save and send",
+      defaultTitle: "Checklist · {date}",
+      autosave: {
+        needsItem: "Add at least one item and the checklist saves itself",
+        needsTitle: "Enter a name and the checklist saves itself",
+        saving: "Saving…",
+        saved: "Saved",
+        error: "Couldn't save",
+        retry: "Retry",
+        leaveError: "The latest changes weren't saved. Check your connection",
+      },
       errors: {
         title: "Enter a name",
         items: "Add at least one item",
