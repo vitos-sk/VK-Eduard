@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { fmt } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 import { findChatId } from "@/modules/chats/queries";
@@ -161,8 +162,9 @@ export async function deleteChecklist(id: string): Promise<SimpleState> {
 export type ToggleState = { error: string | null; done: number; total: number };
 
 /**
- * Отмечает или снимает пункт в своём чеклисте. Когда отмечен последний пункт присланного чеклиста,
- * тому, кто его прислал, уходит уведомление «чеклист виконано».
+ * Отмечает или снимает пункт. Отмечать могут оба участника чата, где лежит карточка чеклиста: владелец копии
+ * и тот, кто её прислал. Когда владелец отметил последний пункт присланного чеклиста, приславшему уходит
+ * уведомление «чеклист виконано» (если отметил приславший, уведомлять некого).
  */
 export async function setItemDone(itemId: string, done: boolean): Promise<ToggleState> {
   const t = await getT();
@@ -172,20 +174,42 @@ export async function setItemDone(itemId: string, done: boolean): Promise<Toggle
   if (!profile) return failed;
 
   const supabase = await createClient();
-  const { data: item, error } = await supabase
+
+  // Свой пункт: обычное обновление (RLS пускает только владельца).
+  const { data: own, error } = await supabase
     .from("checklist_items")
     .update({ done_at: done ? new Date().toISOString() : null })
     .eq("id", itemId)
     .select("checklist_id")
     .maybeSingle();
+  if (error) return failed;
 
-  // RLS: чужой пункт не обновится, и строки в ответе не будет.
-  if (error || !item) return failed;
+  let checklistId = own?.checklist_id ?? null;
+
+  // Не владелец (отправитель отмечает пункт копии коллеги в чате). Доступ решает база: RLS показывает пункт только
+  // владельцу и участнику чата, где лежит карточка этого чеклиста. Если пункт виден, меняем ровно одну колонку
+  // `done_at` этого пункта сервисным ключом (обычная политика записи пускает только владельца).
+  if (!checklistId) {
+    const { data: visible, error: visibleError } = await supabase
+      .from("checklist_items")
+      .select("id, checklist_id")
+      .eq("id", itemId)
+      .maybeSingle();
+    if (visibleError || !visible) return failed;
+
+    const { error: adminError } = await createAdminClient()
+      .from("checklist_items")
+      .update({ done_at: done ? new Date().toISOString() : null })
+      .eq("id", visible.id);
+    if (adminError) return failed;
+
+    checklistId = visible.checklist_id;
+  }
 
   const { data: list, error: listError } = await supabase
     .from("checklists")
     .select("id, title, owner_id, sent_by, checklist_items(done_at)")
-    .eq("id", item.checklist_id)
+    .eq("id", checklistId)
     .maybeSingle();
   if (listError || !list) return failed;
 

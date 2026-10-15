@@ -575,7 +575,7 @@ export const en: Dict = {
       mineLine: "My checklist",
       fromLine: "from {name}",
       readOnlyLine: "Checklist · {name}",
-      readOnlyHint: "Only the owner ticks items",
+      readOnlyHint: "This is a colleague's checklist: they will see your ticks too",
       send: "Send",
       edit: "Edit",
       delete: "Delete",

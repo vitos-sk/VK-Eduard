@@ -285,7 +285,8 @@ function ChecklistCard({
   const [pendingMarks, setPendingMarks] = useState<Record<string, boolean>>({});
   const busy = useRef(new Set<string>());
 
-  // Копия принадлежит получателю: если она моя, отмечаю пункты прямо здесь; если нет, вижу прогресс коллеги.
+  // Копия принадлежит получателю. Пункты в карточке отмечают оба участника чата; от того, чья копия, зависят
+  // только подписи («Виконано 3 з 7» у получателя, «Олег К.: виконано 3 з 7» у приславшего) и метка «Нове».
   const isMyCopy = list?.ownerId === meId;
 
   async function handleToggle(itemId: string, doneNow: boolean) {
@@ -406,23 +407,16 @@ function ChecklistCard({
             <ul className="mt-2 border-t border-dashed border-perf">
               {items.map((item) => (
                 <li key={item.id} className="not-first:border-t not-first:border-dashed not-first:border-perf">
-                  {isMyCopy ? (
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={item.done}
-                      onClick={() => void handleToggle(item.id, item.done)}
-                      className="flex min-h-11 w-full items-center gap-3 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring"
-                    >
-                      <CheckMark checked={item.done} />
-                      <span className={cn("min-w-0 flex-1 text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
-                    </button>
-                  ) : (
-                    <div className="flex min-h-10 items-center gap-3">
-                      <CheckMark checked={item.done} />
-                      <span className={cn("min-w-0 flex-1 text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={item.done}
+                    onClick={() => void handleToggle(item.id, item.done)}
+                    className="flex min-h-11 w-full items-center gap-3 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring"
+                  >
+                    <CheckMark checked={item.done} />
+                    <span className={cn("min-w-0 flex-1 text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                  </button>
                 </li>
               ))}
             </ul>

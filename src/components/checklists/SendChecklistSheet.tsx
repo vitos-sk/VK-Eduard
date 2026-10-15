@@ -16,6 +16,7 @@ import { CheckMark } from "@/components/ui/checkbox";
 import { Radio, RadioGroup } from "@/components/ui/radio";
 import { ResponsiveSheet, SheetTitle } from "@/components/ui/responsive-sheet";
 import { fmt, pluralize } from "@/lib/format";
+import { openExternal } from "@/lib/openExternal";
 import { useLocale, useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Colleague } from "@/modules/chats/queries";
@@ -120,10 +121,7 @@ export function SendChecklistSheet({ open, onOpenChange, checklist, colleagues }
   }
 
   function handleOpenWhatsApp() {
-    const url = whatsAppUrl(buildMessage());
-
-    // Если браузер не дал открыть новое окно, переходим в этом же: человек вернётся в приложение кнопкой «назад».
-    if (!window.open(url, "_blank", "noopener,noreferrer")) window.location.href = url;
+    openExternal(whatsAppUrl(buildMessage()));
   }
 
   async function handleCopyLink() {

@@ -613,7 +613,7 @@ export const uk = {
       mineLine: "Мій чеклист",
       fromLine: "від {name}",
       readOnlyLine: "Чеклист · {name}",
-      readOnlyHint: "Відмічає власник чеклиста",
+      readOnlyHint: "Це чеклист колеги: ваші відмітки він теж побачить",
       send: "Надіслати",
       edit: "Редагувати",
       delete: "Видалити",

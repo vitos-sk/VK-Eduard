@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getT } from "@/lib/i18n/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 import { notifyUser } from "@/modules/notifications/notify";
@@ -86,6 +87,7 @@ export async function deleteChatChecklist(messageId: string): Promise<DeleteCard
 
   const supabase = await createClient();
 
+  // Доступ решает база: RLS показывает сообщение только двум участникам чата. Видно — значит, удалять можно.
   const { data: message } = await supabase
     .from("chat_messages")
     .select("id, checklist_id")
@@ -94,8 +96,14 @@ export async function deleteChatChecklist(messageId: string): Promise<DeleteCard
     .maybeSingle();
   if (!message) return { error: t.chats.card.deleteError };
 
-  // Сначала карточка: если права на удаление нет (миграция не применена), копию не трогаем.
-  const { data: removed, error } = await supabase.from("chat_messages").delete().eq("id", message.id).select("id");
+  // Сама карточка удаляется сервисным ключом: обычной политики на удаление сообщений нет (текст не удаляется никогда).
+  // Сначала карточка: если не вышло, копию не трогаем.
+  const { data: removed, error } = await createAdminClient()
+    .from("chat_messages")
+    .delete()
+    .eq("id", message.id)
+    .eq("kind", "checklist")
+    .select("id");
   if (error || !removed || removed.length === 0) return { error: t.chats.card.deleteError };
 
   if (message.checklist_id) {

@@ -25,7 +25,7 @@ import type { ChecklistDetail } from "@/modules/checklists/queries";
 
 interface ChecklistViewProps {
   detail: ChecklistDetail;
-  /** Свой чеклист (можно отмечать, править, отправлять). Копию коллеги, открытую из чата, можно только смотреть. */
+  /** Свой чеклист: править, удалять, отправлять. Копию коллеги, открытую из чата, можно только отмечать (это разрешено обоим). */
   isOwner: boolean;
   colleagues: Colleague[];
   /** Открыть лист «Надіслати» сразу (после «Зберегти й надіслати»). */
@@ -44,6 +44,13 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [sendOpen, setSendOpen] = useState(openSend);
+
+  function handleSendOpenChange(open: boolean) {
+    setSendOpen(open);
+
+    // Пришли с `?send=1` («Надіслати» в форме): закрыли окно — убираем параметр, чтобы возврат на страницу его не открывал снова.
+    if (!open && openSend) router.replace(`/checklists/${detail.id}`);
+  }
   // Пункты, по которым запрос ещё идёт: повторное нажатие в это время игнорируем, чтобы ответы не перепутались.
   const busy = useRef(new Set<string>());
 
@@ -51,7 +58,7 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
   const complete = isComplete(progress);
 
   async function handleToggle(itemId: string) {
-    if (!isOwner || busy.current.has(itemId)) return;
+    if (busy.current.has(itemId)) return;
 
     const before = items.find((item) => item.id === itemId);
     if (!before) return;
@@ -168,19 +175,15 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
 
               return (
                 <TicketSection key={item.id} className="p-0">
-                  {isOwner ? (
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={isDone}
-                      onClick={() => handleToggle(item.id)}
-                      className="flex min-h-12 w-full items-center gap-3 px-3.5 py-2 text-left outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {text}
-                    </button>
-                  ) : (
-                    <div className="flex min-h-12 items-center gap-3 px-3.5 py-2">{text}</div>
-                  )}
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={isDone}
+                    onClick={() => handleToggle(item.id)}
+                    className="flex min-h-12 w-full items-center gap-3 px-3.5 py-2 text-left outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                  >
+                    {text}
+                  </button>
                 </TicketSection>
               );
             })}
@@ -203,7 +206,7 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
         <>
           <SendChecklistSheet
             open={sendOpen}
-            onOpenChange={setSendOpen}
+            onOpenChange={handleSendOpenChange}
             checklist={{
               id: detail.id,
               title: detail.title,
