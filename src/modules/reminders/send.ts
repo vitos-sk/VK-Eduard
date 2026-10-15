@@ -5,7 +5,7 @@ import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { brusselsClock, isReminderHour, pickRecipients, type Candidate } from "./schedule";
-import { REMINDER_URL, reminderText } from "./texts";
+import { REMINDER_URL, reminderText, testText } from "./texts";
 
 export interface ReminderResult {
   /** Почему ничего не отправлено, если не отправлено. */
@@ -35,17 +35,21 @@ function configureWebPush() {
 /**
  * Рассылает напоминание «внесите отчёт». Вызывается планировщиком (см. `supabase/cron-report-reminder.sql`).
  *
- * `force` — игнорировать «сейчас не 18:00» (для проверки руками); `dryRun` — ничего не слать, только посчитать.
+ * `force` — игнорировать «сейчас не 18:00» (для проверки руками); `dryRun` — ничего не слать, только посчитать;
+ * `test` — слать тестовое уведомление всем подписанным активным (без учёта «уже внёс отчёт» и «уже слали сегодня»),
+ * при этом `last_sent_on` не трогается — настоящее вечернее напоминание не пропадёт.
  */
 export async function sendReportReminders(
   now: Date,
-  options: { force?: boolean; dryRun?: boolean } = {},
+  options: { force?: boolean; dryRun?: boolean; test?: boolean } = {},
 ): Promise<ReminderResult> {
   const { dateKey } = brusselsClock(now);
   const dryRun = Boolean(options.dryRun);
   const empty = { date: dateKey, sent: 0, failed: 0, removed: 0, dryRun };
 
-  if (!options.force && !isReminderHour(now)) {
+  const isTest = Boolean(options.test);
+
+  if (!isTest && !options.force && !isReminderHour(now)) {
     return { ...empty, skipped: "not-18-brussels" };
   }
 
@@ -73,6 +77,7 @@ export async function sendReportReminders(
   const targets = subs.filter((sub) => {
     const profile = profileById.get(sub.user_id);
     if (!profile) return false;
+    if (isTest) return profile.is_active;
 
     const candidate: Candidate = {
       userId: sub.user_id,
@@ -97,8 +102,12 @@ export async function sendReportReminders(
 
   await Promise.all(
     targets.map(async (sub) => {
-      const text = reminderText(sub.locale);
-      const payload = JSON.stringify({ title: text.title, body: text.body, url: REMINDER_URL, tag: "report-reminder" });
+      const text = isTest ? testText(sub.locale) : reminderText(sub.locale);
+      const payload = JSON.stringify(
+        isTest
+          ? { title: text.title, body: text.body, url: "/", tag: "report-reminder-test" }
+          : { title: text.title, body: text.body, url: REMINDER_URL, tag: "report-reminder" },
+      );
 
       try {
         await webpush.sendNotification(
@@ -119,7 +128,7 @@ export async function sendReportReminders(
     }),
   );
 
-  if (delivered.length) {
+  if (delivered.length && !isTest) {
     await admin.from("push_subscriptions").update({ last_sent_on: dateKey }).in("id", delivered);
   }
   if (gone.length) {

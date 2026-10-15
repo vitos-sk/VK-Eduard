@@ -14,3 +14,14 @@ const TEXTS: Record<Locale, { title: string; body: string }> = {
 export function reminderText(locale: string): { title: string; body: string } {
   return TEXTS[isLocale(locale) ? locale : DEFAULT_LOCALE];
 }
+
+const TEST_TEXTS: Record<Locale, { title: string; body: string }> = {
+  uk: { title: "VK group", body: "Це тестове сповіщення" },
+  en: { title: "VK group", body: "This is a test notification" },
+  nl: { title: "VK group", body: "Dit is een testmelding" },
+};
+
+/** Проверка доставки руками (`?test=1`): понятно, что это не настоящее напоминание. */
+export function testText(locale: string): { title: string; body: string } {
+  return TEST_TEXTS[isLocale(locale) ? locale : DEFAULT_LOCALE];
+}

@@ -22,7 +22,7 @@ function isAuthorized(request: Request): boolean {
  * Ежедневное напоминание про отчёт. Зовёт планировщик Supabase (`pg_cron`) с заголовком
  * `Authorization: Bearer <CRON_SECRET>`; в браузере и без секрета не работает.
  *
- * Для проверки руками: `?dry=1` — только посчитать, кому ушло бы; `?force=1` — игнорировать «сейчас не 18:00».
+ * Для проверки руками: `?dry=1` — только посчитать, кому ушло бы; `?force=1` — игнорировать «сейчас не 18:00»; `?test=1` — тестовое уведомление всем подписанным.
  */
 async function handle(request: Request) {
   if (!process.env.CRON_SECRET) {
@@ -38,6 +38,7 @@ async function handle(request: Request) {
     const result = await sendReportReminders(new Date(), {
       force: params.get("force") === "1",
       dryRun: params.get("dry") === "1",
+      test: params.get("test") === "1",
     });
 
     return NextResponse.json(result);
