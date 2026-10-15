@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ListChecks, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { ChecklistRow } from "@/components/checklists/ChecklistRow";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
@@ -19,9 +22,21 @@ const filterCodec = {
 };
 
 /** `/checklists`: свои и присланные чеклисты, фильтры-чипсы сверху, кнопка «Новий». */
-export function ChecklistsScreen({ entries }: { entries: ChecklistListEntry[] }) {
+export function ChecklistsScreen({ entries, justDeleted = false }: { entries: ChecklistListEntry[]; justDeleted?: boolean }) {
   const t = useT();
   const c = t.checklists;
+  const router = useRouter();
+
+  // Пришли после удаления чеклиста (`?deleted=1`): сообщаем об этом один раз и убираем параметр, чтобы обновление страницы не повторяло.
+  const announced = useRef(false);
+  useEffect(() => {
+    if (!justDeleted || announced.current) return;
+
+    announced.current = true;
+    toast(c.view.deleted);
+    router.replace("/checklists");
+  }, [justDeleted, c.view.deleted, router]);
+
   const [filter, setFilter] = useSessionState<ChecklistFilter>("checklists-filter", "all", filterCodec);
 
   const counts = countByFilter(entries);

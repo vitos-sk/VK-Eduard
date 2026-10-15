@@ -11,6 +11,12 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// Настоящий redirect() прерывает выполнение исключением; тест узнаёт его по тексту.
+vi.mock("next/navigation", () => ({
+  redirect: (path: string) => {
+    throw new Error(`REDIRECT:${path}`);
+  },
+}));
 vi.mock("@/lib/i18n/server", () => ({ getT: async () => (await import("@/lib/i18n/dictionaries")).getDictionary("uk") }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => state.user }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => state.admin }));
@@ -18,7 +24,7 @@ vi.mock("@/modules/auth/session", () => ({ getProfile: async () => state.profile
 vi.mock("@/modules/notifications/notify", () => ({ notifyUser: state.notifyUser }));
 vi.mock("@/modules/chats/queries", () => ({ findChatId: async () => "chat-1" }));
 
-import { setItemDone } from "./actions";
+import { deleteChecklist, setItemDone } from "./actions";
 
 const t = getDictionary("uk");
 
@@ -352,5 +358,31 @@ describe("acceptChecklist", () => {
     const result = await acceptChecklist("8fa2c91d0b3e7a64");
 
     expect(result.error).toBe(t.checklists.landing.error);
+  });
+});
+
+describe("deleteChecklist", () => {
+  it("после удаления переводит на «Чеклисти», а не оставляет на странице удалённого чеклиста", async () => {
+    const client = scriptedClient((call) => (call.op === "delete" ? ok([{ id: "L" }]) : fail("неожиданный запрос")));
+    state.user = client;
+
+    await expect(deleteChecklist("L")).rejects.toThrow("REDIRECT:/checklists?deleted=1");
+    expect(client.calls[0]).toMatchObject({ table: "checklists", op: "delete", filters: { id: "L", owner_id: "me" } });
+  });
+
+  it("чужой чеклист (ничего не удалилось) — ошибка, без перехода", async () => {
+    state.user = scriptedClient(() => ok([]));
+
+    const result = await deleteChecklist("L");
+
+    expect(result.error).toBe(t.checklists.view.deleteError);
+  });
+
+  it("ошибка базы — ошибка, без перехода", async () => {
+    state.user = scriptedClient(() => fail());
+
+    const result = await deleteChecklist("L");
+
+    expect(result.error).toBe(t.checklists.view.deleteError);
   });
 });

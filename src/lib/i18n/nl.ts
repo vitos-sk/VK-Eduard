@@ -497,6 +497,15 @@ export const nl: Dict = {
     done: "Klaar",
   },
 
+  errorPages: {
+    notFoundTitle: "Pagina niet gevonden",
+    notFoundHint: "Misschien is ze verwijderd of is de link verouderd",
+    goHome: "Naar Home",
+    errorTitle: "Er is iets misgegaan",
+    errorHint: "Probeer het opnieuw. Helpt dat niet, controleer dan je verbinding",
+    retry: "Opnieuw proberen",
+  },
+
   checklists: {
     title: "Checklists",
     new: "Nieuw",

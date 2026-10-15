@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { fmt } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -142,7 +143,12 @@ export async function updateChecklist(id: string, input: SaveChecklistInput): Pr
   return { error: null, id, itemIds: await orderedItemIds(supabase, id) };
 }
 
-/** Удаляет свой чеклист (или свою копию). Копии, разосланные коллегам, остаются у них. */
+/**
+ * Удаляет свой чеклист (или свою копию). Копии, разосланные коллегам, остаются у них.
+ * Успех заканчивается переходом на «Чеклисти» (`?deleted=1` — показать «Видалено»): страницы удалённого
+ * чеклиста уже нет, и без перехода сервер перерисовал бы именно её, то есть показал «не найдено».
+ * Поэтому при успехе функция ничего не возвращает, а возвращает только ошибку.
+ */
 export async function deleteChecklist(id: string): Promise<SimpleState> {
   const t = await getT();
   const profile = await getProfile();
@@ -155,8 +161,7 @@ export async function deleteChecklist(id: string): Promise<SimpleState> {
 
   revalidatePath("/checklists");
   revalidatePath("/");
-
-  return { error: null };
+  redirect("/checklists?deleted=1");
 }
 
 export type ToggleState = { error: string | null; done: number; total: number };

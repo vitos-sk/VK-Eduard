@@ -89,16 +89,11 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
     setIsDeleting(true);
 
     startDeleteTransition(async () => {
+      // Успех: сервер сам переводит на «Чеклисти». Сюда управление возвращается только при ошибке.
       const result = await deleteChecklist(detail.id);
 
-      if (result.error) {
-        setIsDeleting(false);
-        toast(result.error);
-        return;
-      }
-
-      toast(v.deleted);
-      router.push("/checklists");
+      setIsDeleting(false);
+      if (result?.error) toast(result.error);
     });
   }
 

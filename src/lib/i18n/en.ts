@@ -497,6 +497,15 @@ export const en: Dict = {
     done: "Done",
   },
 
+  errorPages: {
+    notFoundTitle: "Page not found",
+    notFoundHint: "It may have been deleted, or the link is out of date",
+    goHome: "Go to Home",
+    errorTitle: "Something went wrong",
+    errorHint: "Please try again. If it doesn't help, check your connection",
+    retry: "Try again",
+  },
+
   checklists: {
     title: "Checklists",
     new: "New",
