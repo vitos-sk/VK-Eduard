@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { PeriodNavigator } from "@/components/hours/PeriodNavigator";
+import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import {
   addMonthsSafe,
   useCompanyMonthEntries,
@@ -31,19 +31,20 @@ export function ObjectHoursCard({ companyId, site, className }: ObjectHoursCardP
     [site, entries],
   );
 
-  const monthTitle = `${t.months.nominative[month.getMonth()]} ${month.getFullYear()}`;
+  // Календарь отдаёт любой день месяца; тот же месяц повторно не грузим.
+  const handleMonthChange = (next: Date) =>
+    setMonth((current) =>
+      current.getFullYear() === next.getFullYear() && current.getMonth() === next.getMonth()
+        ? current
+        : addMonthsSafe(next, 0),
+    );
 
   return (
     <Ticket asChild variant="flat"><section className={cn(isLoading && "opacity-70",
         className,)}>
       <h2 className="text-[15px] font-semibold">{s.detail.periodTitle}</h2>
 
-      <PeriodNavigator
-        className="mt-3"
-        title={monthTitle}
-        onPrev={() => setMonth((m) => addMonthsSafe(m, -1))}
-        onNext={() => setMonth((m) => addMonthsSafe(m, 1))}
-      />
+      <MonthNavigator className="mt-3" date={month} onChange={handleMonthChange} />
 
       <dl className="perf-t mt-3 grid grid-cols-2 gap-3 pt-3">
         <div>
