@@ -25,14 +25,26 @@ interface ObjectMenuProps {
   siteId: string;
   siteName: string;
   isArchived: boolean;
+  /** Пункт «Редагувати». На детальній сторінці олівець уже є в шапці — там `false`. */
+  showEdit?: boolean;
+  /** Куди йти після видалення. Без нього — лишаємось і оновлюємо список. */
+  afterDeleteHref?: string;
   className?: string;
 }
 
 /**
  * Меню «⋮» об'єкта для boss: редагувати / архівувати / видалити (з модалкою
- * підтвердження). Живе поруч із карточкою, а не всередині її посилання.
+ * підтвердження). Живе поруч із карточкою, а не всередині її посилання, і в
+ * шапці детальної сторінки об'єкта.
  */
-export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMenuProps) {
+export function ObjectMenu({
+  siteId,
+  siteName,
+  isArchived,
+  showEdit = true,
+  afterDeleteHref,
+  className,
+}: ObjectMenuProps) {
   const t = useT();
   const s = t.objectsUi;
   const router = useRouter();
@@ -65,6 +77,12 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
       }
 
       setDeleteOpen(false);
+
+      if (afterDeleteHref) {
+        router.push(afterDeleteHref);
+        return;
+      }
+
       router.refresh();
     });
   };
@@ -85,12 +103,14 @@ export function ObjectMenu({ siteId, siteName, isArchived, className }: ObjectMe
         </PopoverTrigger>
 
         <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
-          <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
-            <Link href={`/objects/${siteId}/edit`} onClick={() => setMenuOpen(false)}>
-              <Pencil className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
-              {s.menu.edit}
-            </Link>
-          </Button>
+          {showEdit && (
+            <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
+              <Link href={`/objects/${siteId}/edit`} onClick={() => setMenuOpen(false)}>
+                <Pencil className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
+                {s.menu.edit}
+              </Link>
+            </Button>
+          )}
 
           <Button
             variant="ghost"

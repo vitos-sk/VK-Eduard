@@ -259,15 +259,7 @@ export const nl: Dict = {
       emptyHint: "Rapporten verschijnen hier zodra je tijd registreert op dit project",
       emptyTitleAll: "Nog geen rapporten voor dit project",
       edit: "Bewerken",
-      archive: "Project archiveren",
-      restore: "Project terugzetten",
       openInMaps: "Route plannen",
-      delete: "Project verwijderen",
-      deleteConfirmTitle: "Project verwijderen?",
-      deleteConfirmBody:
-        "Het project verdwijnt voorgoed. Rapporten waarin het staat blijven bestaan, maar verliezen hun koppeling ermee.",
-      deleteConfirmAction: "Verwijderen",
-      deleteError: "Project verwijderen mislukt. Probeer het opnieuw",
     },
     form: {
       createTitle: "Nieuw project",

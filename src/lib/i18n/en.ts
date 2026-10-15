@@ -259,15 +259,7 @@ export const en: Dict = {
       emptyHint: "Reports will appear here as soon as you clock in on this site",
       emptyTitleAll: "No reports for this site yet",
       edit: "Edit",
-      archive: "Archive site",
-      restore: "Restore site",
       openInMaps: "Get directions",
-      delete: "Delete site",
-      deleteConfirmTitle: "Delete the site?",
-      deleteConfirmBody:
-        "The site will be gone for good. Reports that mention it will stay but lose their link to it.",
-      deleteConfirmAction: "Delete",
-      deleteError: "Couldn't delete the site. Please try again",
     },
     form: {
       createTitle: "New site",

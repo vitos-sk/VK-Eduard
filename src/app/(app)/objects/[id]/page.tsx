@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
-import { ObjectArchiveButton } from "@/components/objects/ObjectArchiveButton";
-import { ObjectDeleteButton } from "@/components/objects/ObjectDeleteButton";
 import { ObjectHoursCard } from "@/components/objects/ObjectHoursCard";
+import { ObjectMenu } from "@/components/objects/ObjectMenu";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -74,13 +73,27 @@ export default async function ObjectDetailPage({
         href="/objects"
         action={
           canEdit && (
-            <Link
-              href={`/objects/${site.id}/edit`}
-              aria-label={t.objects.detail.edit}
-              className="relative flex size-8 items-center justify-center rounded-md text-text outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              <Pencil className="size-5" strokeWidth={1.9} aria-hidden />
-            </Link>
+            // Слот шапки — 32px, а кнопок дві: притискаємо їх до правого краю,
+            // щоб «⋮» виступало вліво, а заголовок лишався по центру.
+            <div className="flex w-8 justify-end">
+              {isBoss && (
+                <ObjectMenu
+                  siteId={site.id}
+                  siteName={site.name}
+                  isArchived={site.archived_at !== null}
+                  showEdit={false}
+                  afterDeleteHref="/objects"
+                  className="text-text"
+                />
+              )}
+              <Link
+                href={`/objects/${site.id}/edit`}
+                aria-label={t.objects.detail.edit}
+                className="relative flex size-8 shrink-0 items-center justify-center rounded-md text-text outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <Pencil className="size-5" strokeWidth={1.9} aria-hidden />
+              </Link>
+            </div>
           )
         }
       />
@@ -134,13 +147,6 @@ export default async function ObjectDetailPage({
           </Ticket>
 
           {isBoss && <ObjectHoursCard companyId={profile.company_id} site={site} />}
-
-          {isBoss && (
-            <div className="flex flex-col gap-2">
-              <ObjectArchiveButton siteId={site.id} isArchived={site.archived_at !== null} />
-              <ObjectDeleteButton siteId={site.id} />
-            </div>
-          )}
         </div>
 
         <div className="mt-[18px] lg:mt-0">
