@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { clearOfflineCache } from "@/lib/offline/cache";
+import { detachDeviceOnLogout } from "@/lib/push/client";
 
 /**
  * Стоит на экранах для невошедших (`/welcome`, `/login`): сюда попадают после выхода.
@@ -13,6 +14,7 @@ import { clearOfflineCache } from "@/lib/offline/cache";
 export function OfflineReset() {
   useEffect(() => {
     void clearOfflineCache();
+    void detachDeviceOnLogout();
 
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker.ready.then((registration) => {

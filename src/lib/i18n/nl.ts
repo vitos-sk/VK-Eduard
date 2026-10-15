@@ -117,7 +117,15 @@ export const nl: Dict = {
     },
     notificationsPage: {
       title: "Meldingen",
-      body: "De app heeft nog geen pushmeldingen. Alle updates — nieuwe rapporten, wijzigingen in de projectstatus — zie je direct op de betreffende schermen.",
+      body: "Elke dag om 18:00 Belgische tijd herinneren we je eraan je rapport in te dienen — als je dat vandaag nog niet hebt gedaan.",
+      reminderLabel: "Rapportherinnering",
+      reminderHint: "Elke dag om 18:00",
+      bossNote: "Leidinggevenden ontvangen geen herinneringen.",
+      unsupported: "Deze browser ondersteunt geen meldingen.",
+      iosInstall: "Op iPhone werken meldingen alleen in de geïnstalleerde app: tik op Deel → Zet op beginscherm en open de app via het icoon.",
+      devOnly: "Meldingen werken alleen in de productieversie van de app.",
+      denied: "Meldingen zijn geblokkeerd. Sta ze toe voor deze app in de instellingen van je telefoon en kom dan hier terug.",
+      enableError: "Wijzigen is niet gelukt. Probeer het opnieuw",
     },
     languagePage: {
       title: "Taal",

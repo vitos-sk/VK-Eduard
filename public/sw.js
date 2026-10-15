@@ -158,3 +158,47 @@ self.addEventListener("message", (event) => {
   if (data.type === "warm" && Array.isArray(data.paths)) event.waitUntil(warm(data.paths));
   if (data.type === "clear") event.waitUntil(clearPages());
 });
+
+/* ── Push-напоминания ─────────────────────────────────────────────────────────
+ * Сервер шлёт JSON { title, body, url, tag }. `tag` — одно и то же напоминание заменяет предыдущее,
+ * а не копится стопкой. По нажатию открываем (или фокусируем) приложение на нужном экране.
+ */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    /* пришёл не JSON — покажем общий текст ниже */
+  }
+
+  const title = data.title || "VK group";
+  const options = {
+    body: data.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: data.tag || "vk-reminder",
+    data: { url: data.url || "/" },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const path = (event.notification.data && event.notification.data.url) || "/";
+  // Только путь внутри сайта: уведомление не должно уводить на чужой адрес.
+  const target = new URL(path.startsWith("/") && !path.startsWith("//") ? path : "/", self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      for (const client of windows) {
+        if (new URL(client.url).origin === self.location.origin && "focus" in client) {
+          return client.focus().then((focused) => ("navigate" in focused ? focused.navigate(target) : focused));
+        }
+      }
+
+      return self.clients.openWindow(target);
+    }),
+  );
+});

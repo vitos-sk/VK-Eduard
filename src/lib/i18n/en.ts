@@ -117,7 +117,15 @@ export const en: Dict = {
     },
     notificationsPage: {
       title: "Notifications",
-      body: "The app has no push notifications yet. All updates — new reports, site status changes — show up right on the relevant screens.",
+      body: "Every day at 18:00 Belgian time we'll remind you to submit your report — if you haven't done so yet today.",
+      reminderLabel: "Report reminder",
+      reminderHint: "Every day at 18:00",
+      bossNote: "Managers don't receive reminders.",
+      unsupported: "This browser doesn't support notifications.",
+      iosInstall: "On iPhone, notifications only work in the installed app: tap Share → Add to Home Screen, then open the app from its icon.",
+      devOnly: "Notifications only work in the production version of the app.",
+      denied: "Notifications are blocked. Allow them for this app in your phone settings, then come back here.",
+      enableError: "Couldn't change it. Please try again",
     },
     languagePage: {
       title: "Language",
