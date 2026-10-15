@@ -37,3 +37,25 @@ export async function getSignedPhotoUrls(
 
   return map;
 }
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Подписанная ссылка на один файл с несколькими короткими повторами. Хранилище иногда ещё не видит только что
+ * загруженный файл (запрос ссылки сразу после загрузки отвечает 404); пара повторов эту гонку убирает.
+ */
+export async function createSignedUrlWithRetry(
+  supabase: SupabaseClient<Database>,
+  bucket: string,
+  path: string,
+): Promise<string | null> {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    if (attempt > 0) await wait(400 * attempt);
+
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(path, EXPIRES_IN_SECONDS);
+
+    if (data?.signedUrl) return data.signedUrl;
+  }
+
+  return null;
+}

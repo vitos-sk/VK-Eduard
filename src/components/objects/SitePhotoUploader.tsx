@@ -4,38 +4,13 @@ import { useMemo, useState } from "react";
 import { Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { uploadSitePhoto } from "@/modules/media/photos";
-import type { Database } from "@/lib/supabase/types.gen";
+import { createSignedUrlWithRetry } from "@/modules/media/signedUrls";
 import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Storage іноді ще не бачить щойно завантажений файл на першому запиті
- * підписаної ссилки (eventual consistency бекенда) — `createSignedUrl`
- * повертає 404 одразу після успішного `upload()`. Кілька коротких
- * повторів прибирають цю гонку, не чіпаючи сам upload.
- */
-async function createSignedUrlWithRetry(
-  supabase: SupabaseClient<Database>,
-  path: string,
-): Promise<string | null> {
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    if (attempt > 0) await wait(400 * attempt);
-
-    const { data } = await supabase.storage.from("site-photos").createSignedUrl(path, 3600);
-
-    if (data?.signedUrl) return data.signedUrl;
-  }
-
-  return null;
-}
 
 interface SitePhotoUploaderProps {
   companyId: string;
@@ -73,7 +48,7 @@ export function SitePhotoUploader({
 
     try {
       const newPath = await uploadSitePhoto(supabase, { companyId, siteId }, file);
-      const signedUrl = await createSignedUrlWithRetry(supabase, newPath);
+      const signedUrl = await createSignedUrlWithRetry(supabase, "site-photos", newPath);
 
       setPath(newPath);
       setUrl(signedUrl);

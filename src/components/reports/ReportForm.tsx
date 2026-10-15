@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Car, Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -12,9 +12,11 @@ import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { TimeField, WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { Toggle } from "@/components/ui/toggle";
 import { parseKm } from "@/modules/travel/km";
+import { fromDateKey } from "@/lib/format";
 import { useT } from "@/lib/i18n/client";
 import { clearOfflineCache } from "@/lib/offline/cache";
 import { createReport } from "@/modules/reports/actions";
+import { clearDraft, readDraft, writeDraft, type ReportDraftFields } from "@/modules/reports/draft";
 import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import {
@@ -29,7 +31,20 @@ import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField, UnderlineTextarea } from "@/components/ui/underline-field";
 import { formatHoursShort } from "@/lib/format";
 
+/** Пауза после последней правки, прежде чем записать чернетку: пока человек печатает, не пишем на каждую букву. */
+const DRAFT_SAVE_DELAY_MS = 500;
+
+function browserStorage(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 interface ReportFormProps {
+  /** Чернетка хранится на телефоне под этим id: на общем телефоне чужая не покажется. */
+  userId: string;
   companyId: string;
   sites: readonly Site[];
   categories: readonly WorkCategory[];
@@ -41,8 +56,11 @@ interface ReportFormProps {
  * Форма `/reports/new`. Два шага в одном экране: сперва об'єкт/дата/категорії/опис
  * сохраняются одной записью, потом (уже с готовым `reportId`) можно сразу
  * добавить фото — до этого их физически некуда прикреплять.
+ *
+ * Чернетка: всё, что человек ввёл, само записывается на телефон (`modules/reports/draft.ts`) и возвращается при
+ * следующем открытии формы, если её закрыли случайно (свайп назад). После сохранения звіту чернетка стирается.
  */
-export function ReportForm({ companyId, sites, categories, lastReport }: ReportFormProps) {
+export function ReportForm({ userId, companyId, sites, categories, lastReport }: ReportFormProps) {
   const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -96,6 +114,122 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
 
   const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
 
+  // ── Чернетка ────────────────────────────────────────────────────────────────────────────────
+  const [isDraftReady, setIsDraftReady] = useState(false);
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
+  // Звіт сохранён: чернетка больше не нужна, и поздняя запись (таймер, сворачивание) не должна её вернуть.
+  const isSubmittedRef = useRef(false);
+
+  const draftFields: ReportDraftFields = {
+    siteId,
+    dateKey: dateKeyOf(date),
+    categoryIds,
+    otherText,
+    description,
+    problemNote,
+    withTime,
+    startAt,
+    endAt,
+    breakMin,
+    withTravel,
+    travelStart,
+    travelEnd,
+    km,
+  };
+  const latestDraftRef = useRef(draftFields);
+
+  // Возвращаем чернетку до первой отрисовки (как `useSessionState`): человек не видит пустую форму, которая тут же заполняется.
+  useLayoutEffect(() => {
+    const storage = browserStorage();
+    const draft = storage
+      ? readDraft(storage, userId, Date.now(), {
+          siteIds: new Set(sites.map((site) => site.id)),
+          categoryIds: new Set(categories.map((category) => category.id)),
+        })
+      : null;
+
+    if (draft) {
+      /* Подставить сохранённое после гидрации — как раз то, ради чего нужен эффект. */
+      /* eslint-disable react-hooks/set-state-in-effect */
+      if (draft.siteId) setSiteId(draft.siteId);
+      setDate(fromDateKey(draft.dateKey));
+      setCategoryIds(draft.categoryIds);
+      setOtherText(draft.otherText);
+      setDescription(draft.description);
+      setProblemNote(draft.problemNote);
+      setWithTime(draft.withTime);
+      setStartAt(draft.startAt);
+      setEndAt(draft.endAt);
+      setBreakMin(draft.breakMin);
+      setWithTravel(draft.withTravel);
+      setTravelStart(draft.travelStart);
+      setTravelEnd(draft.travelEnd);
+      setKm(draft.km);
+      setIsDraftRestored(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+
+    setIsDraftReady(true);
+    // Только при открытии формы; список объектов и видов работ на этот момент уже есть.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Правки записываются через паузу; пока чернетка не возвращена, ничего не пишем (иначе пустая форма затёрла бы её).
+  const draftSignature = JSON.stringify(draftFields);
+  useEffect(() => {
+    latestDraftRef.current = draftFields;
+  });
+  useEffect(() => {
+    if (!isDraftReady || isSubmittedRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      const storage = browserStorage();
+      if (storage && !isSubmittedRef.current) writeDraft(storage, userId, latestDraftRef.current, Date.now());
+    }, DRAFT_SAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [isDraftReady, draftSignature, userId]);
+
+  // Свернули приложение или закрыли вкладку, не дождавшись паузы: записываем сразу.
+  useEffect(() => {
+    const flush = () => {
+      const storage = browserStorage();
+      if (storage && !isSubmittedRef.current) writeDraft(storage, userId, latestDraftRef.current, Date.now());
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", flush);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [userId]);
+
+  const resetForm = () => {
+    const storage = browserStorage();
+    if (storage) clearDraft(storage, userId);
+
+    setSiteId(lastReport?.site_id ?? null);
+    setDate(new Date());
+    setCategoryIds([]);
+    setOtherText("");
+    setDescription("");
+    setProblemNote("");
+    setWithTime(false);
+    setStartAt("07:00");
+    setEndAt("16:00");
+    setBreakMin(0);
+    setWithTravel(false);
+    setTravelStart("06:30");
+    setTravelEnd("07:30");
+    setKm("");
+    setIsDraftRestored(false);
+  };
+
   const applyRepeatLast = () => {
     if (!lastReport) return;
 
@@ -125,6 +259,11 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         toast(result.error ?? t.reportForm.saveError);
         return;
       }
+
+      // Звіт сохранён: чернетка отработала своё.
+      isSubmittedRef.current = true;
+      const storage = browserStorage();
+      if (storage) clearDraft(storage, userId);
 
       toast(t.reportForm.saved);
       if (result.warning === "travel") toast(t.travel.notSaved);
@@ -177,9 +316,19 @@ export function ReportForm({ companyId, sites, categories, lastReport }: ReportF
         }
       >
         <DatePickLink date={date} onChange={setDate} />
+        <p className="mt-1 text-[12px] text-ink-3">{t.reportForm.draftHint}</p>
       </FormTopBar>
 
       <div className="mt-3 space-y-3.5 px-4 lg:px-0">
+        {isDraftRestored && (
+          <Ticket variant="flat" className="flex items-center gap-3 border-primary bg-primary-tint">
+            <p className="min-w-0 flex-1 text-[13px] font-medium">{t.reportForm.draftRestored}</p>
+            <Button variant="ghost" size="sm" className="-mr-2 shrink-0 px-2" onClick={resetForm}>
+              {t.reportForm.draftDiscard}
+            </Button>
+          </Ticket>
+        )}
+
         <Ticket variant="sections">
           <PickerRow
             label={t.manualTime.objectLabel}

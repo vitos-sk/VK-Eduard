@@ -5,10 +5,10 @@ import { Pencil } from "lucide-react";
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectHoursCard } from "@/components/objects/ObjectHoursCard";
 import { ObjectMenu } from "@/components/objects/ObjectMenu";
+import { SiteCover } from "@/components/objects/SiteCover";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Thumb } from "@/components/shared/Thumb";
 import { Badge } from "@/components/ui/badge";
 import { fmt } from "@/lib/format";
 import { sceneForId } from "@/lib/siteScene";
@@ -100,10 +100,11 @@ export default async function ObjectDetailPage({
 
       <div className="px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8 lg:px-0">
         <div className="flex flex-col gap-3">
-          <Thumb
+          {/* Фото объекту может добавить любой сотрудник (не только шеф и автор), поэтому кнопка видна всем. */}
+          <SiteCover
+            siteId={site.id}
             scene={sceneForId(site.id)}
             photoUrl={coverPhotoUrl}
-            size="cover"
             className="h-40 lg:h-[280px]"
           />
 

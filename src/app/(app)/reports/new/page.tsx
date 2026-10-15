@@ -16,6 +16,7 @@ export default async function NewReportPage() {
 
   return (
     <ReportForm
+      userId={profile.id}
       companyId={profile.company_id}
       sites={sites}
       categories={categories}
