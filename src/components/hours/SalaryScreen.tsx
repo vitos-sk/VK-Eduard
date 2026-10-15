@@ -207,7 +207,7 @@ export function SalaryScreen({ profile, initialDate }: SalaryScreenProps) {
             </div>
 
             {/* select-text: на сайте выделение выключено, а расчёт можно выделить и скопировать вручную */}
-            <pre className="tabular perf-t mt-3 max-h-[50dvh] overflow-auto pt-3 text-[13px] leading-relaxed whitespace-pre-wrap text-text select-text">
+            <pre className="tabular perf-t mt-3 pt-3 text-[13px] leading-relaxed break-words whitespace-pre-wrap text-text select-text">
               {text}
             </pre>
           </section>
