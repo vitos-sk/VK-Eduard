@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/modules/auth/session";
 import { getPeriodRange } from "@/modules/dashboard/period";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
+import { getCompanyWorkerEmails } from "@/modules/team/emails";
 import { getCompanyWorkers } from "@/modules/team/queries";
 import { dateKeyOf } from "@/modules/time/calc";
 
@@ -25,9 +26,10 @@ export default async function TeamPage() {
   const supabase = await createClient();
   const { from, to } = getPeriodRange("month", new Date());
 
-  const [workers, entries] = await Promise.all([
+  const [workers, entries, emails] = await Promise.all([
     getCompanyWorkers(supabase, profile.company_id),
     getCompanyEntriesInRange(supabase, profile.company_id, dateKeyOf(from), dateKeyOf(to)),
+    getCompanyWorkerEmails(profile.company_id),
   ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function TeamPage() {
         companyId={profile.company_id}
         currentUserId={profile.id}
         workers={workers}
+        emails={emails}
         entries={entries}
       />
     </div>

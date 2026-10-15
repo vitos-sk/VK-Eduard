@@ -11,6 +11,7 @@ import { formatHoursShort } from "@/lib/format";
 import { useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
+import { fetchWorkerEmails } from "@/modules/team/actions";
 import { buildWorkerHoursList } from "@/modules/team/hours";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { Avatar } from "@/components/ui/avatar";
@@ -24,6 +25,8 @@ interface TeamManagementScreenProps {
   companyId: string;
   currentUserId: string;
   workers: readonly Worker[];
+  /** `worker id → email` (живе в `auth.users`, тож приходить окремо від профілів). */
+  emails: Readonly<Record<string, string>>;
   entries: readonly WorkEntryWithNames[];
 }
 
@@ -35,19 +38,24 @@ export function TeamManagementScreen({
   companyId,
   currentUserId,
   workers: initialWorkers,
+  emails: initialEmails,
   entries,
 }: TeamManagementScreenProps) {
   const t = useT();
   const s = t.companyUi;
   const supabase = useMemo(() => createClient(), []);
   const [workers, setWorkers] = useState<readonly Worker[]>(initialWorkers);
+  const [emails, setEmails] = useState<Readonly<Record<string, string>>>(initialEmails);
   const [search, setSearch] = useState("");
   const avatarUrls = useAvatarUrls(workers);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const refreshWorkers = useCallback(() => {
-    getCompanyWorkers(supabase, companyId)
-      .then((data) => setWorkers(data))
+    Promise.all([getCompanyWorkers(supabase, companyId), fetchWorkerEmails()])
+      .then(([data, nextEmails]) => {
+        setWorkers(data);
+        setEmails(nextEmails);
+      })
       .catch(() => {
         // Мережа моргнула — лишаємо попередній список.
       });
@@ -61,8 +69,12 @@ export function TeamManagementScreen({
   const visibleWorkers = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return workers;
-    return workers.filter((worker) => worker.full_name.toLowerCase().includes(query));
-  }, [workers, search]);
+    return workers.filter(
+      (worker) =>
+        worker.full_name.toLowerCase().includes(query) ||
+        (emails[worker.id] ?? "").toLowerCase().includes(query),
+    );
+  }, [workers, emails, search]);
 
   const hasActiveSearch = search.trim().length > 0;
 
@@ -115,6 +127,9 @@ export function TeamManagementScreen({
                   <p className="text-[13px] text-ink-2">
                     {worker.role === "boss" ? t.profile.roleBoss : t.profile.roleWorker}
                   </p>
+                  {emails[worker.id] && (
+                    <p className="break-all text-[13px] text-ink-2">{emails[worker.id]}</p>
+                  )}
                 </div>
 
                 <p className="tabular shrink-0 text-[15px] font-semibold">

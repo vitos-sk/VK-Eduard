@@ -6,6 +6,7 @@ import { getT } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types.gen";
 import { getProfile } from "@/modules/auth/session";
+import { getCompanyWorkerEmails } from "@/modules/team/emails";
 
 type UserRole = Database["public"]["Enums"]["user_role"];
 
@@ -91,6 +92,21 @@ export async function createWorker(input: {
   revalidatePath("/reports");
 
   return { error: null, email };
+}
+
+/**
+ * Email усіх активних співробітників компанії — для оновлення списку на
+ * `/more/team` після заведення/деактивації. Тільки boss; компанія береться
+ * з профілю боса, а не з аргументів.
+ */
+export async function fetchWorkerEmails(): Promise<Record<string, string>> {
+  const profile = await getProfile();
+
+  if (!profile || profile.role !== "boss") {
+    return {};
+  }
+
+  return getCompanyWorkerEmails(profile.company_id);
 }
 
 export type DeactivateWorkerState = { error: string | null };
