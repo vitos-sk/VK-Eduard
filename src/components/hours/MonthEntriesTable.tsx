@@ -2,152 +2,20 @@
 
 import Link from "next/link";
 import { Pencil } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
-import {
-  fmt,
-  formatHoursShort,
-  formatTimeShort,
-  formatWorkDateShort,
-  fromDateKey,
-  pluralize,
-} from "@/lib/format";
+import { fmt, formatHoursShort, formatTimeShort, fromDateKey, pluralize } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
 import type { WorkEntryWithNames } from "@/modules/entries/types";
 import { breakMinutes } from "@/modules/time/calc";
 import { StampTag } from "@/components/ui/stamp-tag";
 import { Ticket } from "@/components/ui/ticket";
 import { TicketRow } from "@/components/ui/ticket-row";
-import {
-  TicketTable,
-  TicketTableCell,
-  TicketTableHead,
-  TicketTableHeader,
-  TicketTableRow,
-} from "@/components/ui/ticket-table";
 import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 50;
-
-/**
- * Самописний горизонтальний повзунок для таблиці «Зміни за місяць».
- * Нативний скролбар на мобілці або прихований, або зникає одразу після
- * жеста — користувач не бачить, що рядок можна проскролити вбік. Цей
- * повзунок завжди видимий і синхронізований зі скролом таблиці в обидва
- * боки: свайп по таблиці рухає повзунок, перетягування повзунка скролить
- * таблицю.
- */
-function useHorizontalScrollThumb(scrollRef: React.RefObject<HTMLDivElement | null>) {
-  const [thumb, setThumb] = useState({ widthPct: 100, leftPct: 0, visible: false });
-
-  const measure = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const { scrollWidth, clientWidth, scrollLeft } = el;
-    if (scrollWidth <= clientWidth + 1) {
-      setThumb({ widthPct: 100, leftPct: 0, visible: false });
-      return;
-    }
-    const widthPct = Math.max((clientWidth / scrollWidth) * 100, 12);
-    const maxLeftPct = 100 - widthPct;
-    const leftPct = (scrollLeft / (scrollWidth - clientWidth)) * maxLeftPct;
-    setThumb({ widthPct, leftPct, visible: true });
-  }, [scrollRef]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    measure();
-
-    el.addEventListener("scroll", measure, { passive: true });
-    const resizeObserver = new ResizeObserver(measure);
-    resizeObserver.observe(el);
-    if (el.firstElementChild) resizeObserver.observe(el.firstElementChild);
-
-    return () => {
-      el.removeEventListener("scroll", measure);
-      resizeObserver.disconnect();
-    };
-  }, [measure, scrollRef]);
-
-  const scrollToLeftPct = useCallback(
-    (leftPct: number) => {
-      const el = scrollRef.current;
-      if (!el) return;
-      const { scrollWidth, clientWidth } = el;
-      const widthPct = Math.max((clientWidth / scrollWidth) * 100, 12);
-      const maxLeftPct = 100 - widthPct;
-      const clamped = Math.min(Math.max(leftPct, 0), maxLeftPct);
-      el.scrollLeft = (clamped / maxLeftPct) * (scrollWidth - clientWidth);
-    },
-    [scrollRef],
-  );
-
-  return { thumb, scrollToLeftPct };
-}
-
-function HorizontalScrollbar({
-  scrollRef,
-}: {
-  scrollRef: React.RefObject<HTMLDivElement | null>;
-}) {
-  const t = useT();
-  const trackRef = useRef<HTMLDivElement>(null);
-  const { thumb, scrollToLeftPct } = useHorizontalScrollThumb(scrollRef);
-  const dragState = useRef<{ startX: number; startLeftPct: number } | null>(null);
-
-  const onPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      dragState.current = { startX: event.clientX, startLeftPct: thumb.leftPct };
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    [thumb.leftPct],
-  );
-
-  const onPointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!dragState.current || !trackRef.current) return;
-      const trackWidth = trackRef.current.clientWidth;
-      if (trackWidth === 0) return;
-      const deltaPct = ((event.clientX - dragState.current.startX) / trackWidth) * 100;
-      scrollToLeftPct(dragState.current.startLeftPct + deltaPct);
-    },
-    [scrollToLeftPct],
-  );
-
-  const onPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    dragState.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-  }, []);
-
-  if (!thumb.visible) return null;
-
-  return (
-    <div
-      ref={trackRef}
-      className="relative mt-2 h-[6px] rounded-sm bg-scale"
-      role="scrollbar"
-      aria-orientation="horizontal"
-      aria-label={t.hours.monthTableScrollHint}
-      aria-controls="month-entries-scroll"
-      aria-valuenow={Math.round(thumb.leftPct)}
-      aria-valuemin={0}
-      aria-valuemax={Math.round(100 - thumb.widthPct)}
-    >
-      <div
-        className="absolute inset-y-0 touch-none rounded-sm bg-primary"
-        style={{ width: `${thumb.widthPct}%`, left: `${thumb.leftPct}%` }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-      />
-    </div>
-  );
-}
-
 
 interface MonthEntriesTableProps {
   entries: readonly WorkEntryWithNames[];
@@ -163,13 +31,13 @@ interface MonthEntriesTableProps {
 }
 
 /**
- * «Зміни за місяць». На телефоні — тонкі згорнуті рядки (дата, хто, час,
- * години); дотик розкриває об'єкт, перерву, опис і кнопки «Редагувати» /
- * «Видалити». Горизонтального скролу немає. Від `lg` — таблиця з усіма
- * колонками. Що саме потрапить у `entries` (свої зміни чи вся компанія),
- * вирішує RLS на запиті `getCompanyEntriesInRange`, тож редагування/видалення
- * показуємо завжди: `entries_update`/`entries_delete` дозволяють це для
- * будь-якого рядка, який тут узагалі можна побачити.
+ * «Зміни за місяць». Тонкі згорнуті рядки (дата, хто, час, години) — однаково
+ * на телефоні й на ПК, без горизонтального скролу: список росте вниз. Дотик
+ * розкриває об'єкт, перерву, опис і кнопки «Редагувати» / «Видалити». Що саме
+ * потрапить у `entries` (свої зміни чи вся компанія), вирішує RLS на запиті
+ * `getCompanyEntriesInRange`, тож редагування/видалення показуємо завжди:
+ * `entries_update`/`entries_delete` дозволяють це для будь-якого рядка, який
+ * тут узагалі можна побачити.
  */
 export function MonthEntriesTable({
   entries,
@@ -220,15 +88,11 @@ export function MonthEntriesTable({
           {isFiltered ? s.emptyFilteredTitle : t.hours.monthTableEmpty}
         </p>
       ) : (
-        <>
-          <ul className="-mx-3.5 mt-3 lg:hidden">
-            {visibleEntries.map((entry) => (
-              <EntryRow key={entry.id} entry={entry} showAuthor={showAuthor} onChanged={onChanged} />
-            ))}
-          </ul>
-
-          <DesktopTable entries={visibleEntries} showAuthor={showAuthor} onChanged={onChanged} />
-        </>
+        <ul className="-mx-3.5 mt-3">
+          {visibleEntries.map((entry) => (
+            <EntryRow key={entry.id} entry={entry} showAuthor={showAuthor} onChanged={onChanged} />
+          ))}
+        </ul>
       )}
 
       {entries.length > PAGE_SIZE && (
@@ -244,83 +108,6 @@ export function MonthEntriesTable({
         </div>
       )}
     </section></Ticket>
-  );
-}
-
-function DesktopTable({
-  entries,
-  showAuthor,
-  onChanged,
-}: {
-  entries: readonly WorkEntryWithNames[];
-  showAuthor: boolean;
-  onChanged: () => void;
-}) {
-  const t = useT();
-  const locale = useLocale();
-  const s = t.hoursUi;
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <div className="mt-3 hidden lg:block">
-      <div ref={scrollRef} id="month-entries-scroll" className="no-scrollbar overflow-x-auto">
-        <TicketTable className="min-w-[640px]">
-          <TicketTableHeader>
-            <tr>
-              {showAuthor && <TicketTableHead>{t.hours.monthTableWorkerColumn}</TicketTableHead>}
-              <TicketTableHead>{t.hours.monthTableDateColumn}</TicketTableHead>
-              <TicketTableHead>{t.hours.monthTableTimeColumn}</TicketTableHead>
-              <TicketTableHead>{t.hours.break}</TicketTableHead>
-              <TicketTableHead>{t.hours.monthTableObjectColumn}</TicketTableHead>
-              <TicketTableHead numeric>{s.monthTableHoursColumn}</TicketTableHead>
-              <TicketTableHead>{s.monthTableDescriptionColumn}</TicketTableHead>
-              <TicketTableHead className="sticky right-0 bg-ticket" aria-hidden />
-            </tr>
-          </TicketTableHeader>
-
-          <tbody>
-            {entries.map((entry) => {
-              const pauseMinutes = breakMinutes(entry.break_start, entry.break_end);
-
-              return (
-                <TicketTableRow key={entry.id}>
-                  {showAuthor && (
-                    <TicketTableCell className="max-w-[140px] truncate font-medium">
-                      {entry.author_full_name}
-                    </TicketTableCell>
-                  )}
-                  <TicketTableCell className="tabular text-ink-2">
-                    {formatWorkDateShort(entry.work_date, locale)}
-                  </TicketTableCell>
-                  <TicketTableCell className="tabular text-ink-2">
-                    {formatTimeShort(entry.started_at)}–
-                    {entry.ended_at ? formatTimeShort(entry.ended_at) : (
-                      <StampTag>{t.hours.entryOngoing}</StampTag>
-                    )}
-                  </TicketTableCell>
-                  <TicketTableCell className="tabular text-ink-2">
-                    {pauseMinutes > 0 ? formatHoursShort(pauseMinutes) : t.common.dash}
-                  </TicketTableCell>
-                  <TicketTableCell className="max-w-[160px] truncate">
-                    {entry.site_name ?? t.hours.noObject}
-                  </TicketTableCell>
-                  <TicketTableCell numeric className="font-semibold">
-                    {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-                  </TicketTableCell>
-                  <TicketTableCell className="max-w-[160px] truncate text-ink-2">
-                    {entry.description || s.noDescription}
-                  </TicketTableCell>
-                  <TicketTableCell className="sticky right-0 bg-ticket">
-                    <EntryActions entry={entry} onChanged={onChanged} />
-                  </TicketTableCell>
-                </TicketTableRow>
-              );
-            })}
-          </tbody>
-        </TicketTable>
-      </div>
-      <HorizontalScrollbar scrollRef={scrollRef} />
-    </div>
   );
 }
 
@@ -380,7 +167,7 @@ function EntryRow({
       </dl>
 
       {!isOngoing && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2 lg:max-w-sm">
           <Button asChild variant="outline" size="sm" block>
             <Link href={`/time/manual/${entry.id}`}>
               <Pencil className="size-4" strokeWidth={1.9} aria-hidden />
@@ -391,23 +178,5 @@ function EntryRow({
         </div>
       )}
     </TicketRow>
-  );
-}
-
-function EntryActions({ entry, onChanged }: { entry: WorkEntryWithNames; onChanged: () => void }) {
-  const t = useT();
-  if (!entry.ended_at) return null;
-
-  return (
-    <div className="flex shrink-0 items-center justify-end gap-0.5">
-      <Link
-        href={`/time/manual/${entry.id}`}
-        aria-label={t.hours.editEntry}
-        className="relative flex size-8 shrink-0 items-center justify-center rounded-md text-ink-2 outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] hover:bg-primary-tint focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        <Pencil className="size-4" strokeWidth={1.9} aria-hidden />
-      </Link>
-      <DeleteEntryButton entryId={entry.id} onDeleted={onChanged} iconOnly className="size-8" />
-    </div>
   );
 }
