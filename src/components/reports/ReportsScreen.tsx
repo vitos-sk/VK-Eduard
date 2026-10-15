@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
@@ -13,6 +12,7 @@ import {
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
 import { useT } from "@/lib/i18n/client";
+import { useSessionState } from "@/lib/nav/useSessionState";
 import { initialsOf } from "@/components/shared/Thumb";
 import type { Profile } from "@/modules/auth/profile";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
@@ -41,7 +41,7 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
     { value: "team", label: t.reports.screenTabs.team },
     { value: "mine", label: t.reports.screenTabs.mine },
   ];
-  const [tab, setTab] = useState<ScreenTab>("team");
+  const [tab, setTab] = useSessionState<ScreenTab>("reports:tab", "team");
   const isBoss = profile.role === "boss";
 
   return (

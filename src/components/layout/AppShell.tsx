@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -10,8 +10,10 @@ import { SyncBanner } from "@/components/layout/SyncBanner";
 import { OwnAvatarProvider } from "@/components/layout/OwnAvatar";
 import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
+import { PushSync } from "@/components/layout/PushSync";
 import { QuickActionSheet } from "@/components/quick/QuickActionSheet";
 import { Toaster } from "@/components/ui/sonner";
+import { useBackNavigationMarker, useScrollMemory } from "@/lib/nav/useScrollMemory";
 import type { Profile } from "@/modules/auth/profile";
 
 interface AppShellProps {
@@ -36,6 +38,13 @@ interface AppShellProps {
  */
 export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
   const [isQuickOpen, setIsQuickOpen] = useState(false);
+  // Две ветки вёрстки — два скроллящихся контейнера; видна всегда только одна.
+  const phoneScrollRef = useRef<HTMLDivElement>(null);
+  const desktopScrollRef = useRef<HTMLElement>(null);
+
+  useBackNavigationMarker();
+  useScrollMemory(phoneScrollRef);
+  useScrollMemory(desktopScrollRef);
 
   return (
     <OwnAvatarProvider url={avatarUrl}>
@@ -44,7 +53,7 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
         <PhoneFrame>
           {/* Бар — flex-элемент под скроллом, а не absolute: он всегда у низа
               фрейма, даже когда iOS меняет высоту вьюпорта. pb-6 — воздух под FAB. */}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+          <div ref={phoneScrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
             <SyncBanner userId={profile.id} />
             {children}
           </div>
@@ -68,7 +77,7 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
           остаётся статичным по высоте вьюпорта. */}
       <div className="hidden h-dvh bg-paper text-text lg:flex">
         <DesktopSidebar profile={profile} />
-        <main className="min-w-0 flex-1 overflow-y-auto">
+        <main ref={desktopScrollRef} className="min-w-0 flex-1 overflow-y-auto">
           <SyncBanner userId={profile.id} />
           <div className="mx-auto max-w-[1240px] px-6 py-6">{children}</div>
         </main>
@@ -76,6 +85,7 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
 
       <OfflineSync userId={profile.id} />
       <ServiceWorkerRegister />
+      {profile.role !== "boss" && <PushSync userId={profile.id} />}
       <Toaster position="bottom-center" />
     </OwnAvatarProvider>
   );

@@ -76,6 +76,13 @@ export function ReportDetail({
   const t = useT();
   const locale = useLocale();
   const router = useRouter();
+
+  // Стрелка ведёт туда, откуда пришли (главная, объект, «Години», список). Открыли по прямой ссылке
+  // или с ярлыка — истории нет, тогда на список отчётов.
+  const goBack = () => {
+    if (window.history.length > 1) router.back();
+    else router.push("/reports");
+  };
   const [isDescPending, startDescTransition] = useTransition();
   const [isCatPending, startCatTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
@@ -515,7 +522,7 @@ export function ReportDetail({
 
   return (
     <div className="pb-6">
-      <BackHeader title={t.reportDetail.backTitle} href="/reports" action={menu} />
+      <BackHeader title={t.reportDetail.backTitle} onBack={goBack} action={menu} />
       {sitePicker}
 
       <div className="space-y-3 px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-8 lg:space-y-0 lg:px-0">

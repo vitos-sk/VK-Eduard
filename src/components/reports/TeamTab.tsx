@@ -20,6 +20,7 @@ import { initialsOf } from "@/components/shared/Thumb";
 import { MonthNavigator } from "@/components/shared/MonthNavigator";
 import { fmt, formatHoursShort } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
+import { dateCodec, useSessionState } from "@/lib/nav/useSessionState";
 import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
 import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
@@ -81,12 +82,12 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const supabase = useMemo(() => createClient(), []);
 
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
-  const [month, setMonth] = useState(() => new Date());
+  const [month, setMonth] = useSessionState("reports:team:month", new Date(), dateCodec);
   const avatarUrls = useAvatarUrls(workers);
   const [monthMinutes, setMonthMinutes] = useState<ReadonlyMap<string, number>>(new Map());
   const [weekMinutes, setWeekMinutes] = useState<ReadonlyMap<string, number>>(new Map());
-  const [search, setSearch] = useState("");
-  const [view, setView] = useState<TeamView>("people");
+  const [search, setSearch] = useSessionState("reports:team:search", "");
+  const [view, setView] = useSessionState<TeamView>("reports:team:view", "people");
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [exportKind, setExportKind] = useState<ExportKind>("hours");
@@ -97,12 +98,13 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const [loadedFeedKey, setLoadedFeedKey] = useState<string | null>(null);
   const feedKey = dateKeyOf(startOfMonth(month));
   const isFeedLoading = loadedFeedKey !== feedKey;
-  const [siteFilter, setSiteFilter] = useState(SITE_FILTER_ALL);
+  const [siteFilter, setSiteFilter] = useSessionState("reports:team:site", SITE_FILTER_ALL);
 
-  const [openWorkerId, setOpenWorkerId] = useState<string | null>(null);
+  const [openWorkerId, setOpenWorkerId] = useSessionState<string | null>("reports:team:open", null);
   const [openReports, setOpenReports] = useState<readonly SiteReportWithPhotos[]>([]);
   const [openThumbUrls, setOpenThumbUrls] = useState<Readonly<Record<string, string>>>({});
-  const [isOpenLoading, setIsOpenLoading] = useState(false);
+  const [loadedOpenWorkerId, setLoadedOpenWorkerId] = useState<string | null>(null);
+  const isOpenLoading = openWorkerId !== null && loadedOpenWorkerId !== openWorkerId;
 
   const refreshWorkers = useCallback(() => {
     loadWithCache({
@@ -280,21 +282,37 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     setCompanyReports((current) => current.filter((report) => report.id !== reportId));
   };
 
-  const openWorker = (workerId: string) => {
-    setOpenWorkerId(workerId);
-    setIsOpenLoading(true);
+  // Отчёты открытого сотрудника грузятся по его id — и когда нажали, и когда вернулись «назад» из отчёта.
+  useEffect(() => {
+    if (!openWorkerId) return;
 
-    getReportsFeed(supabase, workerId)
+    let cancelled = false;
+
+    getReportsFeed(supabase, openWorkerId)
       .then(async (reports) => {
         const paths = reports
           .map((report) => report.report_photos[0]?.storage_path)
           .filter((path): path is string => Boolean(path));
         const urls = await getSignedPhotoUrls(supabase, paths);
 
+        if (cancelled) return;
         setOpenReports(reports);
         setOpenThumbUrls(Object.fromEntries(urls));
       })
-      .finally(() => setIsOpenLoading(false));
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadedOpenWorkerId(openWorkerId);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openWorkerId, supabase]);
+
+  const openWorker = (workerId: string) => {
+    setOpenReports([]);
+    setLoadedOpenWorkerId(null);
+    setOpenWorkerId(workerId);
   };
 
   const monthFrom = dateKeyOf(startOfMonth(month));

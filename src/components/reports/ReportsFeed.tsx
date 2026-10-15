@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
@@ -14,6 +14,7 @@ import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
 import type { Dict } from "@/lib/i18n";
 import { useLocale, useT } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n/locales";
+import { useSessionState, dateCodec } from "@/lib/nav/useSessionState";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
@@ -61,9 +62,9 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
     { value: "no_description", label: t.reports.tabs.noDescription },
     { value: "with_photo", label: t.reports.tabs.withPhoto },
   ];
-  const [filter, setFilter] = useState<ReportFilter>("all");
-  const [query, setQuery] = useState("");
-  const [month, setMonth] = useState(() => new Date());
+  const [filter, setFilter] = useSessionState<ReportFilter>("reports:mine:filter", "all");
+  const [query, setQuery] = useSessionState("reports:mine:query", "");
+  const [month, setMonth] = useSessionState("reports:mine:month", new Date(), dateCodec);
 
   const siteNameById = useMemo(
     () => new Map(sites.map((site) => [site.id, site.name] as const)),
