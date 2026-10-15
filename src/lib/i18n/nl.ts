@@ -126,6 +126,11 @@ export const nl: Dict = {
       devOnly: "Meldingen werken alleen in de productieversie van de app.",
       denied: "Meldingen zijn geblokkeerd. Sta ze toe voor deze app in de instellingen van je telefoon en kom dan hier terug.",
       enableError: "Wijzigen is niet gelukt. Probeer het opnieuw",
+      promptTitle: "Herinnering aanzetten?",
+      promptBody: "Elke dag om 18:00 herinneren we je aan je rapport als je dat nog niet hebt gedaan. Eén tik en klaar.",
+      promptEnable: "Aanzetten",
+      promptLater: "Later",
+      promptGotIt: "Begrepen",
     },
     languagePage: {
       title: "Taal",

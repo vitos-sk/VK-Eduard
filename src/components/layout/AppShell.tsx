@@ -11,6 +11,7 @@ import { OwnAvatarProvider } from "@/components/layout/OwnAvatar";
 import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
 import { PushSync } from "@/components/layout/PushSync";
+import { ReminderPrompt } from "@/components/layout/ReminderPrompt";
 import { QuickActionSheet } from "@/components/quick/QuickActionSheet";
 import { Toaster } from "@/components/ui/sonner";
 import { useBackNavigationMarker, useScrollMemory } from "@/lib/nav/useScrollMemory";
@@ -85,7 +86,12 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
 
       <OfflineSync userId={profile.id} />
       <ServiceWorkerRegister />
-      {profile.role !== "boss" && <PushSync userId={profile.id} />}
+      {profile.role !== "boss" && (
+        <>
+          <PushSync userId={profile.id} />
+          <ReminderPrompt />
+        </>
+      )}
       <Toaster position="bottom-center" />
     </OwnAvatarProvider>
   );

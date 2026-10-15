@@ -126,6 +126,11 @@ export const en: Dict = {
       devOnly: "Notifications only work in the production version of the app.",
       denied: "Notifications are blocked. Allow them for this app in your phone settings, then come back here.",
       enableError: "Couldn't change it. Please try again",
+      promptTitle: "Turn on the reminder?",
+      promptBody: "Every day at 18:00 we'll remind you to submit your report if you haven't yet. One tap and you're set.",
+      promptEnable: "Turn on",
+      promptLater: "Later",
+      promptGotIt: "Got it",
     },
     languagePage: {
       title: "Language",
