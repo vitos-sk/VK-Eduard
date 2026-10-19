@@ -11,6 +11,7 @@ import { PeriodView } from "@/components/hours/PeriodView";
 import { SalaryLink } from "@/components/hours/SalaryLink";
 import { TravelEntriesCard } from "@/components/hours/TravelEntriesCard";
 import { ALL_FILTER, HoursFilters } from "@/components/hours/HoursFilters";
+import { ChatBell } from "@/components/chats/ChatBell";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { TeamExportSheet } from "@/components/reports/TeamExportSheet";
@@ -233,6 +234,7 @@ export function HoursScreen({
         action={
           <div className="flex items-center gap-2">
             <AddTimeButton compact />
+            <ChatBell className="lg:hidden" />
             <AvatarLink initials={initialsOf(profile.full_name)} />
           </div>
         }

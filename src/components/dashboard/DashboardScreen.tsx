@@ -12,6 +12,7 @@ import { Building2, Clock, FileQuestion, Users } from "lucide-react";
 
 import { TodayCard } from "@/components/dashboard/TodayCard";
 import { TopList } from "@/components/dashboard/TopList";
+import { ChatBell } from "@/components/chats/ChatBell";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
@@ -185,7 +186,12 @@ export function DashboardScreen({
     <div className="pb-6">
       <ScreenHeader
         title={t.dashboard.title}
-        action={<AvatarLink initials={initialsOf(profile.full_name)} className="lg:hidden" />}
+        action={
+          <div className="flex items-center gap-2 lg:hidden">
+            <ChatBell />
+            <AvatarLink initials={initialsOf(profile.full_name)} />
+          </div>
+        }
       />
 
       <div className="px-4 lg:px-0">
