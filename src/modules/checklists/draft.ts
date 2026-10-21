@@ -29,6 +29,16 @@ export function cleanItems(items: readonly DraftItem[]): DraftItem[] {
     .filter((item) => item.text !== "");
 }
 
+/**
+ * Строки формы после выбора шаблона. Шаблон заменяет прошлый: его пункты (`fromTemplate`) уходят, пункты, вписанные
+ * руками, остаются, пустые строки убираются. Если вышло больше `ITEMS_MAX`, обрезается конец (то есть хвост шаблона).
+ */
+export function applyTemplateItems<R extends { text: string; fromTemplate: boolean }>(current: readonly R[], added: readonly R[]): R[] {
+  const kept = current.filter((row) => !row.fromTemplate && row.text.trim() !== "");
+
+  return [...kept, ...added].slice(0, ITEMS_MAX);
+}
+
 /** Проверяет форму перед сохранением: название обязательно, нужен хотя бы один пункт, не больше `ITEMS_MAX`. */
 export function validateDraft(input: ChecklistDraft): DraftResult {
   const title = squash(input.title).slice(0, TITLE_MAX);

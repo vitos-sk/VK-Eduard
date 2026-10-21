@@ -15,18 +15,20 @@ import { UnderlineField } from "@/components/ui/underline-field";
 import { useT } from "@/lib/i18n/client";
 import { createChecklist, updateChecklist } from "@/modules/checklists/actions";
 import { Autosaver, type AutosaveStatus } from "@/modules/checklists/autosave";
-import { cleanItems, ITEMS_MAX, ITEM_MAX, mapItemIds, TITLE_MAX, validateDraft } from "@/modules/checklists/draft";
+import { applyTemplateItems, ITEMS_MAX, ITEM_MAX, mapItemIds, TITLE_MAX, validateDraft } from "@/modules/checklists/draft";
 import type { Site } from "@/modules/sites/queries";
 
 interface Row {
   key: number;
   id: string | null;
   text: string;
+  /** Пункт пришёл из шаблона и не правился: следующий шаблон его заменит. Правка руками делает пункт «своим». */
+  fromTemplate: boolean;
 }
 
 /** Ключ строки нужен только React: не попадает в разметку, поэтому счётчик на сервере и в браузере может расходиться. */
 let rowSeq = 0;
-const newRow = (text = "", id: string | null = null): Row => ({ key: ++rowSeq, id, text });
+const newRow = (text = "", id: string | null = null, fromTemplate = false): Row => ({ key: ++rowSeq, id, text, fromTemplate });
 
 /** Состояние формы, которое уходит на сохранение. */
 interface Snapshot {
@@ -85,7 +87,7 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
   const knownItemIds = useRef(new Map<number, string>());
   const savedKey = useRef<string | null>(
     initial
-      ? snapshotKey({ title: initial.title, siteId: initial.siteId, rows: initial.items.map((item) => ({ key: 0, id: item.id, text: item.text })) })
+      ? snapshotKey({ title: initial.title, siteId: initial.siteId, rows: initial.items.map((item) => ({ key: 0, id: item.id, text: item.text, fromTemplate: false })) })
       : null,
   );
 
@@ -171,7 +173,7 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
   }
 
   function updateRow(key: number, text: string) {
-    setRows((current) => current.map((row) => (row.key === key ? { ...row, text } : row)));
+    setRows((current) => current.map((row) => (row.key === key ? { ...row, text, fromTemplate: false } : row)));
   }
 
   function removeRow(key: number) {
@@ -180,12 +182,13 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
 
   function applyTemplate(template: (typeof c.form.templateList)[number]) {
     if (!titleTouched) setTitle(template.title);
-    setRows((current) => {
-      const blank = cleanItems(current).length === 0;
-      const added = template.items.map((text) => newRow(text));
-
-      return (blank ? added : [...current.filter((row) => row.text.trim() !== ""), ...added]).slice(0, ITEMS_MAX);
-    });
+    // Шаблон заменяет прошлый шаблон, а не дописывается: пункты, вписанные руками, остаются.
+    setRows((current) =>
+      applyTemplateItems(
+        current,
+        template.items.map((text) => newRow(text, null, true)),
+      ),
+    );
   }
 
   async function handleBack() {

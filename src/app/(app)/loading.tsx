@@ -1,4 +1,6 @@
+import { STICKY_BAR } from "@/components/layout/stickyBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 /**
  * Мгновенная заглушка главной, пока сервер собирает профиль, объекты
@@ -8,16 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <div className="px-4 pb-6">
-      <div className="flex items-center justify-between gap-3 pt-[calc(env(safe-area-inset-top)+1.25rem)]">
-        <Skeleton className="h-5 w-24" />
-        <div className="flex items-center gap-2">
-          <Skeleton className="size-8 rounded-md" />
-          <Skeleton className="size-8 rounded-md" />
-        </div>
+      <div className={cn("-mx-4 flex items-center gap-2.5 px-4", STICKY_BAR)}>
+        <Skeleton className="size-7 shrink-0 rounded-sm" />
+        <Skeleton className="h-6 w-24 flex-1" />
+        <Skeleton className="size-8 rounded-md" />
+        <Skeleton className="size-8 rounded-md" />
       </div>
 
-      <div className="mt-6">
-        <Skeleton className="h-8 w-3/4" />
+      <div className="pt-3">
+        <Skeleton className="h-7 w-3/4" />
         <Skeleton className="mt-2 h-4 w-1/2" />
       </div>
 

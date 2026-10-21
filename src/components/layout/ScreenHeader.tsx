@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
+import { STICKY_BAR } from "@/components/layout/stickyBar";
 import { Button } from "@/components/ui/button";
 
 interface ScreenHeaderProps {
@@ -19,25 +20,22 @@ interface ScreenHeaderProps {
 
 /**
  * Шапка вкладки: крупный заголовок слева, необязательное действие справа.
- * Учитывает верхнюю безопасную зону.
+ * На телефоне закреплена вверху (`STICKY_BAR`), учитывает верхнюю безопасную зону.
  */
 export function ScreenHeader({ title, action, className, titleClassName }: ScreenHeaderProps) {
   return (
     <header
-      className={cn(
-        "flex items-center justify-between gap-3 px-4 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-3 lg:px-0 lg:pt-0",
-        className,
-      )}
+      className={cn("flex items-center justify-between gap-3 px-4 lg:px-0", STICKY_BAR, className)}
     >
       <h1
         className={cn(
-          "shrink-0 text-[22px] font-semibold tracking-tight lg:text-[24px]",
+          "min-w-0 truncate text-[22px] font-semibold tracking-tight lg:text-[24px]",
           titleClassName,
         )}
       >
         {title}
       </h1>
-      <div className="min-w-0">{action}</div>
+      <div className="shrink-0">{action}</div>
     </header>
   );
 }
@@ -52,7 +50,7 @@ interface BackHeaderProps {
   className?: string;
 }
 
-/** Компактная шапка вложенной страницы: стрелка назад, заголовок по центру. */
+/** Компактная шапка вложенной страницы: стрелка назад, заголовок по центру. На телефоне закреплена вверху. */
 export function BackHeader({
   title,
   href,
@@ -62,12 +60,7 @@ export function BackHeader({
 }: BackHeaderProps) {
   const t = useT();
   return (
-    <header
-      className={cn(
-        "flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 lg:px-0 lg:pt-0",
-        className,
-      )}
-    >
+    <header className={cn("flex items-center gap-2 px-4 lg:px-0", STICKY_BAR, className)}>
       {href ? (
         <Button asChild variant="ghost" size="icon-sm" className="-ml-1.5">
           <Link href={href} aria-label={t.common.back}>

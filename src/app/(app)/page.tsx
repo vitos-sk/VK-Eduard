@@ -140,6 +140,7 @@ export default async function HomePage() {
     <div className="mx-auto max-w-[640px] px-4 pb-6 lg:px-0">
       <HomeHeader
         initials={initialsOf(profile.full_name)}
+        pageTitle={t.nav.home}
         title={<Greeting name={profile.full_name} />}
         subtitle={formatDateLong(now, locale)}
         trailing={<ChatBell />}

@@ -35,7 +35,9 @@ const buttonVariants = cva(
         icon: "size-ctl-md p-0",
         "icon-xs":
           "size-6 p-0 before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] [&_svg:not([class*='size-'])]:size-3.5",
-        "icon-lg": "size-ctl-md p-0",
+        "icon-lg": "size-12 p-0 lg:size-11",
+        // Подпись переносится по словам (и по слогам), кнопка растёт по высоте: для узких колонок, где перевод бывает длинным.
+        wrap: "h-auto min-h-ctl-lg justify-start gap-1.5 px-2.5 py-1.5 text-left text-[13px] leading-tight whitespace-normal [overflow-wrap:anywhere] hyphens-auto",
         field: "h-field w-full justify-start px-4 text-[16px]",
         bare: "h-auto justify-start gap-0 rounded-none p-0 text-left",
       },

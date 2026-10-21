@@ -73,9 +73,18 @@ Tailwind-классы: `bg-paper`, `bg-ticket`, `bg-stub`, `border-edge`, `borde
 | Большая цифра (день, KPI) | 30 / 600 mono |
 | Минимум | 12 px (подписи таб-бара 11 px, поле на телефоне 16 px) |
 
+## Длинные переводы
+
+Один и тот же текст бывает вдвое длиннее: нидерландское `Salarisrekenmachine` — одно слово в 19 букв. Поэтому:
+
+- подпись в узком месте (колонка, ряд кнопок) — `Button size="wrap"`, а не `whitespace-nowrap`;
+- заголовок шапки сжимается с «…» (`truncate`), а действия справа не уезжают за экран;
+- перевод для узкого места — короткий (`Nieuw rapport`, `Loonberekening`), а не «лучший по смыслу»;
+- проверять нужно на 360 и 390 px во всех трёх языках, особенно в `nl`.
+
 ## Компоненты — `src/components/ui/`
 
-Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare), `Input` / `Textarea`, `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select` (`SelectTrigger size="compact"` + `active` — поле фильтра 36 px с иконкой слева, на всю колонку, выбранное значение на `primary-tint`; `SelectRichItem` — пункт списка с аватаром, названием и подписью mono, выбранный на `primary-tint`; пример — фильтры экрана «Години»), `Avatar` (инициалы, `icon` или фото), `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `ProgressPips` (прогресс чеклиста: сегмент на пункт, больше 24 — сплошная линейка; `sm` в списках, `md` на экране чеклиста), `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром, отступ 60 px + безопасная зона). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
+Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare; квадратные размеры `icon-*`, из них `icon-lg` — 48 px на телефоне и 44 на ПК, для иконки в одном ряду с текстовыми кнопками; `wrap` — подпись переносится по словам и слогам, для узких колонок), `Input` / `Textarea`, `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select` (`SelectTrigger size="compact"` + `active` — поле фильтра 36 px с иконкой слева, на всю колонку, выбранное значение на `primary-tint`; `SelectRichItem` — пункт списка с аватаром, названием и подписью mono, выбранный на `primary-tint`; пример — фильтры экрана «Години»), `Avatar` (инициалы, `icon` или фото), `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `ProgressPips` (прогресс чеклиста: сегмент на пункт, больше 24 — сплошная линейка; `sm` в списках, `md` на экране чеклиста), `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром, отступ 60 px + безопасная зона). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
 
 Талонные:
 

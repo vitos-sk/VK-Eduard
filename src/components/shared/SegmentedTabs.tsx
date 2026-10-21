@@ -76,7 +76,7 @@ export function SegmentedTabs<T extends string>({
             aria-selected={isActive}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative h-[34px] min-w-0 flex-1 px-3 text-[13px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+              "relative h-[34px] min-w-0 flex-1 truncate px-3 text-[13px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
               "not-first:border-l not-first:border-dashed not-first:border-perf",
               isActive ? "bg-primary text-on-primary" : "text-ink-2 hover:bg-primary-tint",
             )}

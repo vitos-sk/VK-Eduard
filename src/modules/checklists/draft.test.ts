@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ITEMS_MAX, ITEM_MAX, TITLE_MAX, cleanItems, mapItemIds, validateDraft } from "./draft";
+import { ITEMS_MAX, ITEM_MAX, TITLE_MAX, applyTemplateItems, cleanItems, mapItemIds, validateDraft } from "./draft";
 
 const item = (text: string, id: string | null = null) => ({ id, text });
 
@@ -46,6 +46,37 @@ describe("validateDraft", () => {
     const result = validateDraft({ title: "н".repeat(TITLE_MAX + 10), items: [item("Бус")] });
 
     expect(result.ok && result.draft.title.length).toBe(TITLE_MAX);
+  });
+});
+
+describe("applyTemplateItems", () => {
+  const own = (text: string) => ({ text, fromTemplate: false });
+  const tpl = (text: string) => ({ text, fromTemplate: true });
+
+  it("в пустой форме просто ставит пункты шаблона", () => {
+    const result = applyTemplateItems([own(""), own("  ")], [tpl("Бус"), tpl("Пальник")]);
+
+    expect(result.map((row) => row.text)).toEqual(["Бус", "Пальник"]);
+  });
+
+  it("новый шаблон заменяет пункты прошлого, а не дописывается к ним", () => {
+    const result = applyTemplateItems([tpl("Бус"), tpl("Пальник")], [tpl("Болгарка"), tpl("Дриль")]);
+
+    expect(result.map((row) => row.text)).toEqual(["Болгарка", "Дриль"]);
+  });
+
+  it("пункты, вписанные руками, остаются; пустые строки уходят", () => {
+    const result = applyTemplateItems([own("Купити фарбу"), tpl("Бус"), own(""), tpl("Пальник")], [tpl("Болгарка")]);
+
+    expect(result.map((row) => row.text)).toEqual(["Купити фарбу", "Болгарка"]);
+  });
+
+  it("не больше ITEMS_MAX: лишнее от шаблона обрезается с конца", () => {
+    const mine = Array.from({ length: ITEMS_MAX - 1 }, (_, index) => own(`Мій ${index}`));
+    const result = applyTemplateItems(mine, [tpl("Перший"), tpl("Другий")]);
+
+    expect(result).toHaveLength(ITEMS_MAX);
+    expect(result[result.length - 1].text).toBe("Перший");
   });
 });
 

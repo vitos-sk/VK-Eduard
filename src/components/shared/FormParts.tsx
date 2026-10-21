@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Pointer } from "lucide-react";
 
+import { STICKY_BAR } from "@/components/layout/stickyBar";
 import { Button } from "@/components/ui/button";
 import { LazyCalendar as Calendar, preloadCalendar } from "@/components/ui/lazy-calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,8 +15,9 @@ import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 
 /**
- * Верхняя строка экранов-форм: кнопка-шеврон «Назад» (только иконка) слева,
- * необязательное действие справа, под ней заголовок 22 / 600.
+ * Верхняя строка экранов-форм. Телефон: закреплённая тонкая полоса — шеврон «Назад», заголовок 17 / 600,
+ * необязательное действие справа; строка под заголовком (`children`, дата) идёт под полосой и уезжает вместе с контентом.
+ * Компьютер: шеврон и действие в строке, под ней заголовок 24 / 600 и `children`.
  */
 export function FormTopBar({
   title,
@@ -31,24 +33,30 @@ export function FormTopBar({
 }) {
   const t = useT();
   return (
-    <header className="px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] lg:px-0 lg:pt-0">
-      <div className="flex min-h-8 items-center justify-between gap-2">
+    <>
+      <header
+        className={cn(
+          "grid min-h-8 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1.5 px-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-2 lg:px-0",
+          STICKY_BAR,
+          "lg:pb-0",
+        )}
+      >
         <Button
           variant="ghost"
           size="icon-sm"
-          className="-ml-1.5"
+          className="col-start-1 row-start-1 -ml-1.5 justify-self-start"
           onClick={onBack}
           aria-label={t.common.back}
         >
           <ChevronLeft className="size-5" strokeWidth={1.9} aria-hidden />
         </Button>
-        {action}
-      </div>
-      <h1 className="mt-0.5 text-[22px] leading-tight font-semibold tracking-tight lg:text-[24px]">
-        {title}
-      </h1>
-      {children}
-    </header>
+        <h1 className="col-start-2 row-start-1 text-[17px] leading-tight font-semibold tracking-tight max-lg:truncate lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:mt-0.5 lg:text-[24px]">
+          {title}
+        </h1>
+        <div className="col-start-3 row-start-1 justify-self-end lg:col-start-2">{action}</div>
+      </header>
+      {children && <div className="px-4 pt-1.5 lg:px-0 lg:pt-0">{children}</div>}
+    </>
   );
 }
 
