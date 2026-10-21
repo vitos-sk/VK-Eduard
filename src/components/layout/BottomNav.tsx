@@ -36,9 +36,10 @@ interface BottomNavProps {
 }
 
 /**
- * Нижний таб-бар (TabBar): высота 84 px, фон `ticket`, сверху пунктир.
+ * Нижний таб-бар (TabBar): высота 52 px, фон `nav` (хаки, темнее бумаги), без линий.
  * Пять пунктов: Головна · Об'єкти · [+] · Години · Звіти.
- * Активный — зелёный, подпись 600, над иконкой жёлтая риска 16×2.
+ * Активный — зелёная иконка и подпись 600 на светлой «таблетке» `ticket` 56×28 под иконкой.
+ * Кнопка [+] на 10 px выше иконок и чуть выступает над баром — это задумано.
  * Последний flex-элемент `PhoneFrame` — всегда у его низа.
  *
  * `z-60` — выше подложки нижних листов (z-50): по макету таб-бар
@@ -54,14 +55,14 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   return (
     <nav
       aria-label={t.common.appName}
-      className="perf-t relative z-60 shrink-0 bg-ticket pb-[env(safe-area-inset-bottom)]"
+      className="relative z-60 shrink-0 bg-nav pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="grid min-h-[60px] grid-cols-5 items-start px-1 pt-2">
+      <div className="grid min-h-[52px] grid-cols-5 items-start px-1 pt-1">
         {leftItems.map((item) => (
           <NavTab key={item.href} item={item} pathname={pathname} />
         ))}
 
-        <div className="flex justify-center">
+        <div className="-mt-2.5 flex justify-center">
           <FabButton onClick={onFabClick} expanded={fabExpanded} />
         </div>
 
@@ -84,15 +85,19 @@ function NavTab({ item, pathname }: { item: NavItem; pathname: string }) {
       aria-current={isActive ? "page" : undefined}
       className={cn(
         // зона нажатия ≥44 px: ссылка на всю ширину ячейки и 44+ по высоте
-        "relative flex min-h-11 flex-col items-center gap-1 text-[11px] outline-none",
+        "relative flex min-h-11 flex-col items-center gap-0.5 text-[11px] leading-[13px] outline-none",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        isActive ? "font-semibold text-primary" : "font-medium text-ink-2",
+        // На хаки неактивное — `ink` (контраст 10:1; `ink-2` здесь ниже AA для 11 px).
+        isActive ? "font-semibold text-primary" : "font-medium text-ink",
       )}
     >
-      {isActive && (
-        <span aria-hidden className="absolute -top-2.5 left-1/2 h-0.5 w-4 -translate-x-1/2 bg-yellow" />
-      )}
-      <Icon className="size-[22px]" strokeWidth={1.9} aria-hidden />
+      {/* Подсветка активной вкладки: светлая «таблетка» под иконкой, как талон на хаки. */}
+      <span
+        aria-hidden
+        className={cn("grid h-7 w-14 place-items-center rounded-full transition-colors duration-150", isActive && "bg-ticket")}
+      >
+        <Icon className="size-[22px]" strokeWidth={1.9} aria-hidden />
+      </span>
       <span>{item.label}</span>
     </Link>
   );

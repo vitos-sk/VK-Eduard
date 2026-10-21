@@ -18,6 +18,7 @@
 | `--paper` | `#f3ecdc` | фон экрана |
 | `--ticket` | `#fffdf7` | талон, карточка, поле |
 | `--stub` | `#efe5cc` | корешок талона, аватар, скелетон |
+| `--nav` | `#dccfa8` | нижняя панель навигации на телефоне (хаки, темнее бумаги); на ней `ink` 10 : 1, `green` 5.3 : 1, «таблетка» активной вкладки `ticket` |
 | `--edge` | `#e4d8ba` | рамка талона 1 px |
 | `--perf` | `#cdbf9b` | перфорация, пунктирные разделители |
 | `--scale` | `#d8ccae` | трек линейки, сетка графика |
@@ -27,7 +28,7 @@
 | `--green` | `#1f5a17` | главное действие, активное |
 | `--green-h` / `--green-d` | `#184a12` / `#143d10` | наведение / нажато |
 | `--green-t` | `#e9f0e1` | фон выбранной строки, hover |
-| `--yellow` | `#f5c43c` | метка нормы, риска вкладки (≤ 3%) |
+| `--yellow` | `#f5c43c` | метка нормы на линейке (≤ 3%) |
 | `--ok` / `--warn` / `--err` | `#2c7a3a` / `#8a5a00` / `#b3261e` | успех / предупреждение / ошибка |
 | `--danger-edge` | `#e0b8af` | рамка кнопки «Удалить» |
 | `--disabled` | `#e8e1cc` | неактивная кнопка |
@@ -84,7 +85,7 @@ Tailwind-классы: `bg-paper`, `bg-ticket`, `bg-stub`, `border-edge`, `borde
 
 ## Компоненты — `src/components/ui/`
 
-Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare; квадратные размеры `icon-*`, из них `icon-lg` — 48 px на телефоне и 44 на ПК, для иконки в одном ряду с текстовыми кнопками; `wrap` — подпись переносится по словам и слогам, для узких колонок), `Input` / `Textarea`, `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select` (`SelectTrigger size="compact"` + `active` — поле фильтра 36 px с иконкой слева, на всю колонку, выбранное значение на `primary-tint`; `SelectRichItem` — пункт списка с аватаром, названием и подписью mono, выбранный на `primary-tint`; пример — фильтры экрана «Години»), `Avatar` (инициалы, `icon` или фото), `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `ProgressPips` (прогресс чеклиста: сегмент на пункт, больше 24 — сплошная линейка; `sm` в списках, `md` на экране чеклиста), `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром, отступ 60 px + безопасная зона). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
+Базовые: `Button` (primary, outline, ghost, danger; `loading`, `block`; доп. secondary, scrim, field, bare; квадратные размеры `icon-*`, из них `icon-lg` — 48 px на телефоне и 44 на ПК, для иконки в одном ряду с текстовыми кнопками; `wrap` — подпись переносится по словам и слогам, для узких колонок), `Input` / `Textarea` (`Textarea size="composer"` — поле ввода чата: одна строка высотой с кнопки рядом, растёт по тексту, без полосы прокрутки; высоту по тексту считать вместе с рамкой), `UnderlineField` / `UnderlineTextarea` (поле с нижней линией, фокус и ошибка 2 px), `Select` (`SelectTrigger size="compact"` + `active` — поле фильтра 36 px с иконкой слева, на всю колонку, выбранное значение на `primary-tint`; `SelectRichItem` — пункт списка с аватаром, названием и подписью mono, выбранный на `primary-tint`; пример — фильтры экрана «Години»), `Avatar` (инициалы, `icon` или фото), `Checkbox` / `CheckMark`, `Radio`, `Toggle` (Switch 40×22), `Chip` (28 px, радиус 6), `Stepper` (стрелки «раніше / пізніше» без видимого текста), `Badge`, `ProgressPips` (прогресс чеклиста: сегмент на пункт, больше 24 — сплошная линейка; `sm` в списках, `md` на экране чеклиста), `StampTag` (submitted, notSubmitted, neutral), `StatusLabel` (статус капсом), `Card`, `Modal`, `Drawer` (нижний лист), `Popover`, `Calendar`, `Spinner`, `Skeleton`, `OfflineBanner`. Тост — `sonner.tsx` (снизу над таб-баром, отступ 52 px + безопасная зона). Составные `SearchField`, `SegmentedTabs` (`variant="segment"` / `"chips"`), `EmptyState`, `Thumb` (SVG-сцена вместо градиента) лежат в `components/shared/`.
 
 Талонные:
 
@@ -106,7 +107,7 @@ Tailwind-классы: `bg-paper`, `bg-ticket`, `bg-stub`, `border-edge`, `borde
 - `SafeImg` (`components/shared/`) — `<img>` с запасным видом (`fallback`): если картинка не загрузилась (нет сети, ссылка протухла), вместо битого значка показывается сцена `Thumb`, иконка `CardPhoto` или инициалы `Avatar`. Все три компонента используют его сами; новые фото из Storage рисовать только так.
 - `StickyActionBar` — липкая панель главной кнопки формы; на телефоне опущена на 24 px отступа области прокрутки, чтобы под кнопкой не просвечивала форма.
 
-Навигация: `BottomNav` (60 px, пунктир сверху, жёлтая риска над активной вкладкой, `FabButton` 44 px), `DesktopSidebar` (232 px с подписями, пунктирная перфорация справа). Телефон — колонка; планшет 480–1023 px — та же колонка по центру до 560 px без рамки устройства; ПК от 1024 px — сайдбар и контент до 1240 px.
+Навигация: `BottomNav` (52 px, фон `nav` без линий, активная вкладка — зелёная иконка и подпись 600 на светлой «таблетке» `ticket` 56×28, `FabButton` 44 px чуть выступает над баром вверх), `DesktopSidebar` (232 px с подписями, пунктирная перфорация справа). Телефон — колонка; планшет 480–1023 px — та же колонка по центру до 560 px без рамки устройства; ПК от 1024 px — сайдбар и контент до 1240 px.
 
 ## Доступность
 

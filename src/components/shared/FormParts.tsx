@@ -153,7 +153,7 @@ export function PickerRow({
  */
 export function StickyActionBar({ children }: { children: ReactNode }) {
   return (
-    <div className="perf-t sticky -bottom-6 z-10 mt-4 bg-paper px-4 pt-2.5 pb-[calc(0.625rem+1.5rem)] lg:bottom-0 lg:px-0 lg:py-2.5">
+    <div className="sticky -bottom-6 z-10 mt-4 bg-paper px-4 pt-2.5 pb-[calc(0.625rem+1.5rem)] lg:bottom-0 lg:px-0 lg:py-2.5">
       {children}
     </div>
   );

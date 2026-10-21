@@ -13,8 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
 import { useT } from "@/lib/i18n/client";
-import { createChecklist, deleteChecklist, updateChecklist } from "@/modules/checklists/actions";
+import { postChecklistToChat } from "@/modules/chats/actions";
+import { createChecklist, deleteChecklist, sendChecklist, updateChecklist } from "@/modules/checklists/actions";
 import { Autosaver, type AutosaveStatus } from "@/modules/checklists/autosave";
+import type { ChecklistDestination } from "@/modules/checklists/destination";
 import { ITEMS_MAX, ITEM_MAX, mapItemIds, TITLE_MAX, validateDraft } from "@/modules/checklists/draft";
 import type { Site } from "@/modules/sites/queries";
 
@@ -51,6 +53,8 @@ interface ChecklistFormProps {
   sites: readonly Site[];
   /** Название, которое подставляется само: у нового — «Чеклист · дата», у правки — прежнее. Его можно менять в любой момент. */
   defaultTitle: string;
+  /** Создают из чата: готовый чеклист «Надіслати» отправляет прямо туда и возвращает в чат. Без него — обычная отправка. */
+  destination?: ChecklistDestination | null;
   /** Не задан — создание, задан — правка своего чеклиста. */
   initial?: { id: string; title: string; siteId: string | null; items: { id: string; text: string }[] };
 }
@@ -62,7 +66,7 @@ interface ChecklistFormProps {
  * (правка), справа компактная «Надіслати».
  * Сверху видно «Зберігаємо… / Збережено»; при выходе с экрана несохранённое уходит на сервер.
  */
-export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormProps) {
+export function ChecklistForm({ sites, defaultTitle, initial, destination = null }: ChecklistFormProps) {
   const t = useT();
   const c = t.checklists;
   const router = useRouter();
@@ -220,6 +224,35 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
       return;
     }
 
+    // Создавали из чата: отправляем прямо в него и возвращаемся туда же.
+    if (destination) {
+      const id = checklistId.current;
+      let chatId: string;
+
+      if (destination.kind === "site") {
+        const result = await postChecklistToChat(id, destination.chatId);
+        if (result.error) {
+          setSending(false);
+          toast(result.error);
+          return;
+        }
+
+        chatId = destination.chatId;
+      } else {
+        const result = await sendChecklist(id, [destination.otherId]);
+        if (result.error || result.chats.length === 0) {
+          setSending(false);
+          toast(result.error ?? c.form.errors.save);
+          return;
+        }
+
+        chatId = result.chats[0].chatId;
+      }
+
+      router.push(`/chats/${chatId}`);
+      return;
+    }
+
     router.push(`/checklists/${checklistId.current}?send=1`);
   }
 
@@ -360,7 +393,7 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
 
         <Button size="sm" onClick={handleSend} disabled={!check.ok} loading={sending}>
           <Send className="size-4" strokeWidth={1.9} aria-hidden />
-          {c.view.send}
+          {destination ? t.checklists.send.toChat : c.view.send}
         </Button>
       </div>
 

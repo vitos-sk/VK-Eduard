@@ -65,12 +65,27 @@ function SelectTrigger({
   )
 }
 
+/** До этой ширины (`lg`) внизу экрана стоит таб-бар, и список не должен заезжать под него. */
+const DESKTOP_QUERY = "(min-width: 1024px)"
+
+/**
+ * Поля от края экрана для выпадающего списка. Справа и слева — 12 px, чтобы список не упирался в край и была видна рамка.
+ * Снизу на телефоне оставляем место под таб-бар (52 px + безопасная зона + воздух): иначе список, открытый у нижнего поля,
+ * уходил под панель. Список строится только после открытия, поэтому `window` здесь уже есть.
+ */
+function defaultCollisionPadding(): { top: number; right: number; bottom: number; left: number } {
+  const isDesktop = typeof window !== "undefined" && window.matchMedia(DESKTOP_QUERY).matches
+
+  return { top: 12, right: 12, bottom: isDesktop ? 12 : 100, left: 12 }
+}
+
 function SelectContent({
   className,
   children,
   position = "popper",
   align = "center",
   sideOffset = 4,
+  collisionPadding,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
@@ -78,10 +93,11 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         data-align-trigger={position === "item-aligned"}
-        className={cn("relative z-50 max-h-(--radix-select-content-available-height) min-w-(--radix-select-trigger-width) origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground border border-edge duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", position ==="popper"&&"data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1", className )}
+        className={cn("relative z-50 max-h-(--radix-select-content-available-height) max-w-(--radix-select-content-available-width) min-w-(--radix-select-trigger-width) origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground border border-edge duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", position ==="popper"&&"data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1", className )}
         position={position}
         align={align}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding ?? defaultCollisionPadding()}
         {...props}
       >
         <SelectScrollUpButton />
@@ -167,9 +183,10 @@ function SelectRichItem({
           <CheckIcon className="pointer-events-none size-4 text-primary" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      {leading}
-      <span className="flex min-w-0 flex-col">
-        <SelectPrimitive.ItemText>{title}</SelectPrimitive.ItemText>
+      {leading && <span className="shrink-0">{leading}</span>}
+      <span className="flex min-w-0 flex-1 flex-col">
+        {/* Длинное название (адрес, ссылка) обрезается, а не растягивает список за экран. */}
+        <SelectPrimitive.ItemText className="truncate">{title}</SelectPrimitive.ItemText>
         {description && (
           <span className="tabular truncate text-[12px] text-ink-2">{description}</span>
         )}

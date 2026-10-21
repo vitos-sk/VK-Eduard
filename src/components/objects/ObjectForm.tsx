@@ -171,6 +171,7 @@ export function ObjectForm({ site, photoUrl = null, categories }: ObjectFormProp
               label={t.objects.form.statusLabel}
               className="px-0 mx-0 flex-wrap overflow-visible"
             />
+            {status === "completed" && <p className="mt-2 text-[12px] text-ink-2">{t.objects.form.completedHint}</p>}
           </TicketSection>
         </Ticket>
       </div>

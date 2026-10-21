@@ -106,7 +106,8 @@ export async function updateSite(
 /**
  * Архивирует/розархивовує об'єкт — `archived_at` timestamptz, а не
  * видалення: історія записів по об'єкту не повинна зникати
- * (`getAllSites` навмисно не фільтрує архівні).
+ * (`getAllSites` навмисно не фільтрує архівні). Завершені об'єкти (`completed`) в архіві й без цього
+ * (`modules/sites/archive.ts`); розархівування повертає такий об'єкт у «В роботі».
  */
 export async function setSiteArchived(
   siteId: string,
@@ -129,6 +130,22 @@ export async function setSiteArchived(
     return {
       error: error.code === RLS_VIOLATION ? t.auth.noProfile : t.objects.form.saveError,
     };
+  }
+
+  // Завершённый объект в архиве сам (`isSiteArchived`): чтобы «Розархівувати» его действительно вернуло,
+  // он снова становится «В роботі». Остальные статусы не трогаем.
+  if (!archived) {
+    const { error: reopenError } = await supabase
+      .from("sites")
+      .update({ status: "in_progress" })
+      .eq("id", siteId)
+      .eq("status", "completed");
+
+    if (reopenError) {
+      return {
+        error: reopenError.code === RLS_VIOLATION ? t.auth.noProfile : t.objects.form.saveError,
+      };
+    }
   }
 
   revalidatePath("/objects");

@@ -297,6 +297,7 @@ export const nl: Dict = {
       addressLabel: "Adres",
       addressPlaceholder: "Plaats, straat",
       statusLabel: "Status",
+      completedHint: "Een afgerond project gaat vanzelf naar het archief: het staat dan onder «Archief» in de lijst met projecten en wordt niet meer aangeboden voor nieuwe rapporten of tijdregistraties",
       photoLabel: "Foto van het project",
       addPhoto: "Foto toevoegen",
       changePhoto: "Foto wijzigen",

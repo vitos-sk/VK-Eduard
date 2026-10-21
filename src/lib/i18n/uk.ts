@@ -318,6 +318,7 @@ export const uk = {
       addressLabel: "Адреса",
       addressPlaceholder: "Місто, вулиця",
       statusLabel: "Статус",
+      completedHint: "Завершений об'єкт сам потрапить в архів: у списку «Об'єкти» він буде у вкладці «Архів», а в нових звітах і записах часу його вже не запропонує",
       photoLabel: "Фото об'єкта",
       addPhoto: "Додати фото",
       changePhoto: "Змінити фото",

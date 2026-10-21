@@ -39,7 +39,7 @@ export function ObjectCard({ object, stats, reserveMenuSpace, className }: Objec
       status={object.status}
       photoUrl={object.photoUrl}
       reserveMenuSpace={reserveMenuSpace}
-      archivedLabel={object.archivedAt ? t.objects.archivedBadge : undefined}
+      archivedLabel={object.isArchived ? t.objects.archivedBadge : undefined}
       className={className}
     />
   );

@@ -66,7 +66,6 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
     { value: "all", label: t.objects.tabs.all },
     { value: "in_progress", label: t.objects.tabs.inProgress },
     { value: "not_started", label: t.objects.tabs.notStarted },
-    { value: "completed", label: t.objects.tabs.completed },
   ];
   const [filters, setFilters] = useState<ObjectsFiltersState>(EMPTY_FILTERS);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
@@ -143,11 +142,11 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
       }
 
       // Архівні об'єкти працівнику не потрібні — вони лишаються лише в історії.
-      if (!isBoss && object.archivedAt !== null) return false;
+      if (!isBoss && object.isArchived) return false;
 
       if (isBoss) {
-        if (archiveFilter === "active" && object.archivedAt !== null) return false;
-        if (archiveFilter === "archived" && object.archivedAt === null) return false;
+        if (archiveFilter === "active" && object.isArchived) return false;
+        if (archiveFilter === "archived" && !object.isArchived) return false;
       }
 
       if (!needle) {
@@ -222,7 +221,7 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
                   <ObjectMenu
                     siteId={object.id}
                     siteName={object.name}
-                    isArchived={object.archivedAt !== null}
+                    isArchived={object.isArchived}
                     className="absolute top-1/2 right-[104px] -translate-y-1/2"
                   />
                 </div>
@@ -251,8 +250,8 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
           value={filters}
           onChange={setFilters}
           sites={objects
-            .filter((object) => isBoss || object.archivedAt === null)
-            .map((object) => ({ id: object.id, name: object.name }))}
+            .filter((object) => isBoss || !object.isArchived)
+            .map((object) => ({ id: object.id, name: object.name, description: object.address || undefined }))}
           workers={
             isBoss ? workers.map((worker) => ({ id: worker.id, name: worker.full_name })) : undefined
           }

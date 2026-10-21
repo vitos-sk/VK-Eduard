@@ -1,6 +1,7 @@
 import type { SiteObject } from "@/lib/types";
 import { sceneForId } from "@/lib/siteScene";
 import type { SiteStats } from "@/modules/reports/siteStats";
+import { isSiteArchived } from "./archive";
 import type { Site } from "./queries";
 
 /** Приводит объект из базы к форме, которую рисуют `ObjectCard`/`Thumb`. */
@@ -19,6 +20,7 @@ export function toSiteObject(
     reportsCount: stats?.reportsCount ?? 0,
     scene: sceneForId(site.id),
     archivedAt: site.archived_at,
+    isArchived: isSiteArchived(site),
     photoUrl,
   };
 }

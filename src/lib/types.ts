@@ -28,8 +28,10 @@ export interface SiteObject {
   scene: SiteScene;
   /** Подписанная ссылка на `sites.photo_path`, если фото объекта загружено. */
   photoUrl: string | null;
-  /** `sites.archived_at` — не `null`, если объект архивирован. */
+  /** `sites.archived_at` — не `null`, если объект архивировали руками. */
   archivedAt: string | null;
+  /** В архиве: архивирован руками или завершён (`isSiteArchived`). Списки и карточки смотрят на это поле. */
+  isArchived: boolean;
 }
 
 /** Один день в столбчатой диаграмме за неделю или месяц. */

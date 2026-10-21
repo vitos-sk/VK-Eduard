@@ -297,6 +297,7 @@ export const en: Dict = {
       addressLabel: "Address",
       addressPlaceholder: "City, street",
       statusLabel: "Status",
+      completedHint: "A completed site moves to the archive by itself: it will be under 'Archive' in the Sites list and won't be offered for new reports or time entries",
       photoLabel: "Site photo",
       addPhoto: "Add photo",
       changePhoto: "Change photo",

@@ -21,6 +21,7 @@ import { getSignedPhotoUrls } from "@/modules/media/signedUrls";
 import { categoryName } from "@/modules/reports/categoryLabels";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { getReportsFeed, getSiteReportsFeed, getWorkCategories } from "@/modules/reports/queries";
+import { isSiteArchived } from "@/modules/sites/archive";
 import { getSiteById } from "@/modules/sites/queries";
 import { Ticket } from "@/components/ui/ticket";
 
@@ -81,7 +82,7 @@ export default async function ObjectDetailPage({
                 <ObjectMenu
                   siteId={site.id}
                   siteName={site.name}
-                  isArchived={site.archived_at !== null}
+                  isArchived={isSiteArchived(site)}
                   showEdit={false}
                   afterDeleteHref="/objects"
                   className="text-text"
@@ -113,7 +114,7 @@ export default async function ObjectDetailPage({
             <section>
               <div className="flex items-start justify-between gap-3">
                 <h1 className="min-w-0 text-[22px] leading-tight font-semibold">{site.name}</h1>
-                {site.archived_at ? (
+                {isSiteArchived(site) ? (
                   <span className="shrink-0 pt-1 text-[12px] font-semibold tracking-[0.04em] text-ink-2 uppercase">
                     {t.objects.archivedBadge}
                   </span>

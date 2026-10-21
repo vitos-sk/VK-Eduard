@@ -32,15 +32,30 @@ function Input({ className, size, type, ...props }: InputProps) {
   )
 }
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+/**
+ * `composer` — поле ввода чата: одна строка высотой с кнопки рядом (44 px на телефоне, 40 на ПК), растёт по тексту.
+ * Строка целых 24 px и отступы 9 / 7 px подобраны так, чтобы строка с рамкой 2 px ровно помещалась в эту высоту:
+ * иначе текст не влезает на пару пикселей и внутри поля появляется полоса прокрутки (на телефоне — серое пятно справа).
+ * Полоса скрыта и когда текст дорос до максимальной высоты: поле всё равно прокручивается.
+ */
+const textareaVariants = cva("", {
+  variants: {
+    size: {
+      default: "min-h-24 resize-y px-4 py-3 leading-[1.45]",
+      composer: "min-h-ctl-md resize-none px-3 py-[9px] leading-6 no-scrollbar lg:py-[7px]",
+    },
+  },
+  defaultVariants: { size: "default" },
+})
+
+type TextareaProps = Omit<React.ComponentProps<"textarea">, "size"> &
+  VariantProps<typeof textareaVariants>
+
+function Textarea({ className, size, ...props }: TextareaProps) {
   return (
     <textarea
       data-slot="textarea"
-      className={cn(
-        fieldVariants({ size: null }),
-        "min-h-24 resize-y px-4 py-3 leading-[1.45]",
-        className
-      )}
+      className={cn(fieldVariants({ size: null }), textareaVariants({ size }), className)}
       {...props}
     />
   )

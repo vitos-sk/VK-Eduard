@@ -6,8 +6,9 @@ export type Site = Tables<"sites">;
 
 /**
  * Активные объекты компании — для выпадашки выбора в форме записи времени.
- * Архивные (`archived_at` задан) сюда не попадают: закрытый объект незачем
- * предлагать для новой записи, история по нему остаётся доступной напрямую.
+ * Архивные (`archived_at` задан) и завершённые (`status = completed`, они уходят в архив сами)
+ * сюда не попадают: закрытый объект незачем предлагать для новой записи, история по нему
+ * остаётся доступной напрямую.
  */
 export async function getActiveSites(
   supabase: SupabaseClient<Database>,
@@ -16,6 +17,7 @@ export async function getActiveSites(
     .from("sites")
     .select("*")
     .is("archived_at", null)
+    .neq("status", "completed")
     .order("name", { ascending: true });
 
   if (error) throw error;

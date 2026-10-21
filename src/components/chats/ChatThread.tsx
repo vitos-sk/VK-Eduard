@@ -118,7 +118,9 @@ export function ChatThread({ chat, meId, meIsBoss, initialMessages }: ChatThread
     if (!field) return;
 
     field.style.height = "auto";
-    field.style.height = `${Math.min(field.scrollHeight, COMPOSER_MAX_PX)}px`;
+    // `scrollHeight` без рамки, а высота поля считается вместе с ней: без этой добавки текст не помещается и появляется полоса прокрутки.
+    const border = field.offsetHeight - field.clientHeight;
+    field.style.height = `${Math.min(field.scrollHeight + border, COMPOSER_MAX_PX)}px`;
   }
 
   function handleSend() {
@@ -248,7 +250,7 @@ export function ChatThread({ chat, meId, meIsBoss, initialMessages }: ChatThread
 
       {/* Панель ввода липнет к низу области прокрутки, прямо над нижней панелью. Смещение -bottom-6 гасит нижний отступ
           области прокрутки (`pb-6` в `AppShell`): отступы «прилипания» считаются от содержимого, а не от края. */}
-      <div className="perf-t sticky -bottom-6 z-10 bg-paper px-4 py-2 lg:bottom-0">
+      <div className="sticky -bottom-6 z-10 bg-paper px-4 py-1 lg:bottom-0">
         <div className="flex items-end gap-2 lg:mx-auto lg:max-w-[640px]">
           <Button variant="outline" size="icon" aria-label={t.chats.attach.open} onClick={() => setAttachOpen(true)}>
             <Paperclip className="size-5" strokeWidth={1.9} aria-hidden />
@@ -260,7 +262,8 @@ export function ChatThread({ chat, meId, meIsBoss, initialMessages }: ChatThread
             value={draft}
             placeholder={t.chats.messagePlaceholder}
             aria-label={t.chats.messagePlaceholder}
-            className={cn("max-h-32 min-h-ctl-md resize-none px-3 py-2.5")}
+            size="composer"
+            className="max-h-32"
             onChange={(event) => {
               setDraft(event.target.value);
               resizeComposer();
@@ -290,7 +293,7 @@ export function ChatThread({ chat, meId, meIsBoss, initialMessages }: ChatThread
       <div ref={endRef} />
 
       {attachTarget && (
-        <ChatAttachSheet open={attachOpen} onOpenChange={setAttachOpen} meId={meId} target={attachTarget} onSent={() => void reload()} />
+        <ChatAttachSheet open={attachOpen} onOpenChange={setAttachOpen} target={attachTarget} />
       )}
     </div>
   );

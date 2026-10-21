@@ -1,13 +1,9 @@
 "use client";
 
+import { MapPin, Users } from "lucide-react";
+
 import { Chip } from "@/components/ui/chip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FilterSelect } from "@/components/shared/FilterSelect";
 import { DateRangeField } from "@/components/shared/DateRangeField";
 import { useT } from "@/lib/i18n/client";
 import type { WorkStatus } from "@/lib/types";
@@ -35,6 +31,8 @@ export const EMPTY_FILTERS: ObjectsFiltersState = {
 interface Option {
   id: string;
   name: string;
+  /** Подпись под названием в списке (адрес объекта). */
+  description?: string;
 }
 
 interface ObjectsFiltersProps {
@@ -45,7 +43,6 @@ interface ObjectsFiltersProps {
   workers?: readonly Option[];
 }
 
-const selectTriggerClass = "mt-1 h-ctl-md w-full rounded-ctl px-3 text-[14px] font-medium text-text";
 const labelClass = "text-[12px] text-ink-2";
 
 /** Блок фільтрів списку «Об'єкти»: статус, період, конкретний об'єкт, працівник. */
@@ -57,7 +54,7 @@ export function ObjectsFilters({ value, onChange, sites, workers }: ObjectsFilte
     { value: "not_started", label: s.filters.statusNotStarted },
     { value: "in_progress", label: s.filters.statusInProgress },
     { value: "paused", label: s.filters.statusPaused },
-    { value: "completed", label: s.filters.statusCompleted },
+    // «Завершено» нет: завершённые объекты уходят в архив сами — смотрите вкладку «Архів».
   ];
   const patch = (partial: Partial<ObjectsFiltersState>) => onChange({ ...value, ...partial });
 
@@ -93,37 +90,31 @@ export function ObjectsFilters({ value, onChange, sites, workers }: ObjectsFilte
 
       <div>
         <label className={labelClass}>{s.filters.object}</label>
-        <Select value={value.siteId} onValueChange={(siteId) => patch({ siteId })}>
-          <SelectTrigger className={selectTriggerClass}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY}>{s.filters.objectAll}</SelectItem>
-            {sites.map((site) => (
-              <SelectItem key={site.id} value={site.id}>
-                {site.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          className="mt-1"
+          icon={MapPin}
+          avatar="icon"
+          label={s.filters.object}
+          allLabel={s.filters.objectAll}
+          value={value.siteId}
+          onChange={(siteId) => patch({ siteId })}
+          options={sites}
+        />
       </div>
 
       {workers && (
         <div>
           <label className={labelClass}>{s.filters.worker}</label>
-          <Select value={value.workerId} onValueChange={(workerId) => patch({ workerId })}>
-            <SelectTrigger className={selectTriggerClass}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ANY}>{s.filters.workerAll}</SelectItem>
-              {workers.map((worker) => (
-                <SelectItem key={worker.id} value={worker.id}>
-                  {worker.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            className="mt-1"
+            icon={Users}
+            avatar="initials"
+            label={s.filters.worker}
+            allLabel={s.filters.workerAll}
+            value={value.workerId}
+            onChange={(workerId) => patch({ workerId })}
+            options={workers}
+          />
         </div>
       )}
     </div>
