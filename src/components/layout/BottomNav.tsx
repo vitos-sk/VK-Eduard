@@ -55,9 +55,9 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   return (
     <nav
       aria-label={t.common.appName}
-      className="perf-t z-60 shrink-0 bg-nav pb-[env(safe-area-inset-bottom)]"
+      className="perf-t relative z-60 shrink-0 bg-ticket pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="grid min-h-[52px] grid-cols-5 items-start px-1 pt-1">
+      <div className="grid min-h-[52px] grid-cols-5 items-start px-1 pt-1.5">
         {leftItems.map((item) => (
           <NavTab key={item.href} item={item} pathname={pathname} />
         ))}
@@ -85,20 +85,24 @@ function NavTab({ item, pathname }: { item: NavItem; pathname: string }) {
       aria-current={isActive ? "page" : undefined}
       className={cn(
         // зона нажатия ≥44 px: ссылка на всю ширину ячейки и 44+ по высоте
-        "relative flex min-h-11 flex-col items-center gap-0.5 text-[11px] leading-[13px] outline-none",
+        "relative flex min-h-11 flex-col items-center gap-1 text-[11px] leading-[13px] outline-none",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        // На хаки неактивное — `ink` (контраст 10:1; `ink-2` здесь ниже AA для 11 px).
-        isActive ? "font-semibold text-primary" : "font-medium text-ink",
+        isActive ? "font-semibold text-primary" : "font-medium text-ink-2",
       )}
     >
-      {/* Подсветка активной вкладки: светлая «таблетка» под иконкой, как талон на хаки. */}
-      <span
+      <Icon
+        className={cn("size-[22px] transition-transform duration-150", isActive && "scale-105")}
+        strokeWidth={isActive ? 2.3 : 1.8}
         aria-hidden
-        className={cn("grid h-7 w-14 place-items-center rounded-full transition-colors duration-150", isActive && "perf-t")}
-      >
-        <Icon className="size-[22px]" strokeWidth={1.9} aria-hidden />
-      </span>
+      />
       <span>{item.label}</span>
+      {/* Аккуратная круглая точка-индикатор под выбранным пунктом */}
+      {isActive && (
+        <span
+          aria-hidden
+          className="absolute -bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary"
+        />
+      )}
     </Link>
   );
 }

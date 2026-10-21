@@ -1,37 +1,13 @@
 import { Logo } from "@/components/brand/Logo";
 import { InfoPage } from "@/components/more/InfoPage";
-import { Ticket, TicketBody } from "@/components/ui/ticket";
+import { Ticket } from "@/components/ui/ticket";
 import { getT } from "@/lib/i18n/server";
 import { version } from "../../../../../package.json";
 
 const SECTION_TITLE =
   "mt-2 text-[13px] font-semibold tracking-wide text-ink-3 uppercase";
 
-interface Credit {
-  name: string;
-  role: string;
-  items: string[];
-}
-
-function CreditCard({ credit }: { credit: Credit }) {
-  return (
-    <Ticket compact>
-      <TicketBody className="flex flex-col gap-2 py-3">
-        <div>
-          <p className="text-[16px] font-semibold text-ink">{credit.name}</p>
-          <p className="text-[13px] text-ink-2">{credit.role}</p>
-        </div>
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[14px] leading-snug marker:text-ink-3">
-          {credit.items.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </TicketBody>
-    </Ticket>
-  );
-}
-
-/** «Про додаток»: що це за застосунок і хто його створив — у тому ж порядку, що й у словнику. */
+/** «Про додаток»: що це за застосунок — назва, версія та параметри. */
 export default async function AboutPage() {
   const t = await getT();
   const about = t.profile.aboutPage;
@@ -62,12 +38,6 @@ export default async function AboutPage() {
           </div>
         ))}
       </Ticket>
-
-      <h2 className={SECTION_TITLE}>{about.creditsTitle}</h2>
-      <CreditCard credit={about.vitaliy} />
-      <CreditCard credit={about.eduard} />
-
-      <p className="mt-2 text-center text-[13px] text-ink-3">{about.rights}</p>
     </InfoPage>
   );
 }
