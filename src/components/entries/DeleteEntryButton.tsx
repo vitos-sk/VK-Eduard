@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,14 +13,25 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { useT } from "@/lib/i18n/client";
-import { deleteEntry } from "@/modules/entries/actions";
+import { deleteEntry, findReportToOffer } from "@/modules/entries/actions";
+import { deleteReport } from "@/modules/reports/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
+/** Что удалено: `reportDeleted` — вместе со временем убрали и отчёт (страница отчёта тогда закрывается). */
+export interface DeleteOutcome {
+  reportDeleted: boolean;
+}
 
 interface DeleteEntryButtonProps {
   entryId: string;
   /** Вызывается после успешного удаления — навигация или перезапрос данных решает вызывающий. */
-  onDeleted: () => void;
+  onDeleted: (outcome?: DeleteOutcome) => void;
+  /**
+   * Запись рабочего времени: если это последнее время за день и на день есть отчёт, окно спрашивает,
+   * удалять ли и отчёт. Для дороги и прочего не нужно.
+   */
+  askAboutReport?: boolean;
   /** Компактный вид — только иконка, без подписи; для рядка таблиці. */
   iconOnly?: boolean;
   /** Низкая кнопка с короткой подписью «Видалити» — для розкритого рядка зміни на телефоні. */
@@ -46,10 +57,47 @@ export function DeleteEntryButton({
   className,
   remove = deleteEntry,
   texts,
+  askAboutReport = false,
 }: DeleteEntryButtonProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  // Отчёт, который предлагаем удалить вместе со временем (`null` — спрашивать не о чем), и идёт ли проверка.
+  const [offer, setOffer] = useState<{ checking: boolean; reportId: string | null }>({ checking: false, reportId: null });
+  const lastCheck = useRef(0);
+
+  const handleOpen = () => {
+    setOpen(true);
+
+    if (!askAboutReport) return;
+
+    // Поздний ответ от прошлого открытия окна не должен подменить свежий.
+    const check = ++lastCheck.current;
+    setOffer({ checking: true, reportId: null });
+
+    findReportToOffer(entryId)
+      .then((result) => check === lastCheck.current && setOffer({ checking: false, reportId: result.reportId }))
+      .catch(() => check === lastCheck.current && setOffer({ checking: false, reportId: null }));
+  };
+
+  // Время и вместе с ним отчёт (а с отчётом уходят и дорога за этот день).
+  const handleConfirmWithReport = () => {
+    const reportId = offer.reportId;
+    if (!reportId) return;
+
+    startTransition(async () => {
+      const result = await deleteReport(reportId);
+
+      if (result.error) {
+        toast(result.error);
+        return;
+      }
+
+      setOpen(false);
+      toast(result.warning ?? t.hours.entryAndReportDeleted);
+      onDeleted({ reportDeleted: true });
+    });
+  };
 
   const handleConfirm = () => {
     startTransition(async () => {
@@ -62,7 +110,7 @@ export function DeleteEntryButton({
 
       setOpen(false);
       toast(texts?.deleted ?? t.hours.entryDeleted);
-      onDeleted();
+      onDeleted({ reportDeleted: false });
     });
   };
 
@@ -72,7 +120,7 @@ export function DeleteEntryButton({
         variant={iconOnly ? "ghost" : "danger"}
         size={iconOnly ? "icon-sm" : compact ? "sm" : "lg"}
         block={!iconOnly}
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         aria-label={t.hours.deleteEntry}
         className={cn(iconOnly && "text-danger-fg", className)}
       >
@@ -84,16 +132,29 @@ export function DeleteEntryButton({
         <ModalContent>
           <ModalHeader>
             <ModalTitle>{texts?.title ?? t.hours.deleteConfirmTitle}</ModalTitle>
-            <ModalDescription>{texts?.body ?? t.hours.deleteConfirmBody}</ModalDescription>
+            <ModalDescription>
+              {offer.reportId ? t.hours.deleteTimeAndReportBody : (texts?.body ?? t.hours.deleteConfirmBody)}
+            </ModalDescription>
           </ModalHeader>
 
           <ModalFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button variant="danger" onClick={handleConfirm} disabled={isPending}>
-              {t.hours.deleteConfirmAction}
-            </Button>
+            {offer.reportId ? (
+              <>
+                <Button variant="outline" onClick={handleConfirm} disabled={isPending}>
+                  {t.hours.deleteTimeOnly}
+                </Button>
+                <Button variant="danger" onClick={handleConfirmWithReport} disabled={isPending}>
+                  {t.hours.deleteTimeAndReport}
+                </Button>
+              </>
+            ) : (
+              <Button variant="danger" onClick={handleConfirm} disabled={isPending || offer.checking}>
+                {t.hours.deleteConfirmAction}
+              </Button>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>

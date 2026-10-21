@@ -254,3 +254,58 @@ export async function deleteEntry(entryId: string): Promise<EntryActionState> {
 
   return OK;
 }
+
+export interface ReportOffer {
+  /** Звіт, який можна запропонувати видалити разом із часом; `null` — питати нічого. */
+  reportId: string | null;
+}
+
+/**
+ * Перед видаленням зміни: чи питати про звіт. Питаємо, тільки коли це остання закрита зміна автора за
+ * цей день на цьому об'єкті і на цей день є рівно один звіт (так само «зв'язане», як на сторінці звіту).
+ * Лишається ще час, звіту нема або їх кілька — просто видаляємо час, питати не про що.
+ * Права решает RLS: рабочий бачить лише свої записи, шеф — всі в компанії.
+ */
+export async function findReportToOffer(entryId: string): Promise<ReportOffer> {
+  const none: ReportOffer = { reportId: null };
+  const profile = await getProfile();
+
+  if (!profile) return none;
+
+  const supabase = await createClient();
+
+  const { data: entry, error: entryError } = await supabase
+    .from("work_entries")
+    .select("author_id, work_date, site_id, ended_at")
+    .eq("id", entryId)
+    .maybeSingle();
+
+  // Зміна, що ще йде, до звіту не належить.
+  if (entryError || !entry || entry.ended_at === null) return none;
+
+  let siblings = supabase
+    .from("work_entries")
+    .select("id")
+    .eq("author_id", entry.author_id)
+    .eq("work_date", entry.work_date)
+    .not("ended_at", "is", null);
+
+  siblings = entry.site_id ? siblings.eq("site_id", entry.site_id) : siblings.is("site_id", null);
+
+  const { data: sameDay, error: siblingsError } = await siblings;
+
+  if (siblingsError || !sameDay || sameDay.some((row) => row.id !== entryId)) return none;
+
+  let reports = supabase
+    .from("site_reports")
+    .select("id")
+    .eq("author_id", entry.author_id)
+    .eq("work_date", entry.work_date)
+    .limit(2);
+
+  reports = entry.site_id ? reports.eq("site_id", entry.site_id) : reports.is("site_id", null);
+
+  const { data: found, error: reportsError } = await reports;
+
+  return !reportsError && found?.length === 1 ? { reportId: found[0].id } : none;
+}

@@ -277,6 +277,7 @@ export const nl: Dict = {
       emptyTitleAll: "Nog geen rapporten voor dit project",
       edit: "Bewerken",
       openInMaps: "Route plannen",
+      openChat: "Chat openen",
     },
     form: {
       createTitle: "Nieuw project",
@@ -328,6 +329,8 @@ export const nl: Dict = {
     pickDate: "Datum kiezen",
     prevPeriod: "Vorige periode",
     nextPeriod: "Volgende periode",
+    /** «✕» рядом с календарём и кнопка пустого дня: снять выбор дня. */
+    showWholeMonth: "Hele maand tonen",
     emptyTitle: "Geen gegevens voor deze periode",
     emptyHint: "Kies een andere periode of voeg tijd handmatig toe",
     noEntriesToday: "Nog geen registraties voor deze dag",
@@ -343,10 +346,16 @@ export const nl: Dict = {
     deleteEntry: "Registratie verwijderen",
     deleteConfirmTitle: "Registratie verwijderen?",
     deleteConfirmBody: "Dit kan niet ongedaan worden gemaakt — de werktijdregistratie wordt voorgoed verwijderd.",
+    /** De laatste dienst van de dag wordt verwijderd en er is een rapport voor die dag — vraag wat er met het rapport moet gebeuren. */
+    deleteTimeAndReportBody:
+      "Dit is de laatste werktijd van deze dag op dit project en er is een rapport voor. Alleen de tijd verwijderen, of ook het rapport en de reistijd?",
+    deleteTimeOnly: "Alleen tijd",
+    deleteTimeAndReport: "Tijd en rapport",
+    entryAndReportDeleted: "Tijd en rapport verwijderd",
     deleteConfirmAction: "Verwijderen",
     entryDeleted: "Registratie verwijderd",
     deleteError: "Registratie verwijderen mislukt. Probeer het opnieuw",
-    salaryCalcTitle: "Salarisrekenmachine",
+    salaryCalcTitle: "Loonberekening",
     salaryCalcWorkerLabel: "Medewerker",
     salaryCalcSelf: "Ik",
     salaryCalcAll: "Iedereen",
@@ -365,15 +374,11 @@ export const nl: Dict = {
     title: "Rapporten",
     searchPlaceholder: "Rapporten zoeken...",
     createReport: "Rapport maken",
-    addReport: "Rapport toevoegen",
+    addReport: "Nieuw rapport",
     tabs: {
       all: "Alle",
       noDescription: "Zonder beschrijving",
       withPhoto: "Met foto",
-    },
-    screenTabs: {
-      mine: "Mijn",
-      team: "Team",
     },
     team: {
       allWorkers: "Alle medewerkers",
@@ -422,6 +427,7 @@ export const nl: Dict = {
     emptyHint: "Maak je eerste rapport over het uitgevoerde werk",
     emptyFilterTitle: "Niets gevonden",
     emptyFilterHint: "Pas de filters of de zoekopdracht aan",
+    emptyDayTitle: "Geen rapporten voor {day}",
     emptyNoDescriptionTitle: "Alle rapporten zijn ingevuld",
   },
 
@@ -456,10 +462,13 @@ export const nl: Dict = {
     saveRejected: "Wijzigingen opslaan mislukt. Probeer het opnieuw of neem contact op met je baas",
     deleteEntry: "Rapport verwijderen",
     deleteConfirmTitle: "Rapport verwijderen?",
-    deleteConfirmBody: "Dit kan niet ongedaan worden gemaakt — het rapport wordt voorgoed verwijderd.",
+    deleteConfirmBody:
+      "Dit kan niet ongedaan worden gemaakt — het rapport wordt voorgoed verwijderd, samen met de werktijd en reistijd van deze dag op dit project.",
     deleteConfirmAction: "Verwijderen",
     entryDeleted: "Rapport verwijderd",
     deleteError: "Rapport verwijderen mislukt. Probeer het opnieuw",
+    /** Het rapport zelf is verwijderd, maar de werktijd of reistijd kon niet worden verwijderd. */
+    deleteLinkedError: "Het rapport is verwijderd, maar de werktijd en reistijd konden niet worden verwijderd. Verwijder ze bij Uren",
     categoriesLabel: "Soort werk",
     noCategoriesLabel: "Niet opgegeven",
     timeTitle: "Gewerkte tijd",
@@ -666,6 +675,22 @@ export const nl: Dict = {
     send: "Bericht versturen",
     sendError: "Versturen mislukt",
     startError: "Chat openen mislukt",
+    siteSubtitle: "Objectchat",
+    menu: { open: "Acties voor de chat", clear: "Wissen", delete: "Chat verwijderen" },
+    clearChat: {
+      title: "Chat wissen?",
+      body: "Het gesprek verdwijnt alleen voor jou. Anderen houden het.",
+      confirm: "Wissen",
+      done: "Chat gewist",
+      error: "Chat wissen mislukt",
+    },
+    deleteChat: {
+      title: "Chat verwijderen?",
+      body: "De chat verdwijnt voor jullie allebei en kan niet worden hersteld.",
+      confirm: "Verwijderen",
+      done: "Chat verwijderd",
+      error: "Chat verwijderen mislukt",
+    },
     today: "Vandaag",
     yesterday: "Gisteren",
     card: {
@@ -683,6 +708,7 @@ export const nl: Dict = {
       deleteTitle: "Checklist uit de chat verwijderen?",
       deleteBodyMine: "De checklist verdwijnt uit de chat en uit je lijst.",
       deleteBodySent: "De kaart verdwijnt voor jullie allebei uit de chat. Je collega houdt de checklist in zijn lijst.",
+      deleteBodySite: "De kaart verdwijnt voor iedereen uit de chat. De maker houdt de checklist.",
       removed: "Verwijderd",
       deleteError: "Verwijderen mislukt. Probeer het opnieuw",
     },
@@ -983,10 +1009,9 @@ export const nl: Dict = {
 
   hoursUi: {
     showTravel: "Reistijd",
+    emptyDayTitle: "Geen diensten voor {day}",
+    dayTableTitle: "Diensten van deze dag",
     showWork: "Werktijd",
-    scopeLabel: "Wiens uren",
-    scopeSelf: "Ik",
-    scopeTeam: "Team",
     filterWorkerLabel: "Medewerker",
     filterWorkerAll: "Alle medewerkers",
     filterSiteLabel: "Project",
@@ -1114,7 +1139,8 @@ export const nl: Dict = {
       emptyFilteredHint: "Herstel de filters of kies een andere maand",
       deleteReport: "Rapport verwijderen",
       deleteConfirmTitle: "Rapport verwijderen?",
-      deleteConfirmBody: "Het rapport verdwijnt samen met alle foto's voorgoed — herstellen is niet mogelijk.",
+      deleteConfirmBody:
+        "Het rapport verdwijnt samen met alle foto's, de werktijd en de reistijd van deze dag op dit project voorgoed — herstellen is niet mogelijk.",
       deleteConfirmAction: "Verwijderen",
       deleteSuccess: "Rapport verwijderd",
       loadError: "Rapportenlijst vernieuwen mislukt",

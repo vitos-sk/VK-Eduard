@@ -18,7 +18,7 @@ type Row = TravelEntry & {
 };
 
 /** Коды «таблицы нет» (миграция 0018 ещё не накатана): Postgres и PostgREST. */
-const MISSING_TABLE_CODES = new Set(["42P01", "PGRST205"]);
+export const MISSING_TABLE_CODES = new Set(["42P01", "PGRST205"]);
 
 /**
  * Поездки за диапазон дат (RLS: рабочему — свои, шефу — вся компания). Если таблицы ещё нет —

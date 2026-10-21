@@ -8,19 +8,12 @@ import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
 import { TeamTab } from "@/components/reports/TeamTab";
-import {
-  SegmentedTabs,
-  type SegmentedOption,
-} from "@/components/shared/SegmentedTabs";
 import { useT } from "@/lib/i18n/client";
-import { useSessionState } from "@/lib/nav/useSessionState";
 import { initialsOf } from "@/components/shared/Thumb";
 import type { Profile } from "@/modules/auth/profile";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
-
-type ScreenTab = "mine" | "team";
 
 interface ReportsScreenProps {
   profile: Profile;
@@ -32,17 +25,12 @@ interface ReportsScreenProps {
 }
 
 /**
- * Экран «Звіти». У boss дві вкладки нагорі — «Мої» (свои записи, як і
- * раніше) і «Команда» (REPORTS.md, розділ 4); у рядового робітника
- * вкладок нема, він завжди бачить тільки свою стрічку.
+ * Экран «Звіти». Шеф сразу видит команду (REPORTS.md, розділ 4): его собственные
+ * отчёты там же — в общей ленте и в списке «Люди». Рядовой робітник видит
+ * только свою стрічку. Переключателей «Мої / Команда» нет.
  */
 export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }: ReportsScreenProps) {
   const t = useT();
-  const SCREEN_TAB_OPTIONS: readonly SegmentedOption<ScreenTab>[] = [
-    { value: "team", label: t.reports.screenTabs.team },
-    { value: "mine", label: t.reports.screenTabs.mine },
-  ];
-  const [tab, setTab] = useSessionState<ScreenTab>("reports:tab", "team");
   const isBoss = profile.role === "boss";
 
   return (
@@ -53,7 +41,8 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
           <div className="flex items-center gap-2">
             <Button asChild variant="primary" size="sm" aria-label={t.reports.createReport}>
               <Link href="/reports/new">
-                <Plus className="size-4" strokeWidth={2} aria-hidden />
+                {/* На узком экране значок уступает место подписи: перевод бывает длинным. */}
+                <Plus className="size-4 max-[369px]:hidden" strokeWidth={2} aria-hidden />
                 {t.reports.addReport}
               </Link>
             </Button>
@@ -63,19 +52,7 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
         }
       />
 
-      {isBoss && (
-        <div className="px-4 lg:px-0">
-          <SegmentedTabs
-            className="mb-3 lg:w-[240px]"
-            options={SCREEN_TAB_OPTIONS}
-            value={tab}
-            onChange={setTab}
-            label={t.reports.title}
-          />
-        </div>
-      )}
-
-      {isBoss && tab === "team" ? (
+      {isBoss ? (
         <TeamTab companyId={profile.company_id} sites={sites} categories={categories} />
       ) : (
         <ReportsFeed reports={reports} sites={sites} categories={categories} thumbUrls={thumbUrls} />

@@ -10,16 +10,18 @@ import {
   SegmentedTabs,
   type SegmentedOption,
 } from "@/components/shared/SegmentedTabs";
+import { activeDay, matchesDay } from "@/lib/dayFilter";
 import { fmt, formatDayMonth, fromDateKey } from "@/lib/format";
 import type { Dict } from "@/lib/i18n";
 import { useLocale, useT } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n/locales";
-import { useSessionState, dateCodec } from "@/lib/nav/useSessionState";
+import { useSessionState, dateCodec, nullableDateCodec } from "@/lib/nav/useSessionState";
 import { aggregateCategoryStats } from "@/modules/reports/categoryStats";
 import { reportState } from "@/modules/reports/reportState";
 import type { SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import { dateKeyOf } from "@/modules/time/calc";
+import { Button } from "@/components/ui/button";
 import { Ticket } from "@/components/ui/ticket";
 
 type ReportFilter = "all" | "no_description" | "with_photo";
@@ -65,11 +67,16 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
   const [filter, setFilter] = useSessionState<ReportFilter>("reports:mine:filter", "all");
   const [query, setQuery] = useSessionState("reports:mine:query", "");
   const [month, setMonth] = useSessionState("reports:mine:month", new Date(), dateCodec);
+  const [day, setDay] = useSessionState<Date | null>("reports:mine:day", null, nullableDateCodec);
+  const selectedDay = activeDay(day, month);
 
   const siteNameById = useMemo(
     () => new Map(sites.map((site) => [site.id, site.name] as const)),
     [sites],
   );
+
+  // Дни месяца, в которых у человека есть отчёты, — точки в календаре.
+  const markedDays = useMemo(() => [...new Set(reports.map((report) => report.work_date))], [reports]);
 
   const now = new Date();
   const todayKey = dateKeyOf(now);
@@ -81,7 +88,8 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
     const monthKey = dateKeyOf(month).slice(0, 7);
 
     return reports.filter((report) => {
-      if (!report.work_date.startsWith(monthKey)) return false;
+      // Выбран день — только он, иначе весь месяц.
+      if (selectedDay ? !matchesDay(report.work_date, selectedDay) : !report.work_date.startsWith(monthKey)) return false;
 
       const state = reportState(report, report.report_photos.length);
 
@@ -95,7 +103,7 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
 
       return haystack.includes(needle);
     });
-  }, [reports, filter, query, siteNameById, month, locale]);
+  }, [reports, filter, query, siteNameById, month, selectedDay, locale]);
 
   const groups = useMemo<DateGroup[]>(() => {
     const byDate = new Map<string, SiteReportWithPhotos[]>();
@@ -133,7 +141,14 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
 
   return (
     <div className="px-4 lg:px-0">
-      <MonthNavigator className="mb-3 lg:w-[380px]" date={month} onChange={setMonth} />
+      <MonthNavigator
+        className="mb-3 lg:w-[380px]"
+        date={month}
+        onChange={setMonth}
+        day={selectedDay}
+        onDayChange={setDay}
+        markedDays={markedDays}
+      />
 
       <div className="lg:flex lg:items-center lg:gap-4">
         <SearchField
@@ -196,6 +211,17 @@ export function ReportsFeed({ reports, sites, categories, thumbUrls = {} }: Repo
             </div>
           </section>
         ))
+      ) : selectedDay && filter === "all" && query.trim() === "" ? (
+        // В выбранном дне отчётов нет — подсказка и возврат к месяцу, а не общее «ничего не найдено».
+        <EmptyState
+          className="mt-6"
+          title={fmt(t.reports.emptyDayTitle, { day: formatDayMonth(selectedDay, locale) })}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setDay(null)}>
+              {t.hours.showWholeMonth}
+            </Button>
+          }
+        />
       ) : (
         <EmptyState className="mt-6" title={emptyTitle} description={emptyHint} />
       )}

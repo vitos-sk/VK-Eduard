@@ -5,6 +5,8 @@ import { eachDayOfInterval, endOfMonth, startOfMonth } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Clock, Route, Share2 } from "lucide-react";
 
+import { EmptyState } from "@/components/shared/EmptyState";
+
 import { AddTimeButton } from "@/components/hours/AddTimeButton";
 import { MonthEntriesTable } from "@/components/hours/MonthEntriesTable";
 import { PeriodView } from "@/components/hours/PeriodView";
@@ -17,11 +19,13 @@ import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { TeamExportSheet } from "@/components/reports/TeamExportSheet";
 import type { ExportKind } from "@/modules/export/formats";
 import { MonthNavigator } from "@/components/shared/MonthNavigator";
-import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
 import type { Dict } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
+import { activeDay, matchesDay } from "@/lib/dayFilter";
+import { fmt, formatDayMonth } from "@/lib/format";
+import { useLocale, useT } from "@/lib/i18n/client";
 import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { getTravelEntriesInRange, type TravelEntryWithNames } from "@/modules/travel/queries";
 import { getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
@@ -56,6 +60,7 @@ export function HoursScreen({
   initialDate,
 }: HoursScreenProps) {
   const t = useT();
+  const locale = useLocale();
   const s = t.hoursUi;
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -63,15 +68,17 @@ export function HoursScreen({
   const isBoss = profile.role === "boss";
 
   const [date, setDate] = useState<Date>(() => new Date(`${initialDate}T00:00:00`));
+  // День, выбранный в календаре: показываем только его; «✕» рядом с календарём возвращает месяц.
+  const [day, setDay] = useState<Date | null>(null);
+  const selectedDay = activeDay(day, date);
 
   const [monthEntries, setMonthEntries] = useState<readonly WorkEntryWithNames[]>([]);
   const [travelEntries, setTravelEntries] = useState<readonly TravelEntryWithNames[]>([]);
   const [loadedMonthKey, setLoadedMonthKey] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
 
-  // Шеф: «Я / Команда» + фільтри по співробітнику й об'єкту.
+  // Шеф: фільтри по співробітнику й об'єкту (себе він обирає в списку співробітників).
   const [showTravel, setShowTravel] = useState(false);
-  const [scope, setScope] = useState<"self" | "team">("team");
   const [workerFilter, setWorkerFilter] = useState(ALL_FILTER);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [exportKind, setExportKind] = useState<ExportKind>("hours");
@@ -79,7 +86,7 @@ export function HoursScreen({
   const [siteFilter, setSiteFilter] = useState(ALL_FILTER);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [sites, setSites] = useState<readonly Site[]>([]);
-  const isTeamView = isBoss && scope === "team";
+  const isTeamView = isBoss;
 
   useEffect(() => {
     if (!isBoss) return;
@@ -137,27 +144,55 @@ export function HoursScreen({
 
   const isEntriesLoading = loadedMonthKey !== dateKeyOf(startOfMonth(date));
 
+  // Записи выбранного дня (дня нет — всего месяца): от них считаются и список, и цифры в фильтрах.
+  const dayEntries = useMemo(
+    () => (selectedDay ? monthEntries.filter((entry) => matchesDay(entry.work_date, selectedDay)) : monthEntries),
+    [monthEntries, selectedDay],
+  );
+  const dayTravel = useMemo(
+    () => (selectedDay ? travelEntries.filter((entry) => matchesDay(entry.work_date, selectedDay)) : travelEntries),
+    [travelEntries, selectedDay],
+  );
+
   const visibleEntries = useMemo(() => {
-    if (!isBoss) return monthEntries;
-    if (scope === "self") return monthEntries.filter((entry) => entry.author_id === profile.id);
+    if (!isBoss) return dayEntries;
 
-    return monthEntries.filter((entry) => {
+    return dayEntries.filter((entry) => {
       if (workerFilter !== ALL_FILTER && entry.author_id !== workerFilter) return false;
       if (siteFilter !== ALL_FILTER && entry.site_id !== siteFilter) return false;
       return true;
     });
-  }, [isBoss, scope, monthEntries, workerFilter, siteFilter, profile.id]);
-  // Дорога — с теми же фильтрами, что и смены: рабочему и шефу в режиме «Я» — своя, шефу в команде — по фильтрам.
+  }, [isBoss, dayEntries, workerFilter, siteFilter]);
+
+  // Точки в календаре: дни, где есть то, что сейчас показывает список (смены или дорога), с теми же фильтрами.
+  const markedDays = useMemo(() => {
+    const rows: readonly { work_date: string; author_id: string; site_id: string | null }[] = showTravel
+      ? travelEntries
+      : monthEntries;
+
+    return [
+      ...new Set(
+        rows
+          .filter((entry) => {
+            if (!isBoss) return true;
+            if (workerFilter !== ALL_FILTER && entry.author_id !== workerFilter) return false;
+            if (siteFilter !== ALL_FILTER && entry.site_id !== siteFilter) return false;
+            return true;
+          })
+          .map((entry) => entry.work_date),
+      ),
+    ];
+  }, [showTravel, travelEntries, monthEntries, isBoss, workerFilter, siteFilter]);
+  // Дорога — с теми же фильтрами, что и смены: рабочему — своя, шефу — по фильтрам.
   const visibleTravel = useMemo(() => {
-    if (!isBoss) return travelEntries;
-    if (scope === "self") return travelEntries.filter((entry) => entry.author_id === profile.id);
+    if (!isBoss) return dayTravel;
 
-    return travelEntries.filter((entry) => {
+    return dayTravel.filter((entry) => {
       if (workerFilter !== ALL_FILTER && entry.author_id !== workerFilter) return false;
       if (siteFilter !== ALL_FILTER && entry.site_id !== siteFilter) return false;
       return true;
     });
-  }, [isBoss, scope, travelEntries, workerFilter, siteFilter, profile.id]);
+  }, [isBoss, dayTravel, workerFilter, siteFilter]);
   const isFiltered = isTeamView && (workerFilter !== ALL_FILTER || siteFilter !== ALL_FILTER);
 
   // Підписи в списках фільтрів: скільки змін і годин зараз дадуть сам по собі співробітник чи об'єкт
@@ -165,18 +200,18 @@ export function HoursScreen({
   const workerStats = useMemo(
     () =>
       tallyEntries(
-        monthEntries.filter((entry) => siteFilter === ALL_FILTER || entry.site_id === siteFilter),
+        dayEntries.filter((entry) => siteFilter === ALL_FILTER || entry.site_id === siteFilter),
         (entry) => entry.author_id,
       ),
-    [monthEntries, siteFilter],
+    [dayEntries, siteFilter],
   );
   const siteStats = useMemo(
     () =>
       tallyEntries(
-        monthEntries.filter((entry) => workerFilter === ALL_FILTER || entry.author_id === workerFilter),
+        dayEntries.filter((entry) => workerFilter === ALL_FILTER || entry.author_id === workerFilter),
         (entry) => entry.site_id,
       ),
-    [monthEntries, workerFilter],
+    [dayEntries, workerFilter],
   );
 
   const handleChanged = useCallback(() => {
@@ -206,14 +241,21 @@ export function HoursScreen({
     );
   }, [date, isBoss, monthEntries, profile.daily_norm_minutes, t]);
 
-  // Калькулятор и переключатель «Робочий час / Час у дорозі» — две кнопки в ряд.
+  // Шеф: к двум кнопкам добавляется квадратный экспорт — всё в один ряд.
+  const hasExport = isTeamView;
+  const openExport = () => {
+    setExportIds(workerFilter !== ALL_FILTER ? [workerFilter] : []);
+    setIsExportOpen(true);
+  };
+
+  // Калькулятор, переключатель «Робочий час / Час у дорозі» и (шефу) экспорт — одним рядом.
   const actionsRow = (
-    <div className="grid grid-cols-2 gap-2">
+    <div className={cn("grid gap-2", hasExport ? "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" : "grid-cols-2")}>
       <SalaryLink month={date} />
       <Button
         variant="outline"
+        size="wrap"
         block
-        className="h-auto min-h-ctl-lg justify-start px-3 py-1.5 text-left text-[13px] leading-tight whitespace-normal"
         aria-pressed={showTravel}
         onClick={() => setShowTravel((value) => !value)}
       >
@@ -224,8 +266,54 @@ export function HoursScreen({
         )}
         {showTravel ? s.showWork : s.showTravel}
       </Button>
+      {hasExport && (
+        <Button variant="outline" size="icon-lg" onClick={openExport} aria-label={t.reportsUi.export.open}>
+          <Share2 className="size-5" strokeWidth={1.9} aria-hidden />
+        </Button>
+      )}
     </div>
   );
+
+  // Список под фильтрами: смены или дорога; в выбранном дне пусто — подсказка и возврат к месяцу.
+  const renderList = (className?: string) => {
+    if (showTravel) {
+      return (
+        <TravelEntriesCard
+          className={className}
+          entries={visibleTravel}
+          showAuthor={isTeamView}
+          onChanged={handleChanged}
+          showEmpty
+        />
+      );
+    }
+
+    if (selectedDay && !isFiltered && !isEntriesLoading && visibleEntries.length === 0) {
+      return (
+        <EmptyState
+          className={className}
+          title={fmt(s.emptyDayTitle, { day: formatDayMonth(selectedDay, locale) })}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setDay(null)}>
+              {t.hours.showWholeMonth}
+            </Button>
+          }
+        />
+      );
+    }
+
+    return (
+      <MonthEntriesTable
+        className={className}
+        entries={visibleEntries}
+        showAuthor={isTeamView}
+        isFiltered={isFiltered}
+        isLoading={isEntriesLoading}
+        title={selectedDay ? s.dayTableTitle : undefined}
+        onChanged={handleChanged}
+      />
+    );
+  };
 
   return (
     <div className="pb-6">
@@ -240,48 +328,36 @@ export function HoursScreen({
         }
       />
 
-      <MonthNavigator className="px-4 pb-3 lg:px-0" date={date} onChange={setDate} />
+      <MonthNavigator
+        className="px-4 pb-3 lg:px-0"
+        date={date}
+        onChange={setDate}
+        day={selectedDay}
+        onDayChange={setDay}
+        markedDays={markedDays}
+      />
 
       {isBoss && (
-        <div className="flex flex-col gap-3 px-4 pb-3 lg:flex-row lg:items-end lg:gap-4 lg:px-0">
-          <SegmentedTabs
-            label={s.scopeLabel}
-            value={scope}
-            onChange={setScope}
-            options={[
-              { value: "team", label: s.scopeTeam },
-              { value: "self", label: s.scopeSelf },
-            ]}
-            className="lg:w-[260px]"
+        <div className="px-4 pb-3 lg:px-0">
+          <HoursFilters
+            className="lg:w-[460px]"
+            workers={workers.map((w) => ({
+              id: w.id,
+              name: w.full_name,
+              ...(workerStats.byKey.get(w.id) ?? EMPTY_FILTER_STAT),
+            }))}
+            sites={sites.map((site) => ({
+              id: site.id,
+              name: site.name,
+              ...(siteStats.byKey.get(site.id) ?? EMPTY_FILTER_STAT),
+            }))}
+            workersTotal={workerStats.total}
+            sitesTotal={siteStats.total}
+            workerId={workerFilter}
+            siteId={siteFilter}
+            onWorkerChange={setWorkerFilter}
+            onSiteChange={setSiteFilter}
           />
-
-          {isTeamView && (
-            <>
-              <HoursFilters
-                className="lg:w-[460px]"
-                workers={workers.map((w) => ({
-                  id: w.id,
-                  name: w.full_name,
-                  ...(workerStats.byKey.get(w.id) ?? EMPTY_FILTER_STAT),
-                }))}
-                sites={sites.map((site) => ({
-                  id: site.id,
-                  name: site.name,
-                  ...(siteStats.byKey.get(site.id) ?? EMPTY_FILTER_STAT),
-                }))}
-                workersTotal={workerStats.total}
-                sitesTotal={siteStats.total}
-                workerId={workerFilter}
-                siteId={siteFilter}
-                onWorkerChange={setWorkerFilter}
-                onSiteChange={setSiteFilter}
-              />
-              <Button variant="outline" size="sm" className="lg:ml-auto" onClick={() => { setExportIds(workerFilter !== ALL_FILTER ? [workerFilter] : []); setIsExportOpen(true); }}>
-                <Share2 className="size-4" strokeWidth={1.9} aria-hidden />
-                {t.export.label}
-              </Button>
-            </>
-          )}
         </div>
       )}
 
@@ -308,41 +384,14 @@ export function HoursScreen({
 
         <div className="mt-3">{actionsRow}</div>
 
-        {showTravel ? (
-          <TravelEntriesCard
-            className="mt-3"
-            entries={visibleTravel}
-            showAuthor={isTeamView}
-            onChanged={handleChanged}
-            showEmpty
-          />
-        ) : (
-          <MonthEntriesTable
-            className="mt-3"
-            entries={visibleEntries}
-            showAuthor={isTeamView}
-            isFiltered={isFiltered}
-            isLoading={isEntriesLoading}
-            onChanged={handleChanged}
-          />
-        )}
+        {renderList("mt-3")}
       </div>
 
       {/* Десктоп: таблиця змін — на всю ширину зліва, праворуч панель 320 px
           з діями дня, сумою та калькулятором. */}
       <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
         <div className="flex flex-col gap-3">
-          {showTravel ? (
-            <TravelEntriesCard entries={visibleTravel} showAuthor={isTeamView} onChanged={handleChanged} showEmpty />
-          ) : (
-            <MonthEntriesTable
-              entries={visibleEntries}
-              showAuthor={isTeamView}
-              isFiltered={isFiltered}
-              isLoading={isEntriesLoading}
-              onChanged={handleChanged}
-            />
-          )}
+          {renderList()}
         </div>
 
         <div className="flex flex-col gap-3">

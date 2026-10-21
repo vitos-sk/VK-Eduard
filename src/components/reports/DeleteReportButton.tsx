@@ -42,7 +42,7 @@ export function DeleteReportButton({ reportId, onDeleted, iconOnly, className }:
       }
 
       setOpen(false);
-      toast(t.reportDetail.entryDeleted);
+      toast(result.warning ?? t.reportDetail.entryDeleted);
       onDeleted();
     });
   };

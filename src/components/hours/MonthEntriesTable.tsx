@@ -27,6 +27,8 @@ interface MonthEntriesTableProps {
   isFiltered?: boolean;
   /** Дані місяця ще вантажаться — замість порожнього стану скелетон. */
   isLoading?: boolean;
+  /** Свой заголовок (например, «Зміни за день», когда в календаре выбран день). */
+  title?: string;
   className?: string;
 }
 
@@ -45,6 +47,7 @@ export function MonthEntriesTable({
   onChanged,
   isFiltered = false,
   isLoading = false,
+  title,
   className,
 }: MonthEntriesTableProps) {
   const t = useT();
@@ -66,7 +69,7 @@ export function MonthEntriesTable({
   return (
     <Ticket asChild variant="flat"><section className={className}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[15px] font-semibold whitespace-nowrap">{t.hours.monthTableTitle}</h2>
+        <h2 className="text-[15px] font-semibold whitespace-nowrap">{title ?? t.hours.monthTableTitle}</h2>
         {entries.length > 0 && (
           <p className="tabular shrink-0 text-[12px] text-ink-2 lg:text-[13px]">
             {fmt(s.entriesTotal, {
@@ -174,7 +177,7 @@ function EntryRow({
               {s.editShort}
             </Link>
           </Button>
-          <DeleteEntryButton entryId={entry.id} onDeleted={onChanged} compact />
+          <DeleteEntryButton entryId={entry.id} onDeleted={onChanged} compact askAboutReport />
         </div>
       )}
     </TicketRow>

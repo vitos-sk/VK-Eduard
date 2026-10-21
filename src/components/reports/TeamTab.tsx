@@ -18,9 +18,10 @@ import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
 import { Avatar } from "@/components/ui/avatar";
 import { initialsOf } from "@/components/shared/Thumb";
 import { MonthNavigator } from "@/components/shared/MonthNavigator";
-import { fmt, formatHoursShort } from "@/lib/format";
+import { activeDay, matchesDay } from "@/lib/dayFilter";
+import { fmt, formatDayMonth, formatHoursShort } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
-import { dateCodec, useSessionState } from "@/lib/nav/useSessionState";
+import { dateCodec, nullableDateCodec, useSessionState } from "@/lib/nav/useSessionState";
 import { DATE_FNS_LOCALES } from "@/lib/i18n/locales";
 import { loadWithCache } from "@/lib/offline/cache";
 import { createClient } from "@/lib/supabase/client";
@@ -76,18 +77,19 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
   const locale = useLocale();
   const s = t.reportsUi;
   const VIEW_OPTIONS: readonly SegmentedOption<TeamView>[] = [
-    { value: "people", label: s.team.viewPeople },
     { value: "reports", label: s.team.viewReports },
+    { value: "people", label: s.team.viewPeople },
   ];
   const supabase = useMemo(() => createClient(), []);
 
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [month, setMonth] = useSessionState("reports:team:month", new Date(), dateCodec);
+  const [day, setDay] = useSessionState<Date | null>("reports:team:day", null, nullableDateCodec);
   const avatarUrls = useAvatarUrls(workers);
   const [monthMinutes, setMonthMinutes] = useState<ReadonlyMap<string, number>>(new Map());
   const [weekMinutes, setWeekMinutes] = useState<ReadonlyMap<string, number>>(new Map());
   const [search, setSearch] = useSessionState("reports:team:search", "");
-  const [view, setView] = useSessionState<TeamView>("reports:team:view", "people");
+  const [view, setView] = useSessionState<TeamView>("reports:team:view", "reports");
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [exportKind, setExportKind] = useState<ExportKind>("hours");
@@ -266,7 +268,11 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     [sites, s.feed.filterSiteAll],
   );
 
-  const feedReports = useMemo(
+  // День из календаря действует только в «Звіти»: «Люди» считают часы за месяц и неделю.
+  const selectedDay = view === "reports" ? activeDay(day, month) : null;
+
+  // Отчёты по выбранным сотрудникам и объекту — до фильтра по дню, из них же точки в календаре.
+  const scopedReports = useMemo(
     () =>
       companyReports.filter((report) => {
         if (selectedIds.size > 0 && !selectedIds.has(report.author_id)) return false;
@@ -275,6 +281,11 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
       }),
     [companyReports, selectedIds, siteFilter],
   );
+  const feedReports = useMemo(
+    () => scopedReports.filter((report) => matchesDay(report.work_date, selectedDay)),
+    [scopedReports, selectedDay],
+  );
+  const markedDays = useMemo(() => [...new Set(scopedReports.map((report) => report.work_date))], [scopedReports]);
   const photosTotal = feedReports.reduce((sum, report) => sum + report.photo_count, 0);
   const hasFeedFilters = selectedIds.size > 0 || siteFilter !== SITE_FILTER_ALL;
 
@@ -372,7 +383,18 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
     <div className="px-4 pb-2 lg:px-0">
       <div className="lg:flex lg:items-center lg:gap-3">
         <div className="flex items-center gap-2 lg:w-[380px] lg:shrink-0">
-          <MonthNavigator className="min-w-0 flex-1" date={month} onChange={setMonth} />
+          <MonthNavigator
+            className="min-w-0 flex-1"
+            date={month}
+            onChange={(next) => {
+              setMonth(next);
+              // В «Люди» месяц листают без дней; выбранный день тогда уже не про этот месяц.
+              if (view !== "reports") setDay(null);
+            }}
+            day={selectedDay}
+            onDayChange={view === "reports" ? setDay : undefined}
+            markedDays={markedDays}
+          />
           <ExportButton
             badge={selectedIds.size}
             onClick={() => openExport(view === "reports" ? "reports" : "hours")}
@@ -497,11 +519,24 @@ export function TeamTab({ companyId, sites, categories }: TeamTabProps) {
               ))}
             </div>
           ) : feedReports.length === 0 ? (
-            <EmptyState
-              className="mt-4"
-              title={hasFeedFilters ? s.feed.emptyFilteredTitle : s.feed.emptyTitle}
-              description={hasFeedFilters ? s.feed.emptyFilteredHint : undefined}
-            />
+            selectedDay && !hasFeedFilters ? (
+              // В выбранном дне отчётов нет — подсказка и возврат к месяцу.
+              <EmptyState
+                className="mt-4"
+                title={fmt(t.reports.emptyDayTitle, { day: formatDayMonth(selectedDay, locale) })}
+                action={
+                  <Button variant="outline" size="sm" onClick={() => setDay(null)}>
+                    {t.hours.showWholeMonth}
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                className="mt-4"
+                title={hasFeedFilters ? s.feed.emptyFilteredTitle : s.feed.emptyTitle}
+                description={hasFeedFilters ? s.feed.emptyFilteredHint : undefined}
+              />
+            )
           ) : (
             <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
               {feedReports.map((report) => (

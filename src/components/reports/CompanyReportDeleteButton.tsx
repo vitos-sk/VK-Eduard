@@ -45,7 +45,7 @@ export function CompanyReportDeleteButton({ reportId, onDeleted, className }: Co
       }
 
       setOpen(false);
-      toast(s.feed.deleteSuccess);
+      toast(result.warning ?? s.feed.deleteSuccess);
       onDeleted(reportId);
     });
   };

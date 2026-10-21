@@ -11,8 +11,11 @@ import { prefsFromRow, type PrefKey } from "./prefs";
  *
  * Уведомление — приятное дополнение к действию, а не его часть: сообщение уже в базе, поэтому любая ошибка здесь
  * (нет ключей, телефон недоступен) только пишется в лог и не должна ломать отправку чеклиста или сообщения.
+ *
+ * `pref: null` — вид уведомления без своего переключателя (например, «новый отчёт» для шефа): его
+ * выключает сам человек, отключив уведомления на устройстве.
  */
-export async function notifyUser(userId: string, pref: Exclude<PrefKey, "reportReminder">, build: (locale: string) => PushPayload): Promise<void> {
+export async function notifyUser(userId: string, pref: Exclude<PrefKey, "reportReminder"> | null, build: (locale: string) => PushPayload): Promise<void> {
   try {
     const admin = createAdminClient();
 
@@ -22,7 +25,7 @@ export async function notifyUser(userId: string, pref: Exclude<PrefKey, "reportR
     ]);
 
     if (error) throw error;
-    if (!subs?.length || !prefsFromRow(prefsRow)[pref]) return;
+    if (!subs?.length || (pref && !prefsFromRow(prefsRow)[pref])) return;
 
     configureWebPush();
 

@@ -11,6 +11,7 @@ vi.mock("@/modules/auth/session", () => ({
   getProfile: async () => ({ id: "user-1", company_id: "company-1", role: "worker" }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
+vi.mock("@/modules/reports/notifyBosses", () => ({ notifyBossesAboutReport: async () => {} }));
 
 import { createManualEntry, updateEntry, type ManualEntryInput } from "@/modules/entries/actions";
 import { createReport, type CreateReportInput } from "@/modules/reports/actions";

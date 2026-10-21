@@ -51,6 +51,12 @@ export function useSessionState<T>(
   return [value, set];
 }
 
+/** Кодек для `Date | null` (например, выбранный день: «не выбран» тоже запоминается). */
+export const nullableDateCodec = {
+  encode: (value: Date | null) => (value ? value.toISOString() : null),
+  decode: (raw: unknown): Date | null | undefined => (raw === null ? null : dateCodec.decode(raw)),
+};
+
 /** Кодек для `Date`: хранится строкой, битая строка → значение по умолчанию. */
 export const dateCodec = {
   encode: (value: Date) => value.toISOString(),

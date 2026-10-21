@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MoreVertical, Pencil, Route } from "lucide-react";
 import { toast } from "sonner";
 
+import { DeleteEntryButton } from "@/components/entries/DeleteEntryButton";
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { DeleteReportButton } from "@/components/reports/DeleteReportButton";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
@@ -16,6 +17,7 @@ import { fmt, formatDateShort, formatHoursShort, formatTimeShort } from "@/lib/f
 import { useLocale, useT } from "@/lib/i18n/client";
 import { sceneForId } from "@/lib/siteScene";
 import type { WorkEntry } from "@/modules/entries/types";
+import { deleteTravelEntry } from "@/modules/travel/actions";
 import type { TravelEntry } from "@/modules/travel/queries";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import type { Site } from "@/modules/sites/queries";
@@ -416,19 +418,34 @@ export function ReportDetail({
                 const pause = breakMinutes(entry.break_start, entry.break_end);
 
                 return (
-                  <li key={entry.id} className="flex items-baseline justify-between gap-3 text-[14px]">
+                  <li key={entry.id} className="flex items-center justify-between gap-3 text-[14px]">
                     <span className="tabular">
                       {formatTimeShort(entry.started_at)}–{entry.ended_at ? formatTimeShort(entry.ended_at) : ""}
                       {pause > 0 && (
                         <span className="ml-2 text-[12px] text-ink-2">{fmt(t.reportDetail.timeBreak, { n: pause })}</span>
                       )}
                     </span>
-                    {/* Одна смена — её часы уже в итоге справа сверху, второй раз не повторяем */}
-                    {entries.length > 1 && (
-                      <span className="tabular text-ink-2">
-                        {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      {/* Одна смена — её часы уже в итоге справа сверху, второй раз не повторяем */}
+                      {entries.length > 1 && (
+                        <span className="tabular text-ink-2">
+                          {entry.total_minutes !== null ? formatHoursShort(entry.total_minutes) : t.common.dash}
+                        </span>
+                      )}
+                      {/* Время можно убрать отдельно от отчёта: автор — своё, шеф — любое */}
+                      {canEdit && (
+                        <DeleteEntryButton
+                          entryId={entry.id}
+                          iconOnly
+                          askAboutReport
+                          onDeleted={(outcome) => {
+                            // Убрали и сам отчёт — на этой странице больше нечего показывать.
+                            if (outcome?.reportDeleted) router.push("/reports");
+                            router.refresh();
+                          }}
+                        />
+                      )}
+                    </span>
                   </li>
                 );
               })}
@@ -453,13 +470,24 @@ export function ReportDetail({
 
             <ul className="mt-2 space-y-1.5">
               {travel.map((trip) => (
-                <li key={trip.id} className="flex items-baseline justify-between gap-3 text-[14px]">
+                <li key={trip.id} className="flex items-center justify-between gap-3 text-[14px]">
                   <span className="tabular">
                     {formatTimeShort(trip.started_at)}–{formatTimeShort(trip.ended_at)}
                   </span>
-                  <span className="tabular text-ink-2">
-                    {travel.length > 1 && formatHoursShort(trip.minutes)}
-                    {trip.km !== null && `${travel.length > 1 ? " · " : ""}${fmt("{km} {unit}", { km: trip.km, unit: t.travel.kmUnit })}`}
+                  <span className="flex items-center gap-1">
+                    <span className="tabular text-ink-2">
+                      {travel.length > 1 && formatHoursShort(trip.minutes)}
+                      {trip.km !== null && `${travel.length > 1 ? " · " : ""}${fmt("{km} {unit}", { km: trip.km, unit: t.travel.kmUnit })}`}
+                    </span>
+                    {canEdit && (
+                      <DeleteEntryButton
+                        entryId={trip.id}
+                        iconOnly
+                        remove={deleteTravelEntry}
+                        texts={{ title: t.travel.deleteTitle, body: t.travel.deleteBody, deleted: t.travel.deleted }}
+                        onDeleted={() => router.refresh()}
+                      />
+                    )}
                   </span>
                 </li>
               ))}

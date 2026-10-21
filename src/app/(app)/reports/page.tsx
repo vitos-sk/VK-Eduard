@@ -13,8 +13,9 @@ export default async function ReportsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
+  // Шеф видит команду (там и его отчёты), собственная лента нужна только рабочему.
   const [reports, sites, categories] = await Promise.all([
-    getReportsFeed(supabase, profile.id),
+    profile.role === "boss" ? Promise.resolve([]) : getReportsFeed(supabase, profile.id),
     getAllSites(supabase),
     getWorkCategories(supabase, profile.company_id),
   ]);

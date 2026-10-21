@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
 import { findOverlappingEntry } from "@/modules/entries/queries";
 import { OTHER_TEXT_MAX_LENGTH } from "@/modules/reports/categoryLabels";
+import { notifyBossesAboutReport } from "@/modules/reports/notifyBosses";
+import { MISSING_TABLE_CODES } from "@/modules/travel/queries";
 import {
   isBreakPairValid,
   isDurationValid,
@@ -213,8 +215,11 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
   }
 
   // Звіт с этим client_id уже есть: прошлая отправка дошла, а ответ потерялся (или нажали дважды).
-  // Берём его, а не создаём второй — иначе удвоятся и звіт, и часы.
+  // Берём его, а не создаём второй — иначе удвоятся и звіт, и часы. Шефу о нём уже сообщили.
+  let isRepeat = false;
+
   if (error?.code === UNIQUE_VIOLATION && input.clientId) {
+    isRepeat = true;
     ({ data, error } = await supabase
       .from("site_reports")
       .select("id")
@@ -269,6 +274,17 @@ export async function createReport(input: CreateReportInput): Promise<CreateRepo
     });
 
     if (travelError && !(travelError.code === UNIQUE_VIOLATION && input.travelClientId)) warning = "travel";
+  }
+
+  // Шефу — push «новый звіт». Повторную отправку того же отчёта (потерялся ответ) не дублируем.
+  if (!isRepeat) {
+    await notifyBossesAboutReport({
+      id: data.id,
+      companyId: profile.company_id,
+      authorId: profile.id,
+      authorName: profile.full_name,
+      siteId: input.siteId,
+    });
   }
 
   revalidatePath("/", "layout");
@@ -498,8 +514,21 @@ export async function updateReportCategories(
   return OK;
 }
 
-/** Видаляє звіт. Фото видаляються каскадом на рівні бази. */
-export async function deleteReport(reportId: string): Promise<ReportActionState> {
+export interface DeleteReportState extends ReportActionState {
+  /** Сам звіт видалено, а час або дорогу прибрати не вдалося — показати текст, але звіт уже зник. */
+  warning?: string | null;
+}
+
+/**
+ * Видаляє звіт разом із часом і дорогою, що до нього належать: фото йдуть каскадом на рівні бази, а
+ * зміни (`work_entries`) і поїздки (`travel_entries`) звіт знаходить так само, як сторінка звіту, —
+ * той самий автор, той самий день, той самий об'єкт. Прав окремо перевіряти не треба: RLS пускає
+ * видаляти автору свої записи, а шефу — будь-які в компанії.
+ *
+ * Якщо в автора за цей день на цьому об'єкті лишився ще один звіт, час і дорога належать і йому —
+ * їх не чіпаємо, поки не видалено останній. Не закриті (триваючі) зміни не чіпаємо взагалі.
+ */
+export async function deleteReport(reportId: string): Promise<DeleteReportState> {
   const t = await getT();
   const profile = await getProfile();
 
@@ -508,6 +537,22 @@ export async function deleteReport(reportId: string): Promise<ReportActionState>
   }
 
   const supabase = await createClient();
+
+  // Автор, дата й об'єкт потрібні до видалення — потім за ними вже нічого не знайти.
+  const { data: report, error: readError } = await supabase
+    .from("site_reports")
+    .select("author_id, work_date, site_id")
+    .eq("id", reportId)
+    .maybeSingle();
+
+  if (readError) {
+    return { error: t.reportDetail.deleteError };
+  }
+
+  if (!report) {
+    return { error: t.reportDetail.saveRejected };
+  }
+
   const { data, error } = await supabase
     .from("site_reports")
     .delete()
@@ -522,9 +567,58 @@ export async function deleteReport(reportId: string): Promise<ReportActionState>
     return { error: t.reportDetail.saveRejected };
   }
 
+  const linkedRemoved = await deleteReportTimeAndTravel(supabase, report);
+
   revalidatePath("/", "layout");
 
-  return OK;
+  return linkedRemoved ? OK : { error: null, warning: t.reportDetail.deleteLinkedError };
+}
+
+/**
+ * Прибирає час і дорогу видаленого звіту. `false` — щось не вдалося (звіт при цьому вже видалено).
+ * Таблиці дороги може не бути в базі (міграція 0018) — це не помилка.
+ */
+async function deleteReportTimeAndTravel(
+  supabase: ServerClient,
+  report: { author_id: string; work_date: string; site_id: string | null },
+): Promise<boolean> {
+  let others = supabase
+    .from("site_reports")
+    .select("id")
+    .eq("author_id", report.author_id)
+    .eq("work_date", report.work_date)
+    .limit(1);
+
+  others = report.site_id ? others.eq("site_id", report.site_id) : others.is("site_id", null);
+
+  const { data: otherReports, error: othersError } = await others;
+
+  // Не знаємо, чи не лишився інший звіт, — краще не видалити зайвого.
+  if (othersError) return false;
+  if (otherReports && otherReports.length > 0) return true;
+
+  let work = supabase
+    .from("work_entries")
+    .delete()
+    .eq("author_id", report.author_id)
+    .eq("work_date", report.work_date)
+    .not("ended_at", "is", null);
+
+  work = report.site_id ? work.eq("site_id", report.site_id) : work.is("site_id", null);
+
+  let travel = supabase
+    .from("travel_entries")
+    .delete()
+    .eq("author_id", report.author_id)
+    .eq("work_date", report.work_date);
+
+  travel = report.site_id ? travel.eq("site_id", report.site_id) : travel.is("site_id", null);
+
+  const [{ error: workError }, { error: travelError }] = await Promise.all([work, travel]);
+
+  const travelTableMissing = Boolean(travelError?.code && MISSING_TABLE_CODES.has(travelError.code));
+
+  return !workError && (!travelError || travelTableMissing);
 }
 
 export type WorkCategoryActionState = { error: string | null };

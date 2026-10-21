@@ -78,6 +78,11 @@ export function formatDayMonth(date: Date, locale: Locale): string {
   return format(date, "d MMMM", { locale: DATE_FNS_LOCALES[locale] });
 }
 
+/** `30 липня 2025` — выбранный день на кнопке навигатора. */
+export function formatDayMonthYear(date: Date, locale: Locale): string {
+  return format(date, "d MMMM yyyy", { locale: DATE_FNS_LOCALES[locale] });
+}
+
 /** `YYYY-MM-DD` → `30.07` — узкая колонка «Дата» в таблице «Зміни за місяць». */
 export function formatWorkDateShort(workDate: string, locale: Locale): string {
   return format(fromDateKey(workDate), "dd.MM", { locale: DATE_FNS_LOCALES[locale] });

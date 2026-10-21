@@ -277,6 +277,7 @@ export const en: Dict = {
       emptyTitleAll: "No reports for this site yet",
       edit: "Edit",
       openInMaps: "Get directions",
+      openChat: "Open chat",
     },
     form: {
       createTitle: "New site",
@@ -328,6 +329,8 @@ export const en: Dict = {
     pickDate: "Pick a date",
     prevPeriod: "Previous period",
     nextPeriod: "Next period",
+    /** «✕» рядом с календарём и кнопка пустого дня: снять выбор дня. */
+    showWholeMonth: "Show the whole month",
     emptyTitle: "No data for this period",
     emptyHint: "Choose another period or add time manually",
     noEntriesToday: "No entries for this day yet",
@@ -343,6 +346,12 @@ export const en: Dict = {
     deleteEntry: "Delete entry",
     deleteConfirmTitle: "Delete the entry?",
     deleteConfirmBody: "This can't be undone — the work time entry will be deleted for good.",
+    /** The last shift of the day is being deleted and the day has a report — ask what to do with the report. */
+    deleteTimeAndReportBody:
+      "This is the last work time for this day at this site, and there's a report for it. Delete just the time, or the report and travel too?",
+    deleteTimeOnly: "Time only",
+    deleteTimeAndReport: "Time and report",
+    entryAndReportDeleted: "Time and report deleted",
     deleteConfirmAction: "Delete",
     entryDeleted: "Entry deleted",
     deleteError: "Couldn't delete the entry. Please try again",
@@ -370,10 +379,6 @@ export const en: Dict = {
       all: "All",
       noDescription: "No description",
       withPhoto: "With photo",
-    },
-    screenTabs: {
-      mine: "Mine",
-      team: "Team",
     },
     team: {
       allWorkers: "All employees",
@@ -422,6 +427,7 @@ export const en: Dict = {
     emptyHint: "Create your first report on the work done",
     emptyFilterTitle: "Nothing found",
     emptyFilterHint: "Try changing the filters or the search",
+    emptyDayTitle: "No reports for {day}",
     emptyNoDescriptionTitle: "All reports are filled in",
   },
 
@@ -456,10 +462,13 @@ export const en: Dict = {
     saveRejected: "Couldn't save the changes. Try again or contact your boss",
     deleteEntry: "Delete report",
     deleteConfirmTitle: "Delete the report?",
-    deleteConfirmBody: "This can't be undone — the report will be deleted for good.",
+    deleteConfirmBody:
+      "This can't be undone — the report will be deleted for good, together with the work time and travel logged for this day at this site.",
     deleteConfirmAction: "Delete",
     entryDeleted: "Report deleted",
     deleteError: "Couldn't delete the report. Please try again",
+    /** The report itself is deleted, but its time or travel couldn't be removed. */
+    deleteLinkedError: "The report is deleted, but its work time and travel couldn't be removed. Delete them in Hours",
     categoriesLabel: "Type of work",
     noCategoriesLabel: "Not specified",
     timeTitle: "Time worked",
@@ -666,6 +675,22 @@ export const en: Dict = {
     send: "Send message",
     sendError: "Couldn't send",
     startError: "Couldn't open the chat",
+    siteSubtitle: "Site chat",
+    menu: { open: "Chat actions", clear: "Clear", delete: "Delete chat" },
+    clearChat: {
+      title: "Clear the chat?",
+      body: "The conversation disappears only for you. Others keep it.",
+      confirm: "Clear",
+      done: "Chat cleared",
+      error: "Couldn't clear the chat",
+    },
+    deleteChat: {
+      title: "Delete the chat?",
+      body: "The chat disappears for both of you and can't be restored.",
+      confirm: "Delete",
+      done: "Chat deleted",
+      error: "Couldn't delete the chat",
+    },
     today: "Today",
     yesterday: "Yesterday",
     card: {
@@ -683,6 +708,7 @@ export const en: Dict = {
       deleteTitle: "Delete checklist from the chat?",
       deleteBodyMine: "The checklist will disappear from the chat and from your list.",
       deleteBodySent: "The card will disappear from the chat for both of you. Your colleague keeps the checklist in their list.",
+      deleteBodySite: "The card disappears from the chat for everyone. The author keeps the checklist.",
       removed: "Deleted",
       deleteError: "Couldn't delete. Please try again",
     },
@@ -983,10 +1009,9 @@ export const en: Dict = {
 
   hoursUi: {
     showTravel: "Travel time",
+    emptyDayTitle: "No shifts for {day}",
+    dayTableTitle: "Shifts this day",
     showWork: "Work time",
-    scopeLabel: "Whose hours",
-    scopeSelf: "Me",
-    scopeTeam: "Team",
     filterWorkerLabel: "Employee",
     filterWorkerAll: "All employees",
     filterSiteLabel: "Site",
@@ -1114,7 +1139,8 @@ export const en: Dict = {
       emptyFilteredHint: "Try resetting the filters or choosing another month",
       deleteReport: "Delete report",
       deleteConfirmTitle: "Delete the report?",
-      deleteConfirmBody: "The report and all its photos will be gone for good — it can't be restored.",
+      deleteConfirmBody:
+        "The report with all its photos, work time and travel for this day at this site will be gone for good — it can't be restored.",
       deleteConfirmAction: "Delete",
       deleteSuccess: "Report deleted",
       loadError: "Couldn't refresh the report list",
