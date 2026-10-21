@@ -258,16 +258,19 @@ export async function deleteEntry(entryId: string): Promise<EntryActionState> {
 export interface ReportOffer {
   /** Звіт, який можна запропонувати видалити разом із часом; `null` — питати нічого. */
   reportId: string | null;
+  /** За цей день на цьому об'єкті лишаються й інші зміни: «весь день» прибере і їх. */
+  othersRemain: boolean;
 }
 
 /**
- * Перед видаленням зміни: чи питати про звіт. Питаємо, тільки коли це остання закрита зміна автора за
- * цей день на цьому об'єкті і на цей день є рівно один звіт (так само «зв'язане», як на сторінці звіту).
- * Лишається ще час, звіту нема або їх кілька — просто видаляємо час, питати не про що.
+ * Перед видаленням зміни: чи питати про звіт. Питаємо, коли за цей день на цьому об'єкті є рівно один звіт автора
+ * (так само «зв'язане», як на сторінці звіту) — і для останньої зміни дня, і коли лишаються ще зміни
+ * (`othersRemain`: тоді запитання про весь день). Звіту нема або їх кілька (незрозуміло, який) — просто видаляємо
+ * час, питати не про що.
  * Права решает RLS: рабочий бачить лише свої записи, шеф — всі в компанії.
  */
 export async function findReportToOffer(entryId: string): Promise<ReportOffer> {
-  const none: ReportOffer = { reportId: null };
+  const none: ReportOffer = { reportId: null, othersRemain: false };
   const profile = await getProfile();
 
   if (!profile) return none;
@@ -294,7 +297,9 @@ export async function findReportToOffer(entryId: string): Promise<ReportOffer> {
 
   const { data: sameDay, error: siblingsError } = await siblings;
 
-  if (siblingsError || !sameDay || sameDay.some((row) => row.id !== entryId)) return none;
+  if (siblingsError || !sameDay) return none;
+
+  const othersRemain = sameDay.some((row) => row.id !== entryId);
 
   let reports = supabase
     .from("site_reports")
@@ -307,5 +312,5 @@ export async function findReportToOffer(entryId: string): Promise<ReportOffer> {
 
   const { data: found, error: reportsError } = await reports;
 
-  return !reportsError && found?.length === 1 ? { reportId: found[0].id } : none;
+  return !reportsError && found?.length === 1 ? { reportId: found[0].id, othersRemain } : none;
 }

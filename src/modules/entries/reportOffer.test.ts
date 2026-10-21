@@ -34,15 +34,15 @@ describe("findReportToOffer — спрашивать ли про звіт при
     entry("w1");
     report("r1");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: "r1" });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: "r1", othersRemain: false });
   });
 
-  it("за день есть ещё смена — спрашивать не о чем, звіт остаётся с оставшимся временем", async () => {
+  it("за день есть ещё смена — звіт всё равно предлагается, но с пометкой «остальное время тоже уйдёт»", async () => {
     entry("w1");
     entry("w2", { started_at: "17:00", ended_at: "20:00" });
     report("r1");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: null });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: "r1", othersRemain: true });
   });
 
   it("звіту на этот день нет — не спрашиваем", async () => {
@@ -51,7 +51,7 @@ describe("findReportToOffer — спрашивать ли про звіт при
     report("other-site", { site_id: "site-2" });
     report("other-user", { author_id: "user-2" });
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: null });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: null, othersRemain: false });
   });
 
   it("два звіти на один день и объект — не знаем, какой предлагать, не спрашиваем", async () => {
@@ -59,7 +59,7 @@ describe("findReportToOffer — спрашивать ли про звіт при
     report("r1");
     report("r2");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: null });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: null, othersRemain: false });
   });
 
   it("смены другого дня, объекта и человека не считаются «ещё временем»", async () => {
@@ -69,7 +69,7 @@ describe("findReportToOffer — спрашивать ли про звіт при
     entry("other-user", { author_id: "user-2" });
     report("r1");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: "r1" });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: "r1", othersRemain: false });
   });
 
   it("без объекта сравниваются только записи без объекта", async () => {
@@ -78,24 +78,24 @@ describe("findReportToOffer — спрашивать ли про звіт при
     report("r-none", { site_id: null });
     report("r-site");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: "r-none" });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: "r-none", othersRemain: false });
   });
 
   it("смена ещё идёт (не закрыта) — к звіту не относится, не спрашиваем", async () => {
     entry("w1", { ended_at: null });
     report("r1");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: null });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: null, othersRemain: false });
   });
 
   it("записи нет (чужая или уже удалена) и нет профиля — не спрашиваем", async () => {
     report("r1");
 
-    expect(await findReportToOffer("missing")).toEqual({ reportId: null });
+    expect(await findReportToOffer("missing")).toEqual({ reportId: null, othersRemain: false });
 
     h.profile = null;
     entry("w1");
 
-    expect(await findReportToOffer("w1")).toEqual({ reportId: null });
+    expect(await findReportToOffer("w1")).toEqual({ reportId: null, othersRemain: false });
   });
 });

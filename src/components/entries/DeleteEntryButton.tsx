@@ -63,7 +63,11 @@ export function DeleteEntryButton({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   // Отчёт, который предлагаем удалить вместе со временем (`null` — спрашивать не о чем), и идёт ли проверка.
-  const [offer, setOffer] = useState<{ checking: boolean; reportId: string | null }>({ checking: false, reportId: null });
+  const [offer, setOffer] = useState<{ checking: boolean; reportId: string | null; othersRemain: boolean }>({
+    checking: false,
+    reportId: null,
+    othersRemain: false,
+  });
   const lastCheck = useRef(0);
 
   const handleOpen = () => {
@@ -73,11 +77,15 @@ export function DeleteEntryButton({
 
     // Поздний ответ от прошлого открытия окна не должен подменить свежий.
     const check = ++lastCheck.current;
-    setOffer({ checking: true, reportId: null });
+    setOffer({ checking: true, reportId: null, othersRemain: false });
 
     findReportToOffer(entryId)
-      .then((result) => check === lastCheck.current && setOffer({ checking: false, reportId: result.reportId }))
-      .catch(() => check === lastCheck.current && setOffer({ checking: false, reportId: null }));
+      .then(
+        (result) =>
+          check === lastCheck.current &&
+          setOffer({ checking: false, reportId: result.reportId, othersRemain: result.othersRemain }),
+      )
+      .catch(() => check === lastCheck.current && setOffer({ checking: false, reportId: null, othersRemain: false }));
   };
 
   // Время и вместе с ним отчёт (а с отчётом уходят и дорога за этот день).
@@ -133,7 +141,11 @@ export function DeleteEntryButton({
           <ModalHeader>
             <ModalTitle>{texts?.title ?? t.hours.deleteConfirmTitle}</ModalTitle>
             <ModalDescription>
-              {offer.reportId ? t.hours.deleteTimeAndReportBody : (texts?.body ?? t.hours.deleteConfirmBody)}
+              {offer.reportId
+                ? offer.othersRemain
+                  ? t.hours.deleteDayBody
+                  : t.hours.deleteTimeAndReportBody
+                : (texts?.body ?? t.hours.deleteConfirmBody)}
             </ModalDescription>
           </ModalHeader>
 
@@ -144,10 +156,10 @@ export function DeleteEntryButton({
             {offer.reportId ? (
               <>
                 <Button variant="outline" onClick={handleConfirm} disabled={isPending}>
-                  {t.hours.deleteTimeOnly}
+                  {offer.othersRemain ? t.hours.deleteThisTimeOnly : t.hours.deleteTimeOnly}
                 </Button>
                 <Button variant="danger" onClick={handleConfirmWithReport} disabled={isPending}>
-                  {t.hours.deleteTimeAndReport}
+                  {offer.othersRemain ? t.hours.deleteWholeDay : t.hours.deleteTimeAndReport}
                 </Button>
               </>
             ) : (
