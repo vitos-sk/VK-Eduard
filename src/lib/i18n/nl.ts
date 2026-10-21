@@ -546,31 +546,11 @@ export const nl: Dict = {
       itemPlaceholder: "Nieuw punt",
       addItem: "Punt toevoegen",
       removeItem: "Punt verwijderen",
-      templates: "Snelle sjablonen",
-      templateList: [
-        {
-          label: "Voor vertrek",
-          title: "Voor vertrek naar het project",
-          items: [
-            "Bus tanken",
-            "Gasbrander en gasfles",
-            "Materialen volgens lijst",
-            "Veiligheidsharnas en helm",
-            "Ladder: bevestiging controleren",
-            "Sleutels van het project",
-          ],
-        },
-        {
-          label: "Gereedschap",
-          title: "Gereedschap",
-          items: ["Haakse slijper", "Boormachine en borenset", "Schroefmachine", "Rolmaat en waterpas", "Mes en lemmetten", "Verlengsnoer"],
-        },
-        {
-          label: "Oplevering",
-          title: "Oplevering project",
-          items: ["Afval opruimen", "Resultaat fotograferen", "Handtekening klant", "Rapport in de app", "Sleutels teruggeven"],
-        },
-      ],
+      cancel: "Annuleren",
+      cancelTitle: "Checklist annuleren?",
+      cancelBody: "Alles wat je hebt ingevuld gaat verloren: de checklist wordt niet bewaard.",
+      cancelKeep: "Doorgaan",
+      cancelConfirm: "Checklist annuleren",
       defaultTitle: "Checklist · {date}",
       autosave: {
         needsItem: "Voeg minstens één punt toe en de checklist wordt vanzelf opgeslagen",

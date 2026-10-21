@@ -1,25 +1,23 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Pencil, Send, Trash2 } from "lucide-react";
+import { Pencil, Send } from "lucide-react";
 import { toast } from "sonner";
 
+import { DeleteChecklistButton } from "@/components/checklists/DeleteChecklistButton";
 import { SendChecklistSheet } from "@/components/checklists/SendChecklistSheet";
 import { BackHeader } from "@/components/layout/ScreenHeader";
-import { StickyActionBar } from "@/components/shared/FormParts";
 import { Button } from "@/components/ui/button";
 import { CheckMark } from "@/components/ui/checkbox";
-import { Modal, ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from "@/components/ui/modal";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ProgressPips } from "@/components/ui/progress-pips";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { fmt } from "@/lib/format";
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Colleague } from "@/modules/chats/queries";
-import { deleteChecklist, setItemDone } from "@/modules/checklists/actions";
+import { setItemDone } from "@/modules/checklists/actions";
 import { countProgress, doneByOther, isComplete } from "@/modules/checklists/progress";
 import type { ChecklistDetail, ChecklistItemView } from "@/modules/checklists/queries";
 
@@ -34,17 +32,13 @@ interface ChecklistViewProps {
   openSend: boolean;
 }
 
-/** `/checklists/[id]`: пункты с галочками и прогрессом, меню «⋮», кнопка «Надіслати». */
+/** `/checklists/[id]`: пункты с галочками и прогрессом; внизу, в потоке страницы, «Видалити» и компактная «Надіслати». */
 export function ChecklistView({ detail, meId, isOwner, colleagues, openSend }: ChecklistViewProps) {
   const t = useT();
   const v = t.checklists.view;
   const router = useRouter();
-  const [, startDeleteTransition] = useTransition();
 
   const [items, setItems] = useState(detail.items);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [sendOpen, setSendOpen] = useState(openSend);
 
   function handleSendOpenChange(open: boolean) {
@@ -89,18 +83,6 @@ export function ChecklistView({ detail, meId, isOwner, colleagues, openSend }: C
     }
   }
 
-  function handleDelete() {
-    setIsDeleting(true);
-
-    startDeleteTransition(async () => {
-      // Успех: сервер сам переводит на «Чеклисти». Сюда управление возвращается только при ошибке.
-      const result = await deleteChecklist(detail.id);
-
-      setIsDeleting(false);
-      if (result?.error) toast(result.error);
-    });
-  }
-
   const subtitle = isOwner
     ? [detail.isReceived ? (detail.senderName ? fmt(v.fromLine, { name: detail.senderName }) : null) : v.mineLine, detail.siteName]
     : [fmt(v.readOnlyLine, { name: detail.ownerName }), detail.siteName];
@@ -111,39 +93,12 @@ export function ChecklistView({ detail, meId, isOwner, colleagues, openSend }: C
         title={detail.title}
         href="/checklists"
         action={
-          isOwner ? (
-            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon-sm" aria-label={v.menu} className="text-text-muted">
-                  <MoreVertical className="size-[18px]" strokeWidth={1.9} aria-hidden />
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent align="end" className="w-52 !bg-surface !text-text !ring-border">
-                {!detail.isReceived && (
-                  <Button asChild variant="ghost" size="sm" block className="justify-start rounded-sm px-2">
-                    <Link href={`/checklists/${detail.id}/edit`} onClick={() => setMenuOpen(false)}>
-                      <Pencil className="size-[16px] text-text-muted" strokeWidth={1.9} aria-hidden />
-                      {v.edit}
-                    </Link>
-                  </Button>
-                )}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  block
-                  className="justify-start rounded-sm px-2 text-danger-fg hover:bg-danger/10"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setDeleteOpen(true);
-                  }}
-                >
-                  <Trash2 className="size-[16px]" strokeWidth={1.9} aria-hidden />
-                  {v.delete}
-                </Button>
-              </PopoverContent>
-            </Popover>
+          isOwner && !detail.isReceived ? (
+            <Button asChild variant="ghost" size="icon-sm" className="text-text-muted">
+              <Link href={`/checklists/${detail.id}/edit`} aria-label={v.edit} title={v.edit}>
+                <Pencil className="size-[18px]" strokeWidth={1.9} aria-hidden />
+              </Link>
+            </Button>
           ) : null
         }
       />
@@ -194,16 +149,18 @@ export function ChecklistView({ detail, meId, isOwner, colleagues, openSend }: C
         )}
 
         {!isOwner && <p className="text-[13px] text-ink-2">{v.readOnlyHint}</p>}
-      </div>
 
-      {isOwner && (
-        <StickyActionBar>
-          <Button block onClick={() => setSendOpen(true)}>
-            <Send className="size-[18px]" strokeWidth={1.9} aria-hidden />
-            {v.send}
-          </Button>
-        </StickyActionBar>
-      )}
+        {/* В потоке страницы, а не липкой панелью: ничего не перекрывает пункты. Слева красное «Видалити», справа компактное «Надіслати». */}
+        {isOwner && (
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <DeleteChecklistButton checklistId={detail.id} />
+            <Button size="sm" onClick={() => setSendOpen(true)}>
+              <Send className="size-4" strokeWidth={1.9} aria-hidden />
+              {v.send}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {isOwner && (
         <>
@@ -219,24 +176,6 @@ export function ChecklistView({ detail, meId, isOwner, colleagues, openSend }: C
             }}
             colleagues={colleagues}
           />
-
-          <Modal open={deleteOpen} onOpenChange={setDeleteOpen}>
-            <ModalContent>
-              <ModalHeader>
-                <ModalTitle>{v.deleteTitle}</ModalTitle>
-                <ModalDescription>{v.deleteBody}</ModalDescription>
-              </ModalHeader>
-
-              <ModalFooter>
-                <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-                  {t.common.cancel}
-                </Button>
-                <Button variant="danger" onClick={handleDelete} loading={isDeleting}>
-                  {v.deleteConfirm}
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
         </>
       )}
     </div>

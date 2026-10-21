@@ -201,3 +201,70 @@ describe("Autosaver: ошибка", () => {
     expect(await saver.flush()).toBe(false);
   });
 });
+
+describe("Autosaver: отмена (discard)", () => {
+  it("несохранённое после паузы не уходит на сервер, а новые правки игнорируются", async () => {
+    const { saver, saved } = setup();
+
+    saver.update("Бус");
+    await saver.discard();
+    saver.update("Бус 2");
+    await vi.advanceTimersByTimeAsync(2000);
+
+    expect(saved).toEqual([]);
+    expect(saver.hasUnsaved).toBe(false);
+    expect(await saver.flush()).toBe(true);
+    expect(saved).toEqual([]);
+  });
+
+  it("сохранение уже идёт — ждёт его конца, а следующий снимок не отправляется", async () => {
+    const first = deferred<boolean>();
+    const saved: string[] = [];
+    const { saver } = setup({
+      save: (value) => {
+        saved.push(value);
+        return saved.length === 1 ? first.promise : Promise.resolve(true);
+      },
+    });
+
+    saver.update("Бус");
+    await vi.advanceTimersByTimeAsync(700);
+    saver.update("Бус 2");
+
+    let finished = false;
+    const discarding = saver.discard().then(() => {
+      finished = true;
+    });
+    await Promise.resolve();
+    expect(finished).toBe(false);
+
+    first.resolve(true);
+    await discarding;
+
+    expect(saved).toEqual(["Бус"]);
+  });
+
+  it("resume возвращает автосохранение: следующая правка сохраняется", async () => {
+    const { saver, saved } = setup();
+
+    await saver.discard();
+    saver.resume();
+    saver.update("Бус");
+    await vi.advanceTimersByTimeAsync(700);
+
+    expect(saved).toEqual(["Бус"]);
+  });
+
+  it("после отмены статус не меняется на «ошибка», даже если шедшее сохранение не удалось", async () => {
+    const failing = deferred<boolean>();
+    const { saver, statuses } = setup({ save: () => failing.promise });
+
+    saver.update("Бус");
+    await vi.advanceTimersByTimeAsync(700);
+    const discarding = saver.discard();
+    failing.resolve(false);
+    await discarding;
+
+    expect(statuses).not.toContain("error");
+  });
+});

@@ -22,6 +22,7 @@ export class Autosaver<T> {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running: Promise<void> | null = null;
   private failed = false;
+  private discarded = false;
 
   constructor(private readonly options: AutosaveOptions<T>) {}
 
@@ -32,6 +33,9 @@ export class Autosaver<T> {
 
   /** Новое состояние формы: запоминаем и сохраним после паузы. */
   update(value: T): void {
+    // Форму закрыли отменой или удалением: правки больше не нужны, и новый чеклист из них не создаём.
+    if (this.discarded) return;
+
     this.latest = value;
     this.dirty = true;
     this.clearTimer();
@@ -56,6 +60,25 @@ export class Autosaver<T> {
     if (this.canSave()) await this.run();
 
     return !this.canSave();
+  }
+
+  /**
+   * Отбросить несохранённое и перестать сохранять («Скасувати», «Видалити»). Если сохранение уже идёт,
+   * ждёт его конца — после этого чеклист либо создан, либо нет, и можно решать, что удалять.
+   * Не вышло удалить — `resume()` возвращает форму к работе.
+   */
+  async discard(): Promise<void> {
+    this.discarded = true;
+    this.latest = null;
+    this.dirty = false;
+    this.clearTimer();
+
+    await this.running;
+  }
+
+  /** Отмена отмены: автосохранение снова работает (следующая правка или `update` его запустит). */
+  resume(): void {
+    this.discarded = false;
   }
 
   private canSave(): boolean {
@@ -100,6 +123,8 @@ export class Autosaver<T> {
         break;
       }
     }
+
+    if (this.discarded) return;
 
     if (this.failed) this.options.onStatus("error");
     else this.options.onStatus(this.dirty ? "idle" : "saved");

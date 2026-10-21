@@ -83,7 +83,7 @@ export function ChecklistsScreen({ entries, justDeleted = false }: { entries: Ch
         ) : (
           <div className="mt-1 flex flex-col gap-2">
             {visible.map((entry) => (
-              <ChecklistRow key={entry.id} entry={entry} />
+              <ChecklistRow key={entry.id} entry={entry} deletable />
             ))}
           </div>
         )}

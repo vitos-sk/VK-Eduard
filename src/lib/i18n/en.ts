@@ -546,31 +546,11 @@ export const en: Dict = {
       itemPlaceholder: "New item",
       addItem: "Add item",
       removeItem: "Remove item",
-      templates: "Quick templates",
-      templateList: [
-        {
-          label: "Before leaving",
-          title: "Before leaving for the site",
-          items: [
-            "Fuel the van",
-            "Gas torch and cylinder",
-            "Materials from the list",
-            "Safety harness and helmet",
-            "Ladder: check the fastening",
-            "Site keys",
-          ],
-        },
-        {
-          label: "Tools",
-          title: "Tools",
-          items: ["Angle grinder", "Drill and bit set", "Screwdriver", "Tape measure and level", "Knife and blades", "Extension cord"],
-        },
-        {
-          label: "Handover",
-          title: "Site handover",
-          items: ["Clean up the waste", "Photograph the result", "Client signature", "Report in the app", "Return the keys"],
-        },
-      ],
+      cancel: "Cancel",
+      cancelTitle: "Discard the checklist?",
+      cancelBody: "Everything you've entered will be lost: the checklist won't be saved.",
+      cancelKeep: "Keep editing",
+      cancelConfirm: "Discard checklist",
       defaultTitle: "Checklist · {date}",
       autosave: {
         needsItem: "Add at least one item and the checklist saves itself",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ListChecks } from "lucide-react";
 
+import { DeleteChecklistButton } from "@/components/checklists/DeleteChecklistButton";
 import { Badge } from "@/components/ui/badge";
 import { ProgressPips } from "@/components/ui/progress-pips";
 import { Ticket } from "@/components/ui/ticket";
@@ -12,8 +13,19 @@ import { cn } from "@/lib/utils";
 import { isComplete } from "@/modules/checklists/progress";
 import type { ChecklistListEntry } from "@/modules/checklists/queries";
 
-/** Строка списка чеклистов: название, от кого и по какому объекту, прогресс сегментами, метка «Нове» / «Готово». */
-export function ChecklistRow({ entry, className }: { entry: ChecklistListEntry; className?: string }) {
+/**
+ * Строка списка чеклистов: название, от кого и по какому объекту, прогресс сегментами, метка «Нове» / «Готово».
+ * `deletable` — справа красная корзина: удалить чеклист, не открывая его (экран «Чеклисти»).
+ */
+export function ChecklistRow({
+  entry,
+  className,
+  deletable = false,
+}: {
+  entry: ChecklistListEntry;
+  className?: string;
+  deletable?: boolean;
+}) {
   const t = useT();
   const c = t.checklists;
   const complete = isComplete(entry.progress);
@@ -27,8 +39,8 @@ export function ChecklistRow({ entry, className }: { entry: ChecklistListEntry; 
     .filter(Boolean)
     .join(" · ");
 
-  return (
-    <Ticket asChild variant="flat" interactive className={cn("flex items-center gap-3", className)}>
+  const card = (
+    <Ticket asChild variant="flat" interactive className={cn("flex min-w-0 flex-1 items-center gap-3", !deletable && className)}>
       <Link href={`/checklists/${entry.id}`}>
         <span
           aria-hidden
@@ -57,5 +69,14 @@ export function ChecklistRow({ entry, className }: { entry: ChecklistListEntry; 
         </span>
       </Link>
     </Ticket>
+  );
+
+  if (!deletable) return card;
+
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      {card}
+      <DeleteChecklistButton checklistId={entry.id} display="icon" />
+    </div>
   );
 }

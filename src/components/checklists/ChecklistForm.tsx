@@ -5,30 +5,28 @@ import { useRouter } from "next/navigation";
 import { Check, Plus, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
+import { DeleteChecklistButton } from "@/components/checklists/DeleteChecklistButton";
+import { FormTopBar, PickerRow } from "@/components/shared/FormParts";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/chip";
 import { Input } from "@/components/ui/input";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
 import { useT } from "@/lib/i18n/client";
-import { createChecklist, updateChecklist } from "@/modules/checklists/actions";
+import { createChecklist, deleteChecklist, updateChecklist } from "@/modules/checklists/actions";
 import { Autosaver, type AutosaveStatus } from "@/modules/checklists/autosave";
-import { applyTemplateItems, ITEMS_MAX, ITEM_MAX, mapItemIds, TITLE_MAX, validateDraft } from "@/modules/checklists/draft";
+import { ITEMS_MAX, ITEM_MAX, mapItemIds, TITLE_MAX, validateDraft } from "@/modules/checklists/draft";
 import type { Site } from "@/modules/sites/queries";
 
 interface Row {
   key: number;
   id: string | null;
   text: string;
-  /** Пункт пришёл из шаблона и не правился: следующий шаблон его заменит. Правка руками делает пункт «своим». */
-  fromTemplate: boolean;
 }
 
 /** Ключ строки нужен только React: не попадает в разметку, поэтому счётчик на сервере и в браузере может расходиться. */
 let rowSeq = 0;
-const newRow = (text = "", id: string | null = null, fromTemplate = false): Row => ({ key: ++rowSeq, id, text, fromTemplate });
+const newRow = (text = "", id: string | null = null): Row => ({ key: ++rowSeq, id, text });
 
 /** Состояние формы, которое уходит на сохранение. */
 interface Snapshot {
@@ -58,8 +56,10 @@ interface ChecklistFormProps {
 }
 
 /**
- * `/checklists/new` и `/checklists/[id]/edit`: название (уже подставлено), объект (необязательно), пункты, шаблоны.
+ * `/checklists/new` и `/checklists/[id]/edit`: название (уже подставлено), объект (необязательно), пункты.
  * Кнопки «Зберегти» нет: форма сохраняется сама, как только есть хотя бы один пункт, и после каждой правки.
+ * Внизу, в потоке страницы (не липкой панелью, чтобы ничего не перекрывать): слева «Скасувати» (новый) или «Видалити»
+ * (правка), справа компактная «Надіслати».
  * Сверху видно «Зберігаємо… / Збережено»; при выходе с экрана несохранённое уходит на сервер.
  */
 export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormProps) {
@@ -68,7 +68,7 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
   const router = useRouter();
 
   const [title, setTitle] = useState(initial?.title ?? defaultTitle);
-  // Пока человек сам не менял название, шаблон может подставить своё.
+  // Пока человек сам не менял название, оно выделяется целиком при фокусе: одно нажатие, и можно печатать своё.
   const [titleTouched, setTitleTouched] = useState(Boolean(initial));
   const [siteId, setSiteId] = useState<string | null>(initial?.siteId ?? null);
   const [rows, setRows] = useState<Row[]>(() =>
@@ -76,6 +76,8 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
   );
   const [status, setStatus] = useState<AutosaveStatus>(initial ? "saved" : "idle");
   const [sending, setSending] = useState(false);
+  // Есть ли уже на сервере этот чеклист: у нового он появляется после первого автосохранения.
+  const [savedId, setSavedId] = useState<string | null>(initial?.id ?? null);
   const [isSitePickerOpen, setIsSitePickerOpen] = useState(false);
 
   // Куда перевести фокус после добавления строки (по Enter или кнопкой).
@@ -87,7 +89,7 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
   const knownItemIds = useRef(new Map<number, string>());
   const savedKey = useRef<string | null>(
     initial
-      ? snapshotKey({ title: initial.title, siteId: initial.siteId, rows: initial.items.map((item) => ({ key: 0, id: item.id, text: item.text, fromTemplate: false })) })
+      ? snapshotKey({ title: initial.title, siteId: initial.siteId, rows: initial.items.map((item) => ({ key: 0, id: item.id, text: item.text })) })
       : null,
   );
 
@@ -117,6 +119,7 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
           }
 
           checklistId.current = result.id;
+          setSavedId(result.id);
           for (const [key, id] of mapItemIds(snapshot.rows, result.itemIds)) knownItemIds.current.set(key, id);
           savedKey.current = snapshotKey(snapshot);
 
@@ -173,27 +176,36 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
   }
 
   function updateRow(key: number, text: string) {
-    setRows((current) => current.map((row) => (row.key === key ? { ...row, text, fromTemplate: false } : row)));
+    setRows((current) => current.map((row) => (row.key === key ? { ...row, text } : row)));
   }
 
   function removeRow(key: number) {
     setRows((current) => (current.length > 1 ? current.filter((row) => row.key !== key) : [newRow()]));
   }
 
-  function applyTemplate(template: (typeof c.form.templateList)[number]) {
-    if (!titleTouched) setTitle(template.title);
-    // Шаблон заменяет прошлый шаблон, а не дописывается: пункты, вписанные руками, остаются.
-    setRows((current) =>
-      applyTemplateItems(
-        current,
-        template.items.map((text) => newRow(text, null, true)),
-      ),
-    );
-  }
-
   async function handleBack() {
     const saved = await autosaver.flush();
     if (!saved) toast(c.form.autosave.leaveError);
+
+    router.back();
+  }
+
+  // «Видалити» / «Скасувати»: автосохранение останавливается (иначе оно создало бы чеклист заново) и ждёт уже идущее.
+  const stopAutosave = () => autosaver.discard();
+  const resumeAutosave = () => {
+    autosaver.resume();
+    autosaver.update({ title, siteId, rows });
+  };
+
+  // «Скасувати» у нового чеклиста, который ещё не сохранился: просто назад. Если сохранение успело пройти в
+  // последний момент, созданное убираем (сервер сам переводит на список).
+  async function handleCancelUnsaved() {
+    await autosaver.discard();
+
+    if (checklistId.current) {
+      await deleteChecklist(checklistId.current);
+      return;
+    }
 
     router.back();
   }
@@ -276,19 +288,6 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
           />
         </Ticket>
 
-        {!initial && (
-          <div>
-            <p className="mb-1.5 text-[13px] font-medium text-ink-2">{c.form.templates}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {c.form.templateList.map((template) => (
-                <Chip key={template.label} onClick={() => applyTemplate(template)}>
-                  {template.label}
-                </Chip>
-              ))}
-            </div>
-          </div>
-        )}
-
         <Ticket variant="sections">
           <TicketSection>
             <span className="text-[12px] text-ink-2">{c.form.items}</span>
@@ -339,12 +338,31 @@ export function ChecklistForm({ sites, defaultTitle, initial }: ChecklistFormPro
         </Ticket>
       </div>
 
-      <StickyActionBar>
-        <Button block onClick={handleSend} disabled={!check.ok} loading={sending}>
-          <Send className="size-[18px]" strokeWidth={1.9} aria-hidden />
+      <div className="mt-4 flex items-center justify-between gap-3 px-4 lg:px-0">
+        {savedId ? (
+          // Уже сохранено (правка или новый после автосохранения): красная кнопка с подтверждением.
+          <DeleteChecklistButton
+            checklistId={savedId}
+            label={initial ? undefined : c.form.cancel}
+            texts={
+              initial
+                ? undefined
+                : { title: c.form.cancelTitle, body: c.form.cancelBody, confirm: c.form.cancelConfirm, keep: c.form.cancelKeep }
+            }
+            onStart={stopAutosave}
+            onFail={resumeAutosave}
+          />
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => void handleCancelUnsaved()}>
+            {c.form.cancel}
+          </Button>
+        )}
+
+        <Button size="sm" onClick={handleSend} disabled={!check.ok} loading={sending}>
+          <Send className="size-4" strokeWidth={1.9} aria-hidden />
           {c.view.send}
         </Button>
-      </StickyActionBar>
+      </div>
 
       <ObjectPickerDrawer
         open={isSitePickerOpen}
