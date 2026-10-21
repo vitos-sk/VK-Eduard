@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { STICKY_BAR } from "@/components/layout/stickyBar";
+import { hasTopBarCorner, TOP_BAR_CORNER_PAD } from "@/components/layout/topBar";
 import { Button } from "@/components/ui/button";
 
 interface ScreenHeaderProps {
@@ -23,9 +25,12 @@ interface ScreenHeaderProps {
  * На телефоне закреплена вверху (`STICKY_BAR`), учитывает верхнюю безопасную зону.
  */
 export function ScreenHeader({ title, action, className, titleClassName }: ScreenHeaderProps) {
+  // На главных экранах справа, поверх шапки, стоят значок чатов и аватар из оболочки (`TopBarCorner`): оставляем им место.
+  const hasCorner = hasTopBarCorner(usePathname());
+
   return (
     <header
-      className={cn("flex items-center justify-between gap-3 px-4 lg:px-0", STICKY_BAR, className)}
+      className={cn("flex items-center justify-between gap-3 px-4 lg:px-0", STICKY_BAR, hasCorner && TOP_BAR_CORNER_PAD, className)}
     >
       <h1
         className={cn(

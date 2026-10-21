@@ -1,4 +1,5 @@
 import { STICKY_BAR } from "@/components/layout/stickyBar";
+import { TOP_BAR_CORNER_PAD } from "@/components/layout/topBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -10,11 +11,10 @@ import { cn } from "@/lib/utils";
 export default function Loading() {
   return (
     <div className="px-4 pb-6">
-      <div className={cn("-mx-4 flex items-center gap-2.5 px-4", STICKY_BAR)}>
+      {/* Значок чатов и аватар справа — настоящие, из оболочки (`TopBarCorner`): здесь только место под них. */}
+      <div className={cn("-mx-4 flex items-center gap-2.5 px-4", STICKY_BAR, TOP_BAR_CORNER_PAD)}>
         <Skeleton className="size-7 shrink-0 rounded-sm" />
         <Skeleton className="h-6 w-24 flex-1" />
-        <Skeleton className="size-8 rounded-md" />
-        <Skeleton className="size-8 rounded-md" />
       </div>
 
       <div className="pt-3">

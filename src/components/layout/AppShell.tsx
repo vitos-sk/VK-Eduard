@@ -7,6 +7,8 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { OfflineSync } from "@/components/layout/OfflineSync";
 import { ServiceWorkerRegister } from "@/components/layout/ServiceWorkerRegister";
 import { SyncBanner } from "@/components/layout/SyncBanner";
+import { TopBarCorner } from "@/components/layout/TopBarCorner";
+import { initialsOf } from "@/components/shared/Thumb";
 import { OwnAvatarProvider } from "@/components/layout/OwnAvatar";
 import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
 import { PhoneFrame } from "@/components/layout/PhoneFrame";
@@ -56,6 +58,8 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
               фрейма, даже когда iOS меняет высоту вьюпорта. pb-6 — воздух под FAB. */}
           <div ref={phoneScrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
             <SyncBanner userId={profile.id} />
+            {/* Значок чатов и аватар — здесь, а не в шапке страницы: при переходах не мигают, как нижняя панель. */}
+            <TopBarCorner initials={initialsOf(profile.full_name)} />
             {children}
           </div>
 

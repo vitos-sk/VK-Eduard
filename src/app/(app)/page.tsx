@@ -1,6 +1,5 @@
 import { eachDayOfInterval, endOfWeek, startOfWeek } from "date-fns";
 
-import { ChatBell } from "@/components/chats/ChatBell";
 import { DayReportCard } from "@/components/home/DayReportCard";
 import { Greeting } from "@/components/home/Greeting";
 import { HomeChecklists } from "@/components/home/HomeChecklists";
@@ -13,7 +12,6 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { formatDateLong, formatHoursShort } from "@/lib/format";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
-import { initialsOf } from "@/components/shared/Thumb";
 import { requireProfile } from "@/modules/auth/session";
 import { pickForHome } from "@/modules/checklists/filter";
 import { getMyChecklists } from "@/modules/checklists/queries";
@@ -139,11 +137,9 @@ export default async function HomePage() {
   return (
     <div className="mx-auto max-w-[640px] px-4 pb-6 lg:px-0">
       <HomeHeader
-        initials={initialsOf(profile.full_name)}
         pageTitle={t.nav.home}
         title={<Greeting name={profile.full_name} />}
         subtitle={formatDateLong(now, locale)}
-        trailing={<ChatBell />}
       />
 
       <DayReportCard

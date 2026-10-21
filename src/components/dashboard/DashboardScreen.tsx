@@ -12,11 +12,8 @@ import { Building2, Clock, FileQuestion, Users } from "lucide-react";
 
 import { TodayCard } from "@/components/dashboard/TodayCard";
 import { TopList } from "@/components/dashboard/TopList";
-import { ChatBell } from "@/components/chats/ChatBell";
-import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { SegmentedTabs } from "@/components/shared/SegmentedTabs";
-import { initialsOf } from "@/components/shared/Thumb";
 import { ChartBars, type ChartBar } from "@/components/ui/chart-bars";
 import { KpiTicket } from "@/components/ui/kpi-ticket";
 import { Ticket } from "@/components/ui/ticket";
@@ -184,15 +181,7 @@ export function DashboardScreen({
 
   return (
     <div className="pb-6">
-      <ScreenHeader
-        title={t.dashboard.title}
-        action={
-          <div className="flex items-center gap-2 lg:hidden">
-            <ChatBell />
-            <AvatarLink initials={initialsOf(profile.full_name)} />
-          </div>
-        }
-      />
+      <ScreenHeader title={t.dashboard.title} />
 
       <div className="px-4 lg:px-0">
         <p className="text-[16px] leading-snug font-semibold lg:text-[20px]">

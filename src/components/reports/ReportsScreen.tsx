@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-import { ChatBell } from "@/components/chats/ChatBell";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { ReportsFeed } from "@/components/reports/ReportsFeed";
@@ -46,8 +45,7 @@ export function ReportsScreen({ profile, reports, sites, categories, thumbUrls }
                 {t.reports.addReport}
               </Link>
             </Button>
-            <ChatBell className="lg:hidden" />
-            <AvatarLink initials={initialsOf(profile.full_name)} />
+            <AvatarLink initials={initialsOf(profile.full_name)} className="hidden lg:block" />
           </div>
         }
       />

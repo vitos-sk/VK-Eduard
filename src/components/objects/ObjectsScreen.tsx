@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Building2, Plus } from "lucide-react";
 
-import { ChatBell } from "@/components/chats/ChatBell";
 import { AvatarLink } from "@/components/layout/AvatarLink";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import {
@@ -173,8 +172,7 @@ export function ObjectsScreen({ objects, isBoss, profile }: ObjectsScreenProps) 
                 <Plus className="size-5" strokeWidth={1.9} aria-hidden />
               </Link>
             </Button>
-            <ChatBell className="lg:hidden" />
-            <AvatarLink initials={initialsOf(profile.full_name)} />
+            <AvatarLink initials={initialsOf(profile.full_name)} className="hidden lg:block" />
           </div>
         }
       />
