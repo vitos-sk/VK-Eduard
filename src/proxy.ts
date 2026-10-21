@@ -123,8 +123,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Все пути, кроме статики и картинок. Иконки, манифест, сервис-воркер и запасная офлайн-страница исключены:
-     * гонять их через проверку сессии — лишний запрос к Supabase на каждый файл.
+     * Все пути, кроме статики и картинок. Иконки, манифест, сервис-воркер (`sw.js`, `sw-lib.js`, `sw-version.js`)
+     * и запасная офлайн-страница исключены: гонять их через проверку сессии — лишний запрос к Supabase на каждый
+     * файл, а у вышедшего из аккаунта обновление воркера получило бы редирект на `/welcome` вместо скрипта.
      *
      * `/api/cron/*` — вызовы планировщика без пользователя: они защищены своим секретом (`CRON_SECRET`),
      * а прокси без сессии отправил бы их на `/welcome`.
@@ -133,6 +134,6 @@ export const config = {
      * Если бы прокси параллельно обновлял СТАРУЮ сессию из кук телефона, его куки перебили бы новые,
      * и человек после ссылки из письма оказывался бы без сессии («посилання недійсне»).
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|auth/|api/cron/|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|sw-lib.js|sw-version.js|offline.html|auth/|api/cron/|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

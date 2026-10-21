@@ -12,6 +12,7 @@ import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { NetworkButton } from "@/components/ui/network-button";
 import { CheckMark } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/input";
 import { Modal, ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from "@/components/ui/modal";
@@ -228,9 +229,15 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
             }}
           />
 
-          <Button size="icon" aria-label={t.chats.send} disabled={normalizeMessage(draft) === null} onClick={handleSend}>
+          <NetworkButton
+            size="icon"
+            hint={false}
+            aria-label={t.chats.send}
+            disabled={normalizeMessage(draft) === null}
+            onClick={handleSend}
+          >
             <SendHorizontal className="size-5" strokeWidth={1.9} aria-hidden />
-          </Button>
+          </NetworkButton>
         </div>
       </div>
 

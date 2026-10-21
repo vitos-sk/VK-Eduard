@@ -13,6 +13,7 @@ import type { ReportPhoto } from "@/modules/reports/types";
 import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { NetworkButton } from "@/components/ui/network-button";
 
 const BUCKET = "entry-photos";
 
@@ -136,9 +137,10 @@ export function ReportPhotoUploader({
 
         {editable && photos.length < MAX_PHOTOS_PER_ENTRY && (
           <>
-            <Button
+            <NetworkButton
               variant="outline"
               size="bare"
+              hint={false}
               onClick={openCamera}
               disabled={isUploading}
               className="size-20 flex-col justify-center gap-1 rounded-md border-dashed border-perf text-ink-2"
@@ -147,17 +149,18 @@ export function ReportPhotoUploader({
               <span className="text-[12px] font-medium">
                 {isUploading ? t.reportDetail.uploading : t.reportDetail.takePhoto}
               </span>
-            </Button>
-            <Button
+            </NetworkButton>
+            <NetworkButton
               variant="outline"
               size="bare"
+              hint={false}
               onClick={openGallery}
               disabled={isUploading}
               className="size-20 flex-col justify-center gap-1 rounded-md border-dashed border-perf text-ink-2"
             >
               <ImagePlus className="size-5" strokeWidth={1.9} aria-hidden />
               <span className="text-[12px] font-medium">{t.reportDetail.fromGallery}</span>
-            </Button>
+            </NetworkButton>
           </>
         )}
       </div>

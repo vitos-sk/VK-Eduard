@@ -1,3 +1,4 @@
+import { SafeImg } from "@/components/shared/SafeImg";
 import { cn } from "@/lib/utils";
 import type { SiteScene } from "@/lib/siteScene";
 
@@ -96,27 +97,27 @@ function Scene({ scene }: { scene: SiteScene }) {
 
 /**
  * Миниатюра объекта: реальное фото (`photoUrl`), если оно загружено,
- * иначе — SVG-сцена. Градиентных квадратов нет.
+ * иначе — SVG-сцена. Градиентных квадратов нет. Фото не загрузилось
+ * (нет сети, ссылка протухла) — тоже сцена, а не битый значок.
  */
 export function Thumb({ scene, photoUrl, size = "md", className }: ThumbProps) {
-  if (photoUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
-      <img
-        src={photoUrl}
-        alt=""
-        aria-hidden
-        className={cn("shrink-0 border border-edge object-cover", sizeStyles[size], className)}
-      />
-    );
-  }
-
-  return (
+  const placeholder = (
     <div
       aria-hidden
       className={cn("shrink-0 overflow-hidden border border-edge", sizeStyles[size], className)}
     >
       <Scene scene={scene} />
     </div>
+  );
+
+  if (!photoUrl) return placeholder;
+
+  return (
+    <SafeImg
+      src={photoUrl}
+      aria-hidden
+      className={cn("shrink-0 border border-edge object-cover", sizeStyles[size], className)}
+      fallback={placeholder}
+    />
   );
 }

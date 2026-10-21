@@ -27,6 +27,7 @@ import {
   totalMinutes,
 } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
+import { NetworkButton } from "@/components/ui/network-button";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField, UnderlineTextarea } from "@/components/ui/underline-field";
 import { formatHoursShort } from "@/lib/format";
@@ -442,9 +443,9 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
       </div>
 
       <StickyActionBar>
-        <Button block onClick={handleSubmit} disabled={!canSubmit} loading={isPending}>
+        <NetworkButton block onClick={handleSubmit} disabled={!canSubmit} loading={isPending}>
           {submitLabel}
-        </Button>
+        </NetworkButton>
       </StickyActionBar>
 
       <ObjectPickerDrawer

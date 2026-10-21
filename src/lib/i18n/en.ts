@@ -876,6 +876,8 @@ export const en: Dict = {
     pageTitle: "No connection",
     pageBody: "This page isn't saved on the device yet. Open it once while online.",
     pageRetry: "Try again",
+    shownSaved: "Showing saved copy: {when}",
+    needsNetwork: "Internet required",
   },
 
   /** Текст расчёта зарплаты для копирования (`modules/payroll`). */

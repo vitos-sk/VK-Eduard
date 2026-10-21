@@ -24,6 +24,24 @@ export function useOnline(): boolean {
   );
 }
 
+const subscribeNever = () => () => {};
+
+function readSavedAt(): number | null {
+  const content = document.querySelector('meta[name="vk-saved-at"]')?.getAttribute("content");
+  const savedAt = Number(content);
+
+  return content && Number.isFinite(savedAt) ? savedAt : null;
+}
+
+/**
+ * Когда сохранена копия страницы, если она открыта из памяти телефона (а не из сети): воркер кладёт эту метку
+ * в `<head>` при сохранении (`public/sw-lib.js`, `injectSavedAt`). `null` — страница пришла из сети.
+ * Читаем один раз: при следующем переходе без сети страница грузится заново и получает свою метку.
+ */
+export function useSavedAt(): number | null {
+  return useSyncExternalStore(subscribeNever, readSavedAt, () => null);
+}
+
 /** Сколько записей ждёт отправки и сколько из них сервер отверг. */
 export function useOutboxCounts(userId: string): { pending: number; rejected: number } {
   const [counts, setCounts] = useState({ pending: 0, rejected: 0 });

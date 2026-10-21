@@ -85,7 +85,7 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
       </div>
 
       <OfflineSync userId={profile.id} />
-      <ServiceWorkerRegister />
+      <ServiceWorkerRegister role={profile.role} />
       <PushSync userId={profile.id} />
       {/* Шефу баннер не показываем (отчёты — не его задача), но включить напоминание он может в настройках. */}
       {profile.role !== "boss" && <ReminderPrompt />}

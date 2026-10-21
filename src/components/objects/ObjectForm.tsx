@@ -17,6 +17,7 @@ import type { WorkCategory } from "@/modules/reports/types";
 import { createSite, updateSite } from "@/modules/sites/actions";
 import type { Site } from "@/modules/sites/queries";
 import { Button } from "@/components/ui/button";
+import { NetworkButton } from "@/components/ui/network-button";
 import { Chip } from "@/components/ui/chip";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
@@ -175,9 +176,9 @@ export function ObjectForm({ site, photoUrl = null, categories }: ObjectFormProp
       </div>
 
       <StickyActionBar>
-        <Button block onClick={handleSave} disabled={!isValid} loading={isPending}>
+        <NetworkButton block onClick={handleSave} disabled={!isValid} loading={isPending}>
           {isValid ? t.objects.form.save : t.objects.form.nameRequired}
-        </Button>
+        </NetworkButton>
       </StickyActionBar>
     </div>
   );

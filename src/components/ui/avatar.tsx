@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 
+import { SafeImg } from "@/components/shared/SafeImg"
 import { cn } from "@/lib/utils"
 
 interface AvatarProps {
@@ -7,7 +8,7 @@ interface AvatarProps {
   initials?: string
   /** Иконка вместо инициалов: «все сотрудники», «объект» в списках выбора. */
   icon?: ReactNode
-  /** Подписанная ссылка на фото. */
+  /** Подписанная ссылка на фото; не загрузилось (нет сети) — показываем инициалы или иконку. */
   src?: string | null
   className?: string
 }
@@ -25,8 +26,7 @@ function Avatar({ initials, icon, src, className }: AvatarProps) {
       )}
     >
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- подписанная ссылка Storage
-        <img src={src} alt="" className="absolute inset-0 size-full object-cover" />
+        <SafeImg src={src} className="absolute inset-0 size-full object-cover" fallback={icon ?? initials} />
       ) : (
         (icon ?? initials)
       )}

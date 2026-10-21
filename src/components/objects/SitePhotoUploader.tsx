@@ -8,7 +8,7 @@ import { useSiteCoverUpload } from "@/components/objects/useSiteCoverUpload";
 import { useT } from "@/lib/i18n/client";
 import { usePhotoSources } from "@/components/shared/PhotoSourceInputs";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { NetworkButton } from "@/components/ui/network-button";
 
 interface SitePhotoUploaderProps {
   siteId: string;
@@ -61,9 +61,10 @@ export function SitePhotoUploader({
 
   return (
     <div className={cn("flex items-center gap-4", className)}>
-      <Button
+      <NetworkButton
         variant="secondary"
         size="bare"
+        hint={false}
         onClick={openGallery}
         disabled={isUploading}
         aria-label={path ? t.objects.form.changePhoto : t.objects.form.addPhoto}
@@ -82,7 +83,7 @@ export function SitePhotoUploader({
         >
           <Camera className="size-5" strokeWidth={1.9} aria-hidden />
         </span>
-      </Button>
+      </NetworkButton>
 
       <div>
         <p className="text-[14px] font-semibold">
@@ -96,14 +97,14 @@ export function SitePhotoUploader({
           {t.objects.form.photoLabel}
         </p>
         <div className="mt-2 flex gap-2">
-          <Button variant="outline" size="sm" onClick={openCamera} disabled={isUploading}>
+          <NetworkButton variant="outline" size="sm" hint={false} onClick={openCamera} disabled={isUploading}>
             <Camera className="size-4" strokeWidth={1.9} aria-hidden />
             {t.reportDetail.takePhoto}
-          </Button>
-          <Button variant="outline" size="sm" onClick={openGallery} disabled={isUploading}>
+          </NetworkButton>
+          <NetworkButton variant="outline" size="sm" hint={false} onClick={openGallery} disabled={isUploading}>
             <ImagePlus className="size-4" strokeWidth={1.9} aria-hidden />
             {t.reportDetail.fromGallery}
-          </Button>
+          </NetworkButton>
         </div>
       </div>
 

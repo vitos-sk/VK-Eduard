@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>VK group</title>
     <style>
-      /* Цвета — зеркало design-system/tokens.css (статичный файл вне React, токены сюда не доходят). */
+      /* Цвета — зеркало design-system/tokens.css (статичный файл вне React, токены сюда не доходят):
+         paper #f3ecdc, ticket #fffdf7, edge #e4d8ba, ink #1c2716, ink-2 #5e6049, green #1f5a17, yellow #f5c43c. */
       body {
         margin: 0;
         min-height: 100dvh;
@@ -17,8 +18,10 @@
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
         text-align: center;
       }
+      main { display: flex; flex-direction: column; align-items: center; max-width: 360px; }
+      .logo { width: 56px; height: 56px; margin-bottom: 20px; }
       h1 { margin: 0 0 8px; font-size: 22px; }
-      p { margin: 0 0 20px; max-width: 320px; color: #5e6049; line-height: 1.5; }
+      p { margin: 0 0 20px; color: #5e6049; line-height: 1.5; }
       button {
         height: 44px;
         padding: 0 20px;
@@ -29,20 +32,58 @@
         font-size: 15px;
         font-weight: 600;
       }
+      #sections { margin-top: 28px; }
+      #sections[hidden] { display: none; }
+      #sections h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #5e6049; }
+      #links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+      #links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid #e4d8ba;
+        border-radius: 10px;
+        background: #fffdf7;
+        color: #1f5a17;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+      }
     </style>
   </head>
   <body>
     <main>
+      <!-- Знак «K» из components/brand/Logo.tsx: те же контуры, цвета знака и пирамидки. -->
+      <svg class="logo" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path d="M0 0h32.6v36.9L68.4 0H100v17.1L24.6 98.4H0Z" fill="#1f5a17" />
+        <path d="M71.1 69.5 98.4 98.4H46Z" fill="#f5c43c" />
+      </svg>
       <h1 id="title"></h1>
       <p id="body"></p>
       <button id="retry" type="button"></button>
+
+      <section id="sections" hidden>
+        <h2 id="sections-title"></h2>
+        <nav id="links"></nav>
+      </section>
     </main>
     <script>
+      /* Тексты — зеркало блока `offline` в lib/i18n, названия разделов — `nav` и `profile.title`. */
       var texts = {
-        uk: ["Немає зв'язку", "Ця сторінка ще не збережена на пристрої. Відкрийте її один раз з інтернетом.", "Спробувати ще раз"],
-        en: ["No connection", "This page isn't saved on the device yet. Open it once while online.", "Try again"],
-        nl: ["Geen verbinding", "Deze pagina is nog niet op het apparaat opgeslagen. Open haar één keer met internet.", "Opnieuw proberen"],
+        uk: ["Немає зв'язку", "Ця сторінка ще не збережена на пристрої. Відкрийте її один раз з інтернетом.", "Спробувати ще раз", "Доступно без інтернету"],
+        en: ["No connection", "This page isn't saved on the device yet. Open it once while online.", "Try again", "Available offline"],
+        nl: ["Geen verbinding", "Deze pagina is nog niet op het apparaat opgeslagen. Open haar één keer met internet.", "Opnieuw proberen", "Offline beschikbaar"],
       };
+      var sections = [
+        ["/", { uk: "Головна", en: "Home", nl: "Home" }],
+        ["/objects", { uk: "Об'єкти", en: "Sites", nl: "Projecten" }],
+        ["/hours", { uk: "Години", en: "Hours", nl: "Uren" }],
+        ["/reports", { uk: "Звіти", en: "Reports", nl: "Rapporten" }],
+        ["/chats", { uk: "Чати", en: "Chats", nl: "Chats" }],
+        ["/checklists", { uk: "Чеклисти", en: "Checklists", nl: "Checklists" }],
+        ["/more", { uk: "Налаштування", en: "Settings", nl: "Instellingen" }],
+      ];
+
       var match = document.cookie.match(/(?:^|; )locale=(uk|en|nl)/);
       var lang = match ? match[1] : "uk";
       document.documentElement.lang = lang;
@@ -51,6 +92,44 @@
       var retry = document.getElementById("retry");
       retry.textContent = texts[lang][2];
       retry.onclick = function () { location.reload(); };
+
+      /* Какие разделы реально сохранены на телефоне: читаем Cache Storage воркера (кэши `vk-pages-…`). */
+      function savedPaths() {
+        if (!window.caches) return Promise.resolve([]);
+
+        return caches.keys().then(function (names) {
+          var pageCaches = names.filter(function (name) { return name.indexOf("vk-pages-") === 0; });
+
+          return Promise.all(pageCaches.map(function (name) {
+            return caches.open(name).then(function (cache) { return cache.keys(); });
+          })).then(function (lists) {
+            var paths = [];
+            lists.forEach(function (requests) {
+              requests.forEach(function (request) { paths.push(new URL(request.url).pathname); });
+            });
+
+            return paths;
+          });
+        });
+      }
+
+      savedPaths().then(function (paths) {
+        var links = document.getElementById("links");
+
+        sections.forEach(function (section) {
+          if (paths.indexOf(section[0]) === -1) return;
+
+          var link = document.createElement("a");
+          link.href = section[0];
+          link.textContent = section[1][lang];
+          links.appendChild(link);
+        });
+
+        if (links.children.length > 0) {
+          document.getElementById("sections-title").textContent = texts[lang][3];
+          document.getElementById("sections").hidden = false;
+        }
+      }).catch(function () { /* без списка разделов страница остаётся рабочей */ });
     </script>
   </body>
 </html>

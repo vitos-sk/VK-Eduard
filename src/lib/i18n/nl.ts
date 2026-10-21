@@ -876,6 +876,8 @@ export const nl: Dict = {
     pageTitle: "Geen verbinding",
     pageBody: "Deze pagina is nog niet op het apparaat opgeslagen. Open haar één keer met internet.",
     pageRetry: "Opnieuw proberen",
+    shownSaved: "Opgeslagen kopie getoond: {when}",
+    needsNetwork: "Internet nodig",
   },
 
   /** Текст расчёта зарплаты для копирования (`modules/payroll`). */

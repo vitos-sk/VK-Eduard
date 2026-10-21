@@ -1,19 +1,27 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { OfflineBanner } from "@/components/ui/offline-banner";
 import { fmt } from "@/lib/format";
-import { useT } from "@/lib/i18n/client";
-import { useOnline, useOutboxCounts } from "@/lib/offline/hooks";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { useOnline, useOutboxCounts, useSavedAt } from "@/lib/offline/hooks";
 import { discardOutboxEntry, flushOutbox, listOutbox } from "@/lib/offline/outbox";
+import { formatSavedAt } from "@/lib/offline/savedAt";
 
 /**
- * Полоса вверху экрана: «Немає зв'язку», «Не відправлено: N» и «Не вдалося відправити».
- * Показывается только когда есть что сказать; сама отправка — в `OfflineSync`.
+ * Полоса вверху экрана: «Немає зв'язку» (и, если страница открыта из сохранённой копии, когда она сохранена),
+ * «Не відправлено: N» и «Не вдалося відправити». Показывается только когда есть что сказать;
+ * сама отправка — в `OfflineSync`.
  */
 export function SyncBanner({ userId }: { userId: string }) {
   const t = useT();
+  const locale = useLocale();
   const online = useOnline();
+  const savedAt = useSavedAt();
+  // «Сейчас» фиксируем один раз: нужно только понять, сохранена копия сегодня или раньше.
+  const [now] = useState(() => Date.now());
   const { pending, rejected } = useOutboxCounts(userId);
 
   const discardRejected = async () => {
@@ -27,6 +35,10 @@ export function SyncBanner({ userId }: { userId: string }) {
   return (
     <div className="space-y-px">
       {!online && <OfflineBanner>{t.offline.banner}</OfflineBanner>}
+
+      {!online && savedAt !== null && (
+        <OfflineBanner>{fmt(t.offline.shownSaved, { when: formatSavedAt(savedAt, now, locale) })}</OfflineBanner>
+      )}
 
       {pending > 0 && (
         <OfflineBanner className="flex items-center justify-center gap-3">

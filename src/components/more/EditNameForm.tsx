@@ -4,7 +4,7 @@ import { useActionState } from "react";
 
 import { useT } from "@/lib/i18n/client";
 import { updateFullName } from "@/modules/auth/actions";
-import { Button } from "@/components/ui/button";
+import { NetworkButton } from "@/components/ui/network-button";
 import { Ticket } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
 
@@ -24,9 +24,9 @@ export function EditNameForm({ fullName }: { fullName: string }) {
         />
       </Ticket>
 
-      <Button block type="submit" loading={isPending}>
+      <NetworkButton block type="submit" loading={isPending}>
         {t.profile.save}
-      </Button>
+      </NetworkButton>
     </form>
   );
 }

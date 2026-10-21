@@ -13,13 +13,20 @@ const supabaseKey =
   process.env.SUPABASE_ANON_KEY ??
   "";
 
+/**
+ * Номер сборки: хеш коммита на Vercel, локально — время запуска. Попадает в `/sw-version.js`
+ * (см. `src/app/sw-version.js/route.ts`), и по нему телефон понимает, что вышла новая версия приложения.
+ */
+const buildId = process.env.VERCEL_GIT_COMMIT_SHA ?? String(Date.now());
+
 const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: supabaseKey,
+    NEXT_PUBLIC_BUILD_ID: buildId,
   },
-  // Сервис-воркер не должен подолгу застревать в кэше браузера: иначе после деплоя
-  // телефоны месяцами сидят на старой версии (см. docs/PWA.md, раздел 5).
+  // Сервис-воркер и его подключаемый файл `sw-lib.js` не должны подолгу застревать в кэше браузера:
+  // иначе после деплоя телефоны месяцами сидят на старой версии (см. docs/PWA.md, раздел 4).
   async headers() {
     return [
       {
@@ -28,6 +35,13 @@ const nextConfig: NextConfig = {
           { key: "Content-Type", value: "application/javascript; charset=utf-8" },
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
           { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/sw-lib.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
         ],
       },
     ];
