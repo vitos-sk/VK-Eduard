@@ -20,11 +20,13 @@ import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Colleague } from "@/modules/chats/queries";
 import { deleteChecklist, setItemDone } from "@/modules/checklists/actions";
-import { countProgress, isComplete } from "@/modules/checklists/progress";
-import type { ChecklistDetail } from "@/modules/checklists/queries";
+import { countProgress, doneByOther, isComplete } from "@/modules/checklists/progress";
+import type { ChecklistDetail, ChecklistItemView } from "@/modules/checklists/queries";
 
 interface ChecklistViewProps {
   detail: ChecklistDetail;
+  /** Кто смотрит: его собственные отметки не подписываются именем. */
+  meId: string;
   /** Свой чеклист: править, удалять, отправлять. Копию коллеги, открытую из чата, можно только отмечать (это разрешено обоим). */
   isOwner: boolean;
   colleagues: Colleague[];
@@ -33,7 +35,7 @@ interface ChecklistViewProps {
 }
 
 /** `/checklists/[id]`: пункты с галочками и прогрессом, меню «⋮», кнопка «Надіслати». */
-export function ChecklistView({ detail, isOwner, colleagues, openSend }: ChecklistViewProps) {
+export function ChecklistView({ detail, meId, isOwner, colleagues, openSend }: ChecklistViewProps) {
   const t = useT();
   const v = t.checklists.view;
   const router = useRouter();
@@ -64,21 +66,23 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
     if (!before) return;
 
     const nextDone = before.doneAt === null;
-    const mark = (doneAt: string | null) =>
-      setItems((current) => current.map((item) => (item.id === itemId ? { ...item, doneAt } : item)));
+    const mark = (patch: Pick<ChecklistItemView, "doneAt" | "doneById" | "doneByName">) =>
+      setItems((current) => current.map((item) => (item.id === itemId ? { ...item, ...patch } : item)));
+    const restore = () => mark({ doneAt: before.doneAt, doneById: before.doneById, doneByName: before.doneByName });
 
     busy.current.add(itemId);
-    mark(nextDone ? new Date().toISOString() : null);
+    // Новая отметка — моя (имя под ней не показывается), снятая — без времени и имени.
+    mark(nextDone ? { doneAt: new Date().toISOString(), doneById: meId, doneByName: null } : { doneAt: null, doneById: null, doneByName: null });
 
     try {
       const result = await setItemDone(itemId, nextDone);
 
       if (result.error) {
-        mark(before.doneAt);
+        restore();
         toast(result.error);
       }
     } catch {
-      mark(before.doneAt);
+      restore();
       toast(v.toggleError);
     } finally {
       busy.current.delete(itemId);
@@ -161,10 +165,14 @@ export function ChecklistView({ detail, isOwner, colleagues, openSend }: Checkli
           <Ticket variant="sections">
             {items.map((item) => {
               const isDone = item.doneAt !== null;
+              const doneBy = doneByOther(item, meId);
               const text = (
                 <>
                   <CheckMark checked={isDone} />
-                  <span className={cn("min-w-0 flex-1 text-[15px] font-medium", isDone && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className={cn("block text-[15px] font-medium", isDone && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                    {doneBy && <span className="block text-[12px] text-ink-2">{doneBy}</span>}
+                  </span>
                 </>
               );
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { MessageCircle, Pencil } from "lucide-react";
 
 import { BackHeader } from "@/components/layout/ScreenHeader";
 import { ObjectHoursCard } from "@/components/objects/ObjectHoursCard";
@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ReportCard } from "@/components/shared/ReportCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { fmt } from "@/lib/format";
 import { sceneForId } from "@/lib/siteScene";
 import { getT } from "@/lib/i18n/server";
@@ -146,6 +147,14 @@ export default async function ObjectDetailPage({
               )}
             </section>
           </Ticket>
+
+          {/* Чат создаётся при первом нажатии, поэтому без предзагрузки: иначе он появился бы у всех, кто просто открыл объект. */}
+          <Button asChild variant="outline" block>
+            <Link href={`/objects/${site.id}/chat`} prefetch={false}>
+              <MessageCircle className="size-[18px]" strokeWidth={1.9} aria-hidden />
+              {t.objects.detail.openChat}
+            </Link>
+          </Button>
 
           {isBoss && <ObjectHoursCard companyId={profile.company_id} site={site} />}
         </div>

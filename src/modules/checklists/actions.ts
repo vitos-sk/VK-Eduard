@@ -180,10 +180,13 @@ export async function setItemDone(itemId: string, done: boolean): Promise<Toggle
 
   const supabase = await createClient();
 
+  // Вместе со временем запоминаем, кто отметил пункт; снятие отметки очищает оба поля.
+  const mark = { done_at: done ? new Date().toISOString() : null, done_by: done ? profile.id : null };
+
   // Свой пункт: обычное обновление (RLS пускает только владельца).
   const { data: own, error } = await supabase
     .from("checklist_items")
-    .update({ done_at: done ? new Date().toISOString() : null })
+    .update(mark)
     .eq("id", itemId)
     .select("checklist_id")
     .maybeSingle();
@@ -192,8 +195,8 @@ export async function setItemDone(itemId: string, done: boolean): Promise<Toggle
   let checklistId = own?.checklist_id ?? null;
 
   // Не владелец (отправитель отмечает пункт копии коллеги в чате). Доступ решает база: RLS показывает пункт только
-  // владельцу и участнику чата, где лежит карточка этого чеклиста. Если пункт виден, меняем ровно одну колонку
-  // `done_at` этого пункта сервисным ключом (обычная политика записи пускает только владельца).
+  // владельцу и участнику чата, где лежит карточка этого чеклиста. Если пункт виден, меняем у него только отметку
+  // (`done_at` и `done_by`) сервисным ключом (обычная политика записи пускает только владельца).
   if (!checklistId) {
     const { data: visible, error: visibleError } = await supabase
       .from("checklist_items")
@@ -204,7 +207,7 @@ export async function setItemDone(itemId: string, done: boolean): Promise<Toggle
 
     const { error: adminError } = await createAdminClient()
       .from("checklist_items")
-      .update({ done_at: done ? new Date().toISOString() : null })
+      .update(mark)
       .eq("id", visible.id);
     if (adminError) return failed;
 

@@ -21,6 +21,11 @@ export function chatUrl(chatId: string): string {
   return `/chats/${chatId}`;
 }
 
+/** Кто пишет в чате объекта: «Олег · Дах Ван Дейк». По заголовку уведомления видно, в каком объекте это сказано. */
+export function siteSender(name: string, siteName: string | null | undefined): string {
+  return siteName ? `${name} · ${siteName}` : name;
+}
+
 /** Предел длины текста в уведомлении: длинное сообщение там всё равно обрежет система. */
 const BODY_MAX = 140;
 

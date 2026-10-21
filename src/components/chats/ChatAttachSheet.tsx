@@ -12,20 +12,23 @@ import { pluralize } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { postChecklistToChat } from "@/modules/chats/actions";
 import { sendChecklist } from "@/modules/checklists/actions";
 import { getMyChecklists, type ChecklistListEntry } from "@/modules/checklists/queries";
+
+/** Куда уйдёт чеклист: коллеге в чат 1 на 1 (ему своя копия) или в общий чат объекта (один общий чеклист). */
+export type AttachTarget = { kind: "person"; otherId: string } | { kind: "site"; chatId: string };
 
 interface ChatAttachSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   meId: string;
-  /** Собеседник, которому уйдёт чеклист. */
-  otherId: string;
+  target: AttachTarget;
   onSent: () => void;
 }
 
-/** Скрепка в чате: отправить один из своих чеклистов этому коллеге или создать новый. Фото пока не поддерживаем. */
-export function ChatAttachSheet({ open, onOpenChange, meId, otherId, onSent }: ChatAttachSheetProps) {
+/** Скрепка в чате: отправить один из своих чеклистов в этот чат или создать новый. Фото пока не поддерживаем. */
+export function ChatAttachSheet({ open, onOpenChange, meId, target, onSent }: ChatAttachSheetProps) {
   const t = useT();
   const locale = useLocale();
   const a = t.chats.attach;
@@ -52,7 +55,7 @@ export function ChatAttachSheet({ open, onOpenChange, meId, otherId, onSent }: C
     setSendingId(id);
 
     startTransition(async () => {
-      const result = await sendChecklist(id, [otherId]);
+      const result = target.kind === "site" ? await postChecklistToChat(id, target.chatId) : await sendChecklist(id, [target.otherId]);
       setSendingId(null);
 
       if (result.error) {

@@ -2,11 +2,14 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronLeft, ChevronUp, ExternalLink, ListChecks, MoreVertical, Paperclip, SendHorizontal, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Building2, ChevronDown, ChevronLeft, ChevronUp, ExternalLink, ListChecks, MoreVertical, Paperclip, SendHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { ChatAttachSheet } from "@/components/chats/ChatAttachSheet";
+import { ChatAttachSheet, type AttachTarget } from "@/components/chats/ChatAttachSheet";
+import { ChatMenu } from "@/components/chats/ChatMenu";
 import { useChatUnread } from "@/components/chats/ChatUnreadProvider";
+import { STICKY_BAR } from "@/components/layout/stickyBar";
 import { initialsOf } from "@/components/shared/Thumb";
 import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
 import { Avatar } from "@/components/ui/avatar";
@@ -28,6 +31,7 @@ import { getChatMessages, type ChatHeader, type ChatMessageView } from "@/module
 import { normalizeMessage, sameMessages } from "@/modules/chats/rules";
 import { dayLabel, startsNewDay } from "@/modules/chats/time";
 import { setItemDone } from "@/modules/checklists/actions";
+import { doneByOther } from "@/modules/checklists/progress";
 
 /** Как часто спрашиваем новые сообщения, пока чат открыт и виден. */
 const POLL_MS = 4_000;
@@ -43,15 +47,18 @@ interface PendingMessage {
 interface ChatThreadProps {
   chat: ChatHeader;
   meId: string;
+  /** Шеф убирает карточки чеклистов в чате объекта, даже чужие. */
+  meIsBoss: boolean;
   initialMessages: ChatMessageView[];
 }
 
 /**
- * `/chats/[id]`: переписка 1 на 1. Сообщения подтягиваются опросом раз в несколько секунд (пока вкладка видна),
- * своё сообщение появляется сразу и подтверждается ответом сервера. Карточка чеклиста показывает прогресс получателя.
+ * `/chats/[id]`: переписка 1 на 1 или общий чат объекта. Сообщения подтягиваются опросом раз в несколько секунд (пока вкладка видна),
+ * своё сообщение появляется сразу и подтверждается ответом сервера. Карточка чеклиста показывает прогресс получателя (в чате объекта — общий прогресс).
  */
-export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
+export function ChatThread({ chat, meId, meIsBoss, initialMessages }: ChatThreadProps) {
   const t = useT();
+  const router = useRouter();
   const locale = useLocale();
   const { refresh: refreshUnread } = useChatUnread();
   const [messages, setMessages] = useState(initialMessages);
@@ -61,7 +68,10 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-  const avatars = useAvatarUrls([{ id: chat.otherId, avatar_path: chat.otherAvatarPath }]);
+  const isSite = chat.kind === "site";
+  const otherId = chat.otherId;
+  const avatars = useAvatarUrls(otherId ? [{ id: otherId, avatar_path: chat.otherAvatarPath }] : []);
+  const attachTarget: AttachTarget | null = isSite ? { kind: "site", chatId: chat.id } : otherId ? { kind: "person", otherId } : null;
 
   const reload = useCallback(async () => {
     try {
@@ -137,6 +147,18 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
       });
   }
 
+  // Чат объекта открывают и со страницы объекта, и из списка, поэтому «назад» ведёт туда, откуда пришли.
+  function goBack() {
+    if (window.history.length > 1) router.back();
+    else router.push("/chats");
+  }
+
+  // Очистили у себя: на экране остаётся пустая переписка, список и значок непрочитанных обновляются.
+  function handleCleared() {
+    setMessages([]);
+    refreshUnread();
+  }
+
   const now = new Date();
   const roleLabel = chat.otherIsBoss ? t.chats.roleBoss : t.chats.roleWorker;
 
@@ -144,17 +166,38 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
     // Телефон: страница на всю высоту области прокрутки, включая её нижний отступ (`pb-6` в `AppShell`, его гасит `-mb-6`),
     // поэтому поле ввода стоит вплотную к нижней панели. Компьютер: высота окна минус отступы `main`.
     <div className="-mb-6 flex min-h-[calc(100%+1.5rem)] flex-col lg:mb-0 lg:min-h-[calc(100dvh-3rem)]">
-      <header className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 lg:mx-auto lg:w-full lg:max-w-[640px] lg:px-0 lg:pt-0">
-        <Button asChild variant="ghost" size="icon-sm" className="-ml-1.5">
-          <Link href="/chats" aria-label={t.common.back}>
+      <header className={cn("flex items-center gap-2 px-4 lg:mx-auto lg:w-full lg:max-w-[640px] lg:px-0", STICKY_BAR)}>
+        {isSite ? (
+          <Button variant="ghost" size="icon-sm" className="-ml-1.5" aria-label={t.common.back} onClick={goBack}>
             <ChevronLeft className="size-5" strokeWidth={1.9} aria-hidden />
-          </Link>
-        </Button>
-        <Avatar initials={initialsOf(chat.otherName)} src={avatars[chat.otherId]} className="size-9" />
-        <div className="min-w-0">
-          <h1 className="truncate text-[16px] leading-tight font-semibold">{chat.otherName}</h1>
-          <p className="text-[12px] text-ink-2">{roleLabel}</p>
+          </Button>
+        ) : (
+          <Button asChild variant="ghost" size="icon-sm" className="-ml-1.5">
+            <Link href="/chats" aria-label={t.common.back}>
+              <ChevronLeft className="size-5" strokeWidth={1.9} aria-hidden />
+            </Link>
+          </Button>
+        )}
+        {isSite ? (
+          <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-md border border-edge bg-stub text-primary">
+            <Building2 className="size-5" strokeWidth={1.9} />
+          </span>
+        ) : (
+          <Avatar initials={initialsOf(chat.otherName)} src={otherId ? avatars[otherId] : undefined} className="size-9" />
+        )}
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[16px] leading-tight font-semibold">
+            {isSite && chat.siteId ? (
+              <Link href={`/objects/${chat.siteId}`} className="outline-none hover:underline focus-visible:outline-2 focus-visible:outline-ring">
+                {chat.otherName}
+              </Link>
+            ) : (
+              chat.otherName
+            )}
+          </h1>
+          <p className="text-[12px] text-ink-2">{isSite ? t.chats.siteSubtitle : roleLabel}</p>
         </div>
+        <ChatMenu chatId={chat.id} canDelete={!isSite} onCleared={handleCleared} />
       </header>
 
       <div className="flex flex-1 flex-col gap-1.5 px-4 pb-3 lg:mx-auto lg:w-full lg:max-w-[640px] lg:px-0">
@@ -181,11 +224,13 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
                   mine={mine}
                   otherName={chat.otherName}
                   meId={meId}
+                  shared={isSite}
+                  canDelete={!isSite || mine || meIsBoss}
                   time={formatTime(created)}
                   onChanged={reload}
                 />
               ) : (
-                <Bubble mine={mine} time={formatTime(created)}>
+                <Bubble mine={mine} time={formatTime(created)} author={isSite && !mine ? message.senderName : null}>
                   {message.body}
                 </Bubble>
               )}
@@ -244,12 +289,27 @@ export function ChatThread({ chat, meId, initialMessages }: ChatThreadProps) {
       {/* Конец переписки: сюда прокручиваем, чтобы последнее сообщение не оказалось под панелью ввода. */}
       <div ref={endRef} />
 
-      <ChatAttachSheet open={attachOpen} onOpenChange={setAttachOpen} meId={meId} otherId={chat.otherId} onSent={() => void reload()} />
+      {attachTarget && (
+        <ChatAttachSheet open={attachOpen} onOpenChange={setAttachOpen} meId={meId} target={attachTarget} onSent={() => void reload()} />
+      )}
     </div>
   );
 }
 
-function Bubble({ mine, time, muted = false, children }: { mine: boolean; time: string; muted?: boolean; children: React.ReactNode }) {
+function Bubble({
+  mine,
+  time,
+  author = null,
+  muted = false,
+  children,
+}: {
+  mine: boolean;
+  time: string;
+  /** Имя автора над текстом: в чате объекта у чужих сообщений. */
+  author?: string | null;
+  muted?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -258,6 +318,7 @@ function Bubble({ mine, time, muted = false, children }: { mine: boolean; time: 
         muted && "opacity-60",
       )}
     >
+      {author && <span className="block text-[12px] leading-tight font-semibold text-ink-2">{author}</span>}
       {children}
       <span className="tabular mt-0.5 block text-right text-[11px] text-ink-3">{time}</span>
     </div>
@@ -269,6 +330,8 @@ function ChecklistCard({
   mine,
   otherName,
   meId,
+  shared,
+  canDelete,
   time,
   onChanged,
 }: {
@@ -276,6 +339,9 @@ function ChecklistCard({
   mine: boolean;
   otherName: string;
   meId: string;
+  /** Карточка в чате объекта: чеклист общий, прогресс один на всех, без метки «Нове» и имён. */
+  shared: boolean;
+  canDelete: boolean;
   time: string;
   /** Перечитать переписку: после отметки пункта или удаления карточки. */
   onChanged: () => Promise<void>;
@@ -336,14 +402,21 @@ function ChecklistCard({
     await onChanged();
   }
 
-  const items = (list?.items ?? []).map((item) => ({
-    ...item,
-    done: item.id in pendingMarks ? pendingMarks[item.id] : item.doneAt !== null,
-  }));
+  const items = (list?.items ?? []).map((item) => {
+    const pending = item.id in pendingMarks;
+
+    return {
+      ...item,
+      done: pending ? pendingMarks[item.id] : item.doneAt !== null,
+      // Пока моя отметка не подтверждена перечитыванием, старое чужое имя под пунктом не показываем.
+      doneBy: pending ? null : doneByOther(item, meId),
+    };
+  });
   const done = list ? items.filter((item) => item.done).length : 0;
   const total = list?.total ?? 0;
   const finished = total > 0 && done === total;
-  const progressText = isMyCopy
+  const hasMenu = Boolean(list) || canDelete;
+  const progressText = isMyCopy || shared
     ? fmt(c.mine, { done, total })
     : fmt(c.progress, { name: otherName, done, total });
 
@@ -356,9 +429,10 @@ function ChecklistCard({
         <span className={cn("min-w-0 flex-1 truncate text-[15px] font-semibold", !list && "font-medium text-ink-2")}>
           {list ? list.title : c.deleted}
         </span>
-        {isMyCopy && done === 0 && <Badge variant="accent">{c.newBadge}</Badge>}
+        {isMyCopy && !shared && done === 0 && <Badge variant="accent">{c.newBadge}</Badge>}
         {finished && <Badge variant="success">{c.doneBadge}</Badge>}
 
+        {hasMenu && (
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon-sm" aria-label={c.menu} className="-mr-1.5 text-text-muted">
@@ -376,21 +450,24 @@ function ChecklistCard({
               </Button>
             )}
 
-            <Button
-              variant="ghost"
-              size="sm"
-              block
-              className="justify-start rounded-sm px-2 text-danger-fg hover:bg-danger/10"
-              onClick={() => {
-                setMenuOpen(false);
-                setDeleteOpen(true);
-              }}
-            >
-              <Trash2 className="size-[16px]" strokeWidth={1.9} aria-hidden />
-              {c.delete}
-            </Button>
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                block
+                className="justify-start rounded-sm px-2 text-danger-fg hover:bg-danger/10"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setDeleteOpen(true);
+                }}
+              >
+                <Trash2 className="size-[16px]" strokeWidth={1.9} aria-hidden />
+                {c.delete}
+              </Button>
+            )}
           </PopoverContent>
         </Popover>
+        )}
       </div>
 
       {list && (
@@ -422,7 +499,10 @@ function ChecklistCard({
                     className="flex min-h-11 w-full items-center gap-3 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring"
                   >
                     <CheckMark checked={item.done} />
-                    <span className={cn("min-w-0 flex-1 text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className={cn("block text-[14px] font-medium", item.done && "text-ink-3 line-through decoration-perf")}>{item.text}</span>
+                      {item.doneBy && <span className="block text-[12px] text-ink-2">{item.doneBy}</span>}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -437,7 +517,7 @@ function ChecklistCard({
         <ModalContent>
           <ModalHeader>
             <ModalTitle>{c.deleteTitle}</ModalTitle>
-            <ModalDescription>{isMyCopy ? c.deleteBodyMine : c.deleteBodySent}</ModalDescription>
+            <ModalDescription>{shared ? c.deleteBodySite : isMyCopy ? c.deleteBodyMine : c.deleteBodySent}</ModalDescription>
           </ModalHeader>
 
           <ModalFooter>

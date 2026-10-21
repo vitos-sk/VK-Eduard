@@ -6,9 +6,14 @@ type Client = SupabaseClient<Database>;
 
 export interface ChatSummary {
   id: string;
-  otherId: string;
+  kind: "person" | "site";
+  /** Собеседник; у чата объекта его нет. */
+  otherId: string | null;
+  /** Заголовок чата: имя собеседника, а у чата объекта — название объекта. */
   otherName: string;
   otherAvatarPath: string | null;
+  /** Объект, к которому привязан чат; у чата 1 на 1 — `null`. */
+  siteId: string | null;
   lastAt: string;
   lastKind: "text" | "checklist" | null;
   lastBody: string | null;
@@ -23,7 +28,7 @@ export async function getMyChats(supabase: Client): Promise<ChatSummary[]> {
   if (error) throw error;
 
   const rows = data ?? [];
-  const otherIds = [...new Set(rows.map((row) => row.out_other))];
+  const otherIds = [...new Set(rows.flatMap((row) => (row.out_other ? [row.out_other] : [])))];
 
   const { data: people, error: peopleError } = otherIds.length
     ? await supabase.from("profiles").select("id, full_name, avatar_path").in("id", otherIds)
@@ -34,9 +39,11 @@ export async function getMyChats(supabase: Client): Promise<ChatSummary[]> {
 
   return rows.map((row) => ({
     id: row.out_chat,
+    kind: row.out_site ? ("site" as const) : ("person" as const),
     otherId: row.out_other,
-    otherName: byId.get(row.out_other)?.full_name ?? "",
-    otherAvatarPath: byId.get(row.out_other)?.avatar_path ?? null,
+    otherName: row.out_site ? (row.out_site_name ?? "") : ((row.out_other && byId.get(row.out_other)?.full_name) || ""),
+    otherAvatarPath: (row.out_other && byId.get(row.out_other)?.avatar_path) || null,
+    siteId: row.out_site,
     lastAt: row.out_last_at,
     lastKind: row.out_last_kind === "text" || row.out_last_kind === "checklist" ? row.out_last_kind : null,
     lastBody: row.out_last_body,
@@ -48,7 +55,12 @@ export async function getMyChats(supabase: Client): Promise<ChatSummary[]> {
 
 export interface ChatHeader {
   id: string;
-  otherId: string;
+  kind: "person" | "site";
+  /** Объект, к которому привязан чат; у чата 1 на 1 — `null`. */
+  siteId: string | null;
+  /** Собеседник; у чата объекта его нет. */
+  otherId: string | null;
+  /** Заголовок чата: имя собеседника, а у чата объекта — название объекта. */
   otherName: string;
   otherAvatarPath: string | null;
   otherIsBoss: boolean;
@@ -56,11 +68,28 @@ export interface ChatHeader {
 
 /** Шапка чата. `null` — такого чата нет или человек в нём не участник (RLS скрывает чужие чаты как несуществующие). */
 export async function getChat(supabase: Client, chatId: string, myId: string): Promise<ChatHeader | null> {
-  const { data, error } = await supabase.from("chats").select("id, user_a, user_b").eq("id", chatId).maybeSingle();
+  const { data, error } = await supabase
+    .from("chats")
+    .select("id, user_a, user_b, site_id, sites(name)")
+    .eq("id", chatId)
+    .maybeSingle();
   if (error) throw error;
   if (!data) return null;
 
+  if (data.site_id) {
+    return {
+      id: data.id,
+      kind: "site",
+      siteId: data.site_id,
+      otherId: null,
+      otherName: data.sites?.name ?? "",
+      otherAvatarPath: null,
+      otherIsBoss: false,
+    };
+  }
+
   const otherId = data.user_a === myId ? data.user_b : data.user_a;
+  if (!otherId) return null;
   const { data: person, error: personError } = await supabase
     .from("profiles")
     .select("full_name, avatar_path, role")
@@ -70,6 +99,8 @@ export async function getChat(supabase: Client, chatId: string, myId: string): P
 
   return {
     id: data.id,
+    kind: "person",
+    siteId: null,
     otherId,
     otherName: person?.full_name ?? "",
     otherAvatarPath: person?.avatar_path ?? null,
@@ -86,6 +117,8 @@ export interface ChatMessageView {
   kind: "text" | "checklist";
   body: string | null;
   createdAt: string;
+  /** Имя автора (в чате объекта оно подписывается над чужими сообщениями). */
+  senderName: string | null;
   /** Для карточки чеклиста: копия получателя, её пункты и прогресс. `null` — копию удалили. */
   checklist: {
     id: string;
@@ -93,7 +126,7 @@ export interface ChatMessageView {
     ownerId: string;
     done: number;
     total: number;
-    items: { id: string; text: string; doneAt: string | null }[];
+    items: { id: string; text: string; doneAt: string | null; doneById: string | null; doneByName: string | null }[];
   } | null;
 }
 
@@ -101,7 +134,7 @@ export interface ChatMessageView {
 export async function getChatMessages(supabase: Client, chatId: string): Promise<ChatMessageView[]> {
   const { data, error } = await supabase
     .from("chat_messages")
-    .select("id, sender_id, kind, body, created_at, checklists(id, title, owner_id, checklist_items(id, text, sort_order, done_at))")
+    .select("id, sender_id, kind, body, created_at, sender:profiles!chat_messages_sender_id_fkey(full_name), checklists(id, title, owner_id, checklist_items(id, text, sort_order, done_at, done_by, doneBy:profiles!checklist_items_done_by_fkey(full_name)))")
     .eq("chat_id", chatId)
     .order("created_at", { ascending: false })
     .limit(MESSAGES_LIMIT);
@@ -114,6 +147,7 @@ export async function getChatMessages(supabase: Client, chatId: string): Promise
       kind: row.kind === "checklist" ? ("checklist" as const) : ("text" as const),
       body: row.body,
       createdAt: row.created_at,
+      senderName: row.sender?.full_name ?? null,
       checklist: row.checklists
         ? {
             id: row.checklists.id,
@@ -123,11 +157,24 @@ export async function getChatMessages(supabase: Client, chatId: string): Promise
             total: row.checklists.checklist_items.length,
             items: [...row.checklists.checklist_items]
               .sort((a, b) => a.sort_order - b.sort_order)
-              .map((item) => ({ id: item.id, text: item.text, doneAt: item.done_at })),
+              .map((item) => ({
+                id: item.id,
+                text: item.text,
+                doneAt: item.done_at,
+                doneById: item.done_by,
+                doneByName: item.doneBy?.full_name ?? null,
+              })),
           }
         : null,
     }))
     .reverse();
+}
+
+/** Чат объекта этого сотрудника (создаётся при первом обращении). `null` — объект не найден или не из его фирмы. */
+export async function openSiteChat(supabase: Client, siteId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc("open_site_chat", { p_site: siteId });
+
+  return error || !data ? null : data;
 }
 
 /** Id чата между двумя людьми, если он есть (пара всегда хранится упорядоченной). */

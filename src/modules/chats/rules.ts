@@ -54,15 +54,21 @@ export function chatPreview(chat: ChatPreviewInput, meId: string, labels: ChatPr
 /** Сообщения в переписке не изменились: опрос не должен перерисовывать экран и сбрасывать прокрутку зря. */
 type ComparableMessage = {
   id: string;
-  checklist: { done: number; total: number; items?: readonly { id: string; doneAt: string | null }[] } | null;
+  checklist: {
+    done: number;
+    total: number;
+    items?: readonly { id: string; doneAt: string | null; doneByName?: string | null }[];
+  } | null;
 };
 
-/** «Что отмечено» одной строкой: у карточки с пунктами важны отметки, а не только их число. */
+/** «Что отмечено и кем» одной строкой: у карточки с пунктами важны отметки и имена, а не только их число. */
 function cardSignature(message: ComparableMessage): string {
   const list = message.checklist;
   if (!list) return "";
 
-  return `${list.done}/${list.total}:${(list.items ?? []).map((item) => `${item.id}${item.doneAt ? 1 : 0}`).join(",")}`;
+  const items = (list.items ?? []).map((item) => `${item.id}${item.doneAt ? 1 : 0}${item.doneByName ?? ""}`);
+
+  return `${list.done}/${list.total}:${items.join(",")}`;
 }
 
 export function sameMessages(a: readonly ComparableMessage[], b: readonly ComparableMessage[]): boolean {

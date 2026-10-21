@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "@/lib/i18n/locales";
 
-import { chatPushText, chatUrl } from "./texts";
+import { chatPushText, chatUrl, siteSender } from "./texts";
 
 describe("chatPushText", () => {
   it("сообщение: заголовок — имя, текст — само сообщение", () => {
@@ -61,5 +61,17 @@ describe("chatPushText", () => {
 describe("chatUrl", () => {
   it("ведёт в нужный чат", () => {
     expect(chatUrl("abc")).toBe("/chats/abc");
+  });
+});
+
+describe("siteSender", () => {
+  it("в чате объекта к имени добавляется объект", () => {
+    expect(siteSender("Олег", "Дах Ван Дейк")).toBe("Олег · Дах Ван Дейк");
+  });
+
+  it("названия объекта нет — просто имя", () => {
+    expect(siteSender("Олег", null)).toBe("Олег");
+    expect(siteSender("Олег", undefined)).toBe("Олег");
+    expect(siteSender("Олег", "")).toBe("Олег");
   });
 });

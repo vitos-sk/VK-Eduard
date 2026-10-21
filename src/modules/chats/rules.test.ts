@@ -113,4 +113,14 @@ describe("sameMessages", () => {
     expect(sameMessages([withItems("t", null)], [withItems(null, "t")])).toBe(false);
     expect(sameMessages([withItems("t", null)], [withItems("t", null)])).toBe(true);
   });
+
+  it("пункт отмечен, но другим человеком — не то же (на карточке другое имя)", () => {
+    const markedBy = (name: string | null) => ({
+      id: "c",
+      checklist: { done: 1, total: 1, items: [{ id: "i1", doneAt: "t", doneByName: name }] },
+    });
+
+    expect(sameMessages([markedBy("Олег")], [markedBy("Іван")])).toBe(false);
+    expect(sameMessages([markedBy("Олег")], [markedBy("Олег")])).toBe(true);
+  });
 });

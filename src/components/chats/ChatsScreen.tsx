@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ListChecks, MessageCircle, SquarePen } from "lucide-react";
+import { Building2, ListChecks, MessageCircle, SquarePen } from "lucide-react";
 
 import { useChatUnread } from "@/components/chats/ChatUnreadProvider";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
@@ -58,7 +58,7 @@ export function ChatsScreen({ initial, meId }: { initial: ChatSummary[]; meId: s
     };
   }, [refreshUnread]);
 
-  const avatars = useAvatarUrls(chats.map((chat) => ({ id: chat.otherId, avatar_path: chat.otherAvatarPath })));
+  const avatars = useAvatarUrls(chats.flatMap((chat) => (chat.otherId ? [{ id: chat.otherId, avatar_path: chat.otherAvatarPath }] : [])));
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
 
@@ -110,7 +110,13 @@ export function ChatsScreen({ initial, meId }: { initial: ChatSummary[]; meId: s
                 return (
                   <Ticket key={chat.id} asChild variant="flat" interactive className="flex items-center gap-3">
                     <Link href={`/chats/${chat.id}`}>
-                      <Avatar initials={initialsOf(chat.otherName)} src={avatars[chat.otherId]} className="size-10" />
+                      {chat.kind === "site" ? (
+                        <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-md border border-edge bg-stub text-primary">
+                          <Building2 className="size-5" strokeWidth={1.9} />
+                        </span>
+                      ) : (
+                        <Avatar initials={initialsOf(chat.otherName)} src={chat.otherId ? avatars[chat.otherId] : undefined} className="size-10" />
+                      )}
 
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">

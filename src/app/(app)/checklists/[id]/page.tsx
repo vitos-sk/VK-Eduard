@@ -28,5 +28,14 @@ export default async function ChecklistPage({
   const isOwner = detail.ownerId === profile.id;
   const colleagues = isOwner ? await getColleagues(supabase, profile.id) : [];
 
-  return <ChecklistView key={detail.id} detail={detail} isOwner={isOwner} colleagues={colleagues} openSend={isOwner && send === "1"} />;
+  return (
+    <ChecklistView
+      key={detail.id}
+      detail={detail}
+      meId={profile.id}
+      isOwner={isOwner}
+      colleagues={colleagues}
+      openSend={isOwner && send === "1"}
+    />
+  );
 }

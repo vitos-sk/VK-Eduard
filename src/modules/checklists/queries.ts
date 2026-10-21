@@ -24,6 +24,9 @@ export interface ChecklistItemView {
   id: string;
   text: string;
   doneAt: string | null;
+  /** Кто отметил; `null` — не отмечен или отмечен раньше, чем стали запоминать, кто. */
+  doneById: string | null;
+  doneByName: string | null;
 }
 
 export interface ChecklistDetail {
@@ -106,7 +109,7 @@ export async function getMyChecklists(supabase: Client, userId: string): Promise
 export async function getChecklist(supabase: Client, id: string): Promise<ChecklistDetail | null> {
   const { data, error } = await supabase
     .from("checklists")
-    .select("*, checklist_items(id, text, sort_order, done_at)")
+    .select("*, checklist_items(id, text, sort_order, done_at, done_by, doneBy:profiles!checklist_items_done_by_fkey(full_name))")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
@@ -129,7 +132,13 @@ export async function getChecklist(supabase: Client, id: string): Promise<Checkl
     shareToken: data.share_token,
     items: [...data.checklist_items]
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((item) => ({ id: item.id, text: item.text, doneAt: item.done_at })),
+      .map((item) => ({
+        id: item.id,
+        text: item.text,
+        doneAt: item.done_at,
+        doneById: item.done_by,
+        doneByName: item.doneBy?.full_name ?? null,
+      })),
   };
 }
 

@@ -19,5 +19,5 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
 
   const messages = await getChatMessages(supabase, chat.id);
 
-  return <ChatThread key={chat.id} chat={chat} meId={profile.id} initialMessages={messages} />;
+  return <ChatThread key={chat.id} chat={chat} meId={profile.id} meIsBoss={profile.role === "boss"} initialMessages={messages} />;
 }

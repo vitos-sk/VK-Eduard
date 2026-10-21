@@ -61,7 +61,7 @@ src/
   lib/            i18n/ (три словаря), offline/ (кэш и очередь), supabase/ (клиенты), format.ts
   design-system/  токены цветов, радиусов, шрифтов
 public/           sw.js (сервис-воркер), offline.html, иконки
-supabase/         migrations/ (0001–0019), bootstrap.sql (первая фирма и шеф), seed.sql (демо для разработки)
+supabase/         migrations/ (0001–0023), bootstrap.sql (первая фирма и шеф), seed.sql (демо для разработки)
 docs/             документация (читать с docs/README.md)
 ```
 

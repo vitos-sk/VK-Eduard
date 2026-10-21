@@ -19,6 +19,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_clears: {
+        Row: {
+          chat_id: string
+          cleared_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          cleared_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          cleared_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_clears_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_clears_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           body: string | null
@@ -113,24 +146,27 @@ export type Database = {
           created_at: string
           id: string
           last_message_at: string
-          user_a: string
-          user_b: string
+          site_id: string | null
+          user_a: string | null
+          user_b: string | null
         }
         Insert: {
           company_id: string
           created_at?: string
           id?: string
           last_message_at?: string
-          user_a: string
-          user_b: string
+          site_id?: string | null
+          user_a?: string | null
+          user_b?: string | null
         }
         Update: {
           company_id?: string
           created_at?: string
           id?: string
           last_message_at?: string
-          user_a?: string
-          user_b?: string
+          site_id?: string | null
+          user_a?: string | null
+          user_b?: string | null
         }
         Relationships: [
           {
@@ -138,6 +174,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: true
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
           {
@@ -160,6 +203,7 @@ export type Database = {
         Row: {
           checklist_id: string
           done_at: string | null
+          done_by: string | null
           id: string
           sort_order: number
           text: string
@@ -167,6 +211,7 @@ export type Database = {
         Insert: {
           checklist_id: string
           done_at?: string | null
+          done_by?: string | null
           id?: string
           sort_order?: number
           text: string
@@ -174,6 +219,7 @@ export type Database = {
         Update: {
           checklist_id?: string
           done_at?: string | null
+          done_by?: string | null
           id?: string
           sort_order?: number
           text?: string
@@ -184,6 +230,13 @@ export type Database = {
             columns: ["checklist_id"]
             isOneToOne: false
             referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -884,6 +937,10 @@ export type Database = {
           out_title: string
         }[]
       }
+      clear_chat: {
+        Args: { p_chat: string }
+        Returns: undefined
+      }
       mark_chat_read: {
         Args: { p_chat: string }
         Returns: undefined
@@ -897,12 +954,22 @@ export type Database = {
           out_last_kind: string
           out_last_sender: string
           out_last_title: string
-          out_other: string
+          out_other: string | null
+          out_site: string | null
+          out_site_name: string | null
           out_unread: number
         }[]
       }
       open_chat: {
         Args: { p_other: string }
+        Returns: string
+      }
+      open_site_chat: {
+        Args: { p_site: string }
+        Returns: string
+      }
+      post_checklist_to_site_chat: {
+        Args: { p_checklist: string; p_chat: string }
         Returns: string
       }
       send_checklist: {

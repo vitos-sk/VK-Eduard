@@ -71,6 +71,19 @@ describe("setItemDone: свой пункт", () => {
     expect(adminCalls()).toHaveLength(0);
   });
 
+  it("отметка запоминает, кто её поставил; снятие очищает и время, и имя", async () => {
+    const client = scriptedClient(userScript({ canUpdate: true, itemVisible: true, list: list() }));
+    state.user = client;
+
+    await setItemDone("I", true);
+    await setItemDone("I", false);
+
+    const updates = client.calls.filter((call) => call.table === "checklist_items" && call.op === "update");
+    expect(Object.keys(updates[0].payload as object).sort()).toEqual(["done_at", "done_by"]);
+    expect((updates[0].payload as { done_by: unknown }).done_by).toBe("me");
+    expect(updates[1].payload).toEqual({ done_at: null, done_by: null });
+  });
+
   it("получатель отметил последний пункт — приславшему уходит «чеклист виконано»", async () => {
     state.user = scriptedClient(
       userScript({
@@ -97,7 +110,7 @@ describe("setItemDone: свой пункт", () => {
 });
 
 describe("setItemDone: приславший отмечает пункт копии коллеги в чате", () => {
-  it("пункт ему виден (RLS) — меняется одна колонка done_at этого пункта", async () => {
+  it("пункт ему виден (RLS) — меняются только done_at и done_by этого пункта", async () => {
     state.user = scriptedClient(userScript({ canUpdate: false, itemVisible: true, list: list({ owner_id: "other" }) }));
 
     const result = await setItemDone("I", true);
@@ -107,8 +120,9 @@ describe("setItemDone: приславший отмечает пункт копи
     expect(update.table).toBe("checklist_items");
     expect(update.op).toBe("update");
     expect(update.filters).toEqual({ id: "I" });
-    expect(Object.keys(update.payload)).toEqual(["done_at"]);
+    expect(Object.keys(update.payload).sort()).toEqual(["done_at", "done_by"]);
     expect(typeof update.payload.done_at).toBe("string");
+    expect(update.payload.done_by).toBe("me");
   });
 
   it("снятие отметки пишет null", async () => {
@@ -116,7 +130,7 @@ describe("setItemDone: приславший отмечает пункт копи
 
     await setItemDone("I", false);
 
-    expect((adminCalls() as { payload: unknown }[])[0].payload).toEqual({ done_at: null });
+    expect((adminCalls() as { payload: unknown }[])[0].payload).toEqual({ done_at: null, done_by: null });
   });
 
   it("когда приславший завершает чеклист за коллегу, уведомлять некого", async () => {

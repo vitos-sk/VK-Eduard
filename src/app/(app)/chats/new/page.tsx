@@ -8,5 +8,5 @@ export default async function NewChatPage() {
   const supabase = await createClient();
   const [colleagues, chats] = await Promise.all([getColleagues(supabase, profile.id), getMyChats(supabase)]);
 
-  return <NewChatScreen colleagues={colleagues} withChat={chats.map((chat) => chat.otherId)} />;
+  return <NewChatScreen colleagues={colleagues} withChat={chats.flatMap((chat) => (chat.otherId ? [chat.otherId] : []))} />;
 }
