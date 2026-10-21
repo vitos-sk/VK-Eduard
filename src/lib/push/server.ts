@@ -50,6 +50,17 @@ export async function deliverPush(
   } catch (error) {
     const status = (error as { statusCode?: number }).statusCode;
 
-    return status === 404 || status === 410 ? "gone" : "failed";
+    if (status === 404 || status === 410) return "gone";
+
+    // Без этого строки в журнале не было вовсе: «не пришло» и «не отправили» выглядели одинаково.
+    let host = "?";
+    try {
+      host = new URL(target.endpoint).host;
+    } catch {
+      /* битый endpoint — оставим «?» */
+    }
+    console.error("[push] не доставлено", { status, host, message: (error as Error).message });
+
+    return "failed";
   }
 }

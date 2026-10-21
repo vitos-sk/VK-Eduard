@@ -16,7 +16,7 @@ export default async function NotificationsPage() {
 
   return (
     <InfoPage title={t.profile.notificationsPage.title}>
-      <p>{t.profile.notificationsPage.body}</p>
+      <p>{profile.role === "boss" ? t.profile.notificationsPage.bodyBoss : t.profile.notificationsPage.body}</p>
       <ReminderSettings vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
       <NotificationKinds initial={prefs} />
     </InfoPage>

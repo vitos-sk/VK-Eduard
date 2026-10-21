@@ -4,6 +4,9 @@ import { getLocale } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/modules/auth/session";
+import { pushToUser } from "@/modules/notifications/notify";
+
+import { testText } from "./texts";
 
 export type PushResult = { ok: true } | { ok: false; reason: "no-profile" | "invalid" | "error" };
 
@@ -64,4 +67,31 @@ export async function removePushSubscription(endpoint: string): Promise<PushResu
   const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("user_id", profile.id);
 
   return error ? { ok: false, reason: "error" } : { ok: true };
+}
+
+export type TestPushResult =
+  | { ok: true; devices: number; sent: number }
+  | { ok: false; reason: "no-profile" | "config" | "error" };
+
+/**
+ * Проверка «Надіслати тестове сповіщення»: шлёт пробное уведомление на все устройства самого человека и говорит, на сколько
+ * оно ушло. `devices: 0` — этот аккаунт ещё ни на что не подписан; `config` — на сервере нет ключей VAPID.
+ */
+export async function sendTestPush(): Promise<TestPushResult> {
+  const profile = await getProfile();
+  if (!profile) return { ok: false, reason: "no-profile" };
+
+  try {
+    const outcome = await pushToUser(profile.id, null, (locale) => ({
+      ...testText(locale),
+      url: "/more/notifications",
+      tag: "push-test",
+    }));
+
+    return { ok: true, devices: outcome.devices, sent: outcome.sent };
+  } catch (error) {
+    console.error("[push-test]", error);
+
+    return { ok: false, reason: error instanceof Error && /VAPID/.test(error.message) ? "config" : "error" };
+  }
 }

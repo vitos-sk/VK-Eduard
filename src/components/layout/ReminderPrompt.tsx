@@ -25,12 +25,13 @@ function isSnoozed(): boolean {
 }
 
 /**
- * Предложение включить напоминание «внесите отчёт» одним нажатием — чтобы не искать переключатель в настройках.
+ * Предложение включить уведомления одним нажатием — чтобы не искать переключатель в настройках. Рабочему — напоминание
+ * «внесите отчёт», шефу — «сообщим о новых отчётах» (без подписанного телефона слать уведомление шефу некуда).
  * Само разрешение браузер спрашивает только после нажатия «Увімкнути» (без нажатия его почти всегда отклоняют).
- * Не показывается: шефам (см. `AppShell`), если разрешение уже дано/отклонено, человек сам выключал напоминание
- * или нажал «Пізніше» (спросим снова через 3 дня).
+ * Не показывается, если разрешение уже дано/отклонено, человек сам выключал уведомления или нажал «Пізніше»
+ * (спросим снова через 3 дня).
  */
-export function ReminderPrompt() {
+export function ReminderPrompt({ isBoss = false }: { isBoss?: boolean }) {
   const t = useT();
   const n = t.profile.notificationsPage;
   const pathname = usePathname();
@@ -97,8 +98,8 @@ export function ReminderPrompt() {
           <BellRing className="mt-0.5 size-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
           <div className="flex-1 space-y-3">
             <div className="space-y-1">
-              <p className="text-[14px] font-semibold text-text">{n.promptTitle}</p>
-              <p className="text-[13px] text-text-muted">{mode === "ios" ? n.iosInstall : n.promptBody}</p>
+              <p className="text-[14px] font-semibold text-text">{isBoss ? n.promptBossTitle : n.promptTitle}</p>
+              <p className="text-[13px] text-text-muted">{mode === "ios" ? n.iosInstall : isBoss ? n.promptBossBody : n.promptBody}</p>
             </div>
             <div className="flex gap-2">
               {mode === "ask" && (

@@ -33,7 +33,7 @@ export async function notifyBossesAboutReport(report: NewReport): Promise<void> 
 
     const recipients = (bosses ?? []).filter((boss) => boss.id !== report.authorId);
 
-    await Promise.all(
+    const outcomes = await Promise.all(
       recipients.map((boss) =>
         notifyUser(boss.id, null, (locale) => ({
           ...reportCreatedPushText(locale, { name: report.authorName, site: site?.name ?? null }),
@@ -43,6 +43,11 @@ export async function notifyBossesAboutReport(report: NewReport): Promise<void> 
         })),
       ),
     );
+
+    // Одна строка в журнале сервера на отчёт: видно, сколько шефов, сколько у них подписанных телефонов и дошло ли.
+    const devices = outcomes.reduce((sum, outcome) => sum + (outcome?.devices ?? 0), 0);
+    const sent = outcomes.reduce((sum, outcome) => sum + (outcome?.sent ?? 0), 0);
+    console.info("[notify-bosses]", { report: report.id, bosses: recipients.length, devices, sent });
   } catch (error) {
     console.error("[notify-bosses]", error);
   }

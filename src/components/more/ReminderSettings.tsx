@@ -14,7 +14,8 @@ import {
   unsubscribeDevice,
   type PushSupport,
 } from "@/lib/push/client";
-import { removePushSubscription, savePushSubscription } from "@/modules/reminders/actions";
+import { Button } from "@/components/ui/button";
+import { removePushSubscription, savePushSubscription, sendTestPush } from "@/modules/reminders/actions";
 
 type State =
   | { kind: "loading" }
@@ -83,6 +84,21 @@ export function ReminderSettings({ vapidPublicKey }: { vapidPublicKey: string })
     });
   }
 
+  function sendTest() {
+    startTransition(async () => {
+      try {
+        const result = await sendTestPush();
+
+        if (!result.ok) toast.error(result.reason === "config" ? n.testConfig : n.testFailed);
+        else if (result.devices === 0) toast.error(n.testNoDevice);
+        else if (result.sent === 0) toast.error(n.testFailed);
+        else toast(n.testSent);
+      } catch {
+        toast.error(n.testFailed);
+      }
+    });
+  }
+
   if (state.kind === "loading") return null;
 
   if (state.kind === "dev") return <p>{n.devOnly}</p>;
@@ -102,6 +118,15 @@ export function ReminderSettings({ vapidPublicKey }: { vapidPublicKey: string })
         </span>
         <Toggle checked={state.enabled} disabled={isPending} onCheckedChange={toggle} aria-label={n.deviceLabel} />
       </label>
+
+      {state.enabled && (
+        <div className="flex min-h-14 items-center gap-3 px-3.5 not-first:border-t not-first:border-dashed not-first:border-perf">
+          <span className="min-w-0 flex-1 text-[12px] text-ink-2">{n.testHint}</span>
+          <Button variant="outline" size="sm" loading={isPending} onClick={sendTest}>
+            {n.testSend}
+          </Button>
+        </div>
+      )}
     </Ticket>
   );
 }

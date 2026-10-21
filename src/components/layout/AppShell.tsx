@@ -91,8 +91,8 @@ export function AppShell({ profile, avatarUrl, children }: AppShellProps) {
       <OfflineSync userId={profile.id} />
       <ServiceWorkerRegister role={profile.role} />
       <PushSync userId={profile.id} />
-      {/* Шефу баннер не показываем (отчёты — не его задача), но включить напоминание он может в настройках. */}
-      {profile.role !== "boss" && <ReminderPrompt />}
+      {/* Предложение включить уведомления: рабочему — напоминание о звіте, шефу — сообщения о новых отчётах. */}
+      <ReminderPrompt isBoss={profile.role === "boss"} />
       <Toaster position="bottom-center" />
     </OwnAvatarProvider>
   );
