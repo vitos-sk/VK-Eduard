@@ -9,7 +9,7 @@ import { DatePickLink, FieldLabel, FormTopBar, StickyActionBar } from "@/compone
 import { ObjectField } from "@/components/shared/ObjectField";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
-import { TimeField, WorkTimeFields } from "@/components/time/WorkTimeFields";
+import { TimeRangeEditor } from "@/components/time/TimeRangeEditor";
 import { Toggle } from "@/components/ui/toggle";
 import { parseKm } from "@/modules/travel/km";
 import { fromDateKey } from "@/lib/format";
@@ -31,7 +31,6 @@ import { NetworkButton } from "@/components/ui/network-button";
 import { Textarea } from "@/components/ui/input";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
 import { UnderlineField } from "@/components/ui/underline-field";
-import { formatHoursShort } from "@/lib/format";
 
 /** Пауза после последней правки, прежде чем записать чернетку: пока человек печатает, не пишем на каждую букву. */
 const DRAFT_SAVE_DELAY_MS = 500;
@@ -373,7 +372,7 @@ export function ReportForm({ userId, companyId, sites, sitePhotoUrls, lastReport
           </label>
 
           {withTime && (
-            <WorkTimeFields
+            <TimeRangeEditor
               className="perf-t"
               startAt={startAt}
               endAt={endAt}
@@ -383,6 +382,7 @@ export function ReportForm({ userId, companyId, sites, sitePhotoUrls, lastReport
               onBreakChange={setBreakMin}
               durationMin={durationMin}
               isDurationOk={isDurationOk}
+              totalLabel={t.manualTime.workedUnit}
             />
           )}
         </Ticket>
@@ -398,18 +398,20 @@ export function ReportForm({ userId, companyId, sites, sitePhotoUrls, lastReport
           </label>
 
           {withTravel && (
-            <div className="perf-t px-3.5 pt-2 pb-3">
-              <div className="grid grid-cols-2 gap-3">
-                <TimeField label={t.manualTime.start} value={travelStart} onChange={setTravelStart} invalid={!isTravelOk} />
-                <TimeField label={t.manualTime.finish} value={travelEnd} onChange={setTravelEnd} invalid={!isTravelOk} />
-              </div>
+            <>
+              <TimeRangeEditor
+                className="perf-t"
+                startAt={travelStart}
+                endAt={travelEnd}
+                onStartChange={setTravelStart}
+                onEndChange={setTravelEnd}
+                durationMin={travelMin}
+                isDurationOk={isTravelOk}
+                totalLabel={t.travel.unit}
+                errorText={t.travel.errorDuration}
+              />
 
-              <div className="mt-2 flex items-center justify-between gap-2 text-[13px]">
-                <span className="text-ink-2">{t.manualTime.duration}</span>
-                <span className="tabular font-semibold">{isTravelOk ? formatHoursShort(travelMin) : t.common.dash}</span>
-              </div>
-
-              <div className="mt-3">
+              <div className="perf-t px-3.5 pt-3 pb-3">
                 <UnderlineField
                   label={t.travel.kmLabel}
                   type="number"
@@ -422,10 +424,10 @@ export function ReportForm({ userId, companyId, sites, sitePhotoUrls, lastReport
                   error={isKmOk ? undefined : t.travel.errorKm}
                   className="tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-              </div>
 
-              <p className="mt-3 text-[12px] text-ink-2">{t.travel.note}</p>
-            </div>
+                <p className="mt-3 text-[12px] text-ink-2">{t.travel.note}</p>
+              </div>
+            </>
           )}
         </Ticket>
       </div>

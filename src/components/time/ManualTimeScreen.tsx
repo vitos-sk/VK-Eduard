@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
-import { WorkTimeFields } from "@/components/time/WorkTimeFields";
+import { TimeRangeEditor } from "@/components/time/TimeRangeEditor";
 import { useT } from "@/lib/i18n/client";
 import { clearOfflineCache } from "@/lib/offline/cache";
 import { enqueueManualEntry, newClientId } from "@/lib/offline/outbox";
@@ -197,7 +197,7 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
         </Ticket>
 
         <Ticket variant="sections">
-          <WorkTimeFields
+          <TimeRangeEditor
             startAt={startAt}
             endAt={endAt}
             breakMin={breakMin}
@@ -206,6 +206,7 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
             onBreakChange={setBreakMin}
             durationMin={durationMin}
             isDurationOk={isDurationOk}
+            totalLabel={t.manualTime.workedUnit}
           />
         </Ticket>
       </div>
