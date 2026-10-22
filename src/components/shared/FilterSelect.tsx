@@ -23,6 +23,8 @@ export interface FilterSelectOption {
   name: string;
   /** Подпись под названием: «8 змін · 66:40», адрес. */
   description?: string;
+  /** Подписанная ссылка на фото (аватар сотрудника, обложка объекта); нет фото — инициалы или иконка. */
+  photoUrl?: string | null;
 }
 
 interface FilterSelectProps {
@@ -80,9 +82,9 @@ export function FilterSelect({
               description={option.description}
               leading={
                 avatar === "initials" ? (
-                  <Avatar initials={initialsOf(option.name)} />
+                  <Avatar initials={initialsOf(option.name)} src={option.photoUrl} lazy />
                 ) : (
-                  <Avatar icon={<Icon strokeWidth={1.9} />} />
+                  <Avatar icon={<Icon strokeWidth={1.9} />} src={option.photoUrl} lazy />
                 )
               }
             />

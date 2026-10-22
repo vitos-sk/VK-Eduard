@@ -12,6 +12,7 @@ import { clearOfflineCache } from "@/lib/offline/cache";
 import { enqueueManualEntry, newClientId } from "@/lib/offline/outbox";
 import { createManualEntry, updateEntry } from "@/modules/entries/actions";
 import type { WorkEntry } from "@/modules/entries/types";
+import { createReport } from "@/modules/reports/actions";
 import type { Site } from "@/modules/sites/queries";
 import {
   breakMinutes as calcBreakMinutes,
@@ -53,6 +54,8 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
   const [isPending, startTransition] = useTransition();
   // Один ключ на всё время работы с формой: повторная отправка той же записи не даст дубля.
   const clientIdRef = useRef(newClientId());
+  // То же для звіту, который создаётся вместе со временем, когда в новой записи есть описание.
+  const reportClientIdRef = useRef(newClientId());
 
   const [siteId, setSiteId] = useState<string | null>(entry?.site_id ?? null);
   const [date, setDate] = useState<Date>(() =>
@@ -89,6 +92,9 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
         ? t.manualTime.saveChanges
         : t.manualTime.submit;
 
+  // Новая запись с описанием — это ещё и звіт (без фото): он сразу виден на «Звіти». Правка записи звіт не трогает.
+  const wantsReport = !entry && description.trim() !== "";
+
   const handleSubmit = () => {
     startTransition(async () => {
       const input = {
@@ -100,7 +106,23 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
         breakEnd,
         description,
         clientId: clientIdRef.current,
+        ...(wantsReport ? { reportClientId: reportClientIdRef.current } : {}),
       };
+
+      // Звіт с часами создаёт то же действие, что и форма «Новий звіт»: оба или ничего, шефу уходит push.
+      const saveNew = () =>
+        wantsReport
+          ? createReport({
+              workDate: input.workDate,
+              siteId,
+              description: description.trim(),
+              categoryIds: [],
+              otherText: "",
+              clientId: reportClientIdRef.current,
+              timeClientId: clientIdRef.current,
+              time: { startedAt: startAt, endedAt: endAt, breakStart, breakEnd },
+            })
+          : createManualEntry(input);
 
       // Без интернета новая запись кладётся в очередь на телефоне и уходит, когда связь вернётся.
       const saveOffline = async () => {
@@ -122,7 +144,7 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
       let result;
 
       try {
-        result = entry ? await updateEntry(entry.id, input) : await createManualEntry(input);
+        result = entry ? await updateEntry(entry.id, input) : await saveNew();
       } catch {
         // Запрос не дошёл (связь пропала на ходу).
         if (entry) {
@@ -140,7 +162,7 @@ export function ManualTimeScreen({ sites, userId, companyId, entry }: ManualTime
 
       // Записи поменялись — сохранённые на телефоне копии «Годин» и дашборда устарели.
       void clearOfflineCache();
-      toast(entry ? t.manualTime.updated : t.manualTime.saved);
+      toast(entry ? t.manualTime.updated : wantsReport ? t.manualTime.savedWithReport : t.manualTime.saved);
       router.push("/hours");
       router.refresh();
     });

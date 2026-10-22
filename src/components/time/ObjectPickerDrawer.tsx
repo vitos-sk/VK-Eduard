@@ -6,7 +6,9 @@ import { Check, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { ResponsiveSheet, SheetClose, SheetTitle } from "@/components/ui/responsive-sheet";
+import { Thumb } from "@/components/shared/Thumb";
 import { useT } from "@/lib/i18n/client";
+import { sceneForId } from "@/lib/siteScene";
 import type { Site } from "@/modules/sites/queries";
 import { cn } from "@/lib/utils";
 import { createSite } from "@/modules/sites/actions";
@@ -18,6 +20,8 @@ interface ObjectPickerDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sites: readonly Site[];
+  /** Фото объектов по id: с ним в каждой строке справа маленькая картинка (нет фото — сцена-заглушка). */
+  photoUrls?: Readonly<Record<string, string>>;
   /** Выбранный объект или `null`, пока он не указан. */
   value: string | null;
   onSelect: (siteId: string) => void;
@@ -31,6 +35,7 @@ export function ObjectPickerDrawer({
   open,
   onOpenChange,
   sites,
+  photoUrls,
   value,
   onSelect,
   onClear,
@@ -162,6 +167,10 @@ export function ObjectPickerDrawer({
 
                   {isActive && (
                     <Check className="size-4 shrink-0 text-primary" strokeWidth={1.9} aria-hidden />
+                  )}
+
+                  {photoUrls && (
+                    <Thumb scene={sceneForId(site.id)} photoUrl={photoUrls[site.id] ?? null} size="sm" />
                   )}
                 </button>
               </Ticket>

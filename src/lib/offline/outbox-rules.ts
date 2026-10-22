@@ -19,3 +19,13 @@ export function classifyInsertError(
 
   return "rejected";
 }
+
+/**
+ * Время с описанием — это ещё и звіт (без фото): вместе с записью времени в очереди отправляется и он.
+ * Записи, вставшие в очередь до этого правила, ключа звіту не имеют — уходят одним временем, как раньше.
+ */
+export function shouldCreateReport<T extends { description: string; reportClientId?: string }>(
+  input: T,
+): input is T & { reportClientId: string } {
+  return Boolean(input.reportClientId) && input.description.trim() !== "";
+}

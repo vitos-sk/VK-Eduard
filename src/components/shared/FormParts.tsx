@@ -111,6 +111,28 @@ export function DatePickLink({
   );
 }
 
+/** Подпись над полем формы: 13 / 500, справа необязательная подсказка («Оберіть одне або кілька»). */
+export function FieldLabel({
+  id,
+  hint,
+  className,
+  children,
+}: {
+  id?: string;
+  hint?: ReactNode;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <span className={cn("mb-1.5 flex items-baseline justify-between gap-2", className)}>
+      <span id={id} className="text-[13px] font-medium text-text">
+        {children}
+      </span>
+      {hint && <span className="shrink-0 text-[12px] text-ink-2">{hint}</span>}
+    </span>
+  );
+}
+
 /** Строка-пикер в талоне: подпись 12 px, значение 14 / 500, шеврон. */
 export function PickerRow({
   label,

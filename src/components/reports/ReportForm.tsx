@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useTransition, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
 import { Car, Clock } from "lucide-react";
 import { toast } from "sonner";
 
-import { DatePickLink, FormTopBar, PickerRow, StickyActionBar } from "@/components/shared/FormParts";
+import { DatePickLink, FieldLabel, FormTopBar, StickyActionBar } from "@/components/shared/FormParts";
+import { ObjectField } from "@/components/shared/ObjectField";
 import { ReportPhotoUploader } from "@/components/reports/ReportPhotoUploader";
-import { isOtherSelected, WorkCategoryChips } from "@/components/reports/WorkCategoryChips";
 import { ObjectPickerDrawer } from "@/components/time/ObjectPickerDrawer";
 import { TimeField, WorkTimeFields } from "@/components/time/WorkTimeFields";
 import { Toggle } from "@/components/ui/toggle";
@@ -17,7 +17,7 @@ import { useT } from "@/lib/i18n/client";
 import { clearOfflineCache } from "@/lib/offline/cache";
 import { createReport } from "@/modules/reports/actions";
 import { clearDraft, readDraft, writeDraft, type ReportDraftFields } from "@/modules/reports/draft";
-import type { ReportPhoto, SiteReportWithPhotos, WorkCategory } from "@/modules/reports/types";
+import type { ReportPhoto, SiteReportWithPhotos } from "@/modules/reports/types";
 import type { Site } from "@/modules/sites/queries";
 import {
   dateKeyOf,
@@ -28,8 +28,9 @@ import {
 } from "@/modules/time/calc";
 import { Button } from "@/components/ui/button";
 import { NetworkButton } from "@/components/ui/network-button";
+import { Textarea } from "@/components/ui/input";
 import { Ticket, TicketSection } from "@/components/ui/ticket";
-import { UnderlineField, UnderlineTextarea } from "@/components/ui/underline-field";
+import { UnderlineField } from "@/components/ui/underline-field";
 import { formatHoursShort } from "@/lib/format";
 
 /** Пауза после последней правки, прежде чем записать чернетку: пока человек печатает, не пишем на каждую букву. */
@@ -43,25 +44,36 @@ function browserStorage(): Storage | null {
   }
 }
 
+/** Многострочное поле с подписью над ним: рамка и высота поля показывают, что сюда можно писать. */
+function TextBox({ label, ...props }: { label: string } & ComponentProps<typeof Textarea>) {
+  return (
+    <label className="block">
+      <FieldLabel>{label}</FieldLabel>
+      <Textarea {...props} />
+    </label>
+  );
+}
+
 interface ReportFormProps {
   /** Чернетка хранится на телефоне под этим id: на общем телефоне чужая не покажется. */
   userId: string;
   companyId: string;
   sites: readonly Site[];
-  categories: readonly WorkCategory[];
+  /** Фото объектов по id — для выбора объекта. */
+  sitePhotoUrls: Readonly<Record<string, string>>;
   /** Самый свежий звіт автора — источник «останнього об'єкта» и повтора. */
   lastReport: SiteReportWithPhotos | null;
 }
 
 /**
- * Форма `/reports/new`. Два шага в одном экране: сперва об'єкт/дата/категорії/опис
+ * Форма `/reports/new`. Два шага в одном экране: сперва об'єкт/дата/опис
  * сохраняются одной записью, потом (уже с готовым `reportId`) можно сразу
  * добавить фото — до этого их физически некуда прикреплять.
  *
  * Чернетка: всё, что человек ввёл, само записывается на телефон (`modules/reports/draft.ts`) и возвращается при
  * следующем открытии формы, если её закрыли случайно (свайп назад). После сохранения звіту чернетка стирается.
  */
-export function ReportForm({ userId, companyId, sites, categories, lastReport }: ReportFormProps) {
+export function ReportForm({ userId, companyId, sites, sitePhotoUrls, lastReport }: ReportFormProps) {
   const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -75,8 +87,6 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
 
   const [siteId, setSiteId] = useState<string | null>(lastReport?.site_id ?? null);
   const [date, setDate] = useState<Date>(() => new Date());
-  const [categoryIds, setCategoryIds] = useState<string[]>([]);
-  const [otherText, setOtherText] = useState("");
   const [description, setDescription] = useState("");
   const [problemNote, setProblemNote] = useState("");
   const [withTime, setWithTime] = useState(false);
@@ -103,17 +113,15 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
   const isTravelOk = isDurationValid(travelMin);
   const kmValue = parseKm(km);
   const isKmOk = !Number.isNaN(kmValue);
-  const isOtherMissing = isOtherSelected(categories, categoryIds) && otherText.trim() === "";
-  const canSubmit = (!withTime || isDurationOk) && (!withTravel || (isTravelOk && isKmOk)) && !isOtherMissing;
-  const submitLabel = isOtherMissing
-    ? t.reportForm.fillOther
-    : (withTime && !isDurationOk) || (withTravel && !isTravelOk)
+  const canSubmit = (!withTime || isDurationOk) && (!withTravel || (isTravelOk && isKmOk));
+  const submitLabel =
+    (withTime && !isDurationOk) || (withTravel && !isTravelOk)
       ? t.reportForm.fixTime
       : withTravel && !isKmOk
         ? t.travel.errorKm
         : t.reportForm.submit;
 
-  const selectedSite = siteId ? sites.find((site) => site.id === siteId) : undefined;
+  const selectedSite = siteId ? (sites.find((site) => site.id === siteId) ?? null) : null;
 
   // ── Чернетка ────────────────────────────────────────────────────────────────────────────────
   const [isDraftReady, setIsDraftReady] = useState(false);
@@ -124,8 +132,9 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
   const draftFields: ReportDraftFields = {
     siteId,
     dateKey: dateKeyOf(date),
-    categoryIds,
-    otherText,
+    // Видов работ в форме больше нет; поля остаются в чернетке, чтобы старые чернетки читались.
+    categoryIds: [],
+    otherText: "",
     description,
     problemNote,
     withTime,
@@ -145,7 +154,7 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
     const draft = storage
       ? readDraft(storage, userId, Date.now(), {
           siteIds: new Set(sites.map((site) => site.id)),
-          categoryIds: new Set(categories.map((category) => category.id)),
+          categoryIds: new Set<string>(),
         })
       : null;
 
@@ -154,8 +163,6 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
       /* eslint-disable react-hooks/set-state-in-effect */
       if (draft.siteId) setSiteId(draft.siteId);
       setDate(fromDateKey(draft.dateKey));
-      setCategoryIds(draft.categoryIds);
-      setOtherText(draft.otherText);
       setDescription(draft.description);
       setProblemNote(draft.problemNote);
       setWithTime(draft.withTime);
@@ -171,7 +178,7 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
     }
 
     setIsDraftReady(true);
-    // Только при открытии формы; список объектов и видов работ на этот момент уже есть.
+    // Только при открытии формы; список объектов на этот момент уже есть.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -216,8 +223,6 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
 
     setSiteId(lastReport?.site_id ?? null);
     setDate(new Date());
-    setCategoryIds([]);
-    setOtherText("");
     setDescription("");
     setProblemNote("");
     setWithTime(false);
@@ -235,8 +240,6 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
     if (!lastReport) return;
 
     setSiteId(lastReport.site_id);
-    setCategoryIds(lastReport.category_ids);
-    setOtherText(lastReport.other_text);
     // Описание намеренно не копируем — REPORTS.md: «описание чистое».
   };
 
@@ -246,8 +249,8 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
         workDate: dateKeyOf(date),
         siteId,
         description,
-        categoryIds,
-        otherText,
+        categoryIds: [],
+        otherText: "",
         problemNote,
         clientId: clientIdsRef.current.report,
         timeClientId: clientIdsRef.current.time,
@@ -331,45 +334,30 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
         )}
 
         <Ticket variant="sections">
-          <PickerRow
-            label={t.manualTime.objectLabel}
-            value={selectedSite?.name ?? null}
-            placeholder={t.manualTime.objectPlaceholder}
-            onClick={() => setIsObjectPickerOpen(true)}
-          />
+          <TicketSection className="py-3">
+            <ObjectField
+              label={t.manualTime.objectLabel}
+              site={selectedSite}
+              placeholder={t.manualTime.objectPlaceholder}
+              photoUrl={selectedSite ? sitePhotoUrls[selectedSite.id] : null}
+              onClick={() => setIsObjectPickerOpen(true)}
+            />
+          </TicketSection>
 
-          {categories.length > 0 && (
-            <TicketSection>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-[12px] text-ink-2">{t.reportForm.categoriesLabel}</span>
-                <span className="text-[12px] text-ink-2">{t.reportForm.categoriesHint}</span>
-              </div>
-              <WorkCategoryChips
-                categories={categories}
-                value={categoryIds}
-                onChange={setCategoryIds}
-                otherText={otherText}
-                onOtherTextChange={setOtherText}
-              />
-            </TicketSection>
-          )}
-
-          <TicketSection>
-            <UnderlineTextarea
+          <TicketSection className="py-3">
+            <TextBox
               label={t.manualTime.description}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              rows={2}
               placeholder={t.manualTime.descriptionPlaceholder}
             />
           </TicketSection>
 
-          <TicketSection>
-            <UnderlineTextarea
+          <TicketSection className="py-3">
+            <TextBox
               label={t.reportForm.problemLabel}
               value={problemNote}
               onChange={(event) => setProblemNote(event.target.value)}
-              rows={2}
               placeholder={t.reportForm.problemPlaceholder}
             />
           </TicketSection>
@@ -452,6 +440,7 @@ export function ReportForm({ userId, companyId, sites, categories, lastReport }:
         open={isObjectPickerOpen}
         onOpenChange={setIsObjectPickerOpen}
         sites={sites}
+        photoUrls={sitePhotoUrls}
         value={siteId}
         onSelect={setSiteId}
       />

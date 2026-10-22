@@ -497,7 +497,6 @@ export const en: Dict = {
 
   reportForm: {
     title: "New report",
-    categoriesLabel: "Type of work",
     problemLabel: "Problem area — what took time (optional)",
     problemPlaceholder: "For example: waited 2 hours for material",
     otherLabel: "What work did you do?",
@@ -509,9 +508,7 @@ export const en: Dict = {
     addTravel: "Add travel time to the site",
     addHoursHint: "The hours go into the timesheet together with the report",
     submit: "Save report",
-    fillOther: "Fill in “Other” to save",
     fixTime: "Check the time to save",
-    categoriesHint: "Choose one or more",
     saved: "Report saved",
     draftHint: "Your draft is saved automatically",
     draftRestored: "Report draft restored",
@@ -751,6 +748,7 @@ export const en: Dict = {
     fillSiteOrDescription: "Enter a site or a description to save",
     saveChanges: "Save changes",
     saved: "Entry saved",
+    savedWithReport: "Entry saved, report created",
     updated: "Entry updated",
     errorDuration: "Check the time — the duration must be from 1 minute to 18 hours",
     /** The same (or overlapping) time is already logged — duplicate protection. */

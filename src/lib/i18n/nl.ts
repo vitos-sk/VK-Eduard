@@ -497,7 +497,6 @@ export const nl: Dict = {
 
   reportForm: {
     title: "Nieuw rapport",
-    categoriesLabel: "Soort werk",
     problemLabel: "Probleemplek — wat tijd kostte (optioneel)",
     problemPlaceholder: "Bijvoorbeeld: 2 uur gewacht op materiaal",
     otherLabel: "Welk werk heb je gedaan?",
@@ -509,9 +508,7 @@ export const nl: Dict = {
     addTravel: "Reistijd naar het project invullen",
     addHoursHint: "De uren komen samen met het rapport in de urenstaat",
     submit: "Rapport opslaan",
-    fillOther: "Vul “Overig” in om op te slaan",
     fixTime: "Controleer de tijd om op te slaan",
-    categoriesHint: "Kies er één of meer",
     saved: "Rapport opgeslagen",
     draftHint: "Je concept wordt automatisch bewaard",
     draftRestored: "Concept van het rapport hersteld",
@@ -751,6 +748,7 @@ export const nl: Dict = {
     fillSiteOrDescription: "Vul een project of beschrijving in om op te slaan",
     saveChanges: "Wijzigingen opslaan",
     saved: "Registratie opgeslagen",
+    savedWithReport: "Registratie opgeslagen, rapport gemaakt",
     updated: "Registratie bijgewerkt",
     errorDuration: "Controleer de tijd — de duur moet tussen 1 minuut en 18 uur liggen",
     /** Dezelfde (of overlappende) tijd is al geregistreerd — bescherming tegen dubbele invoer. */

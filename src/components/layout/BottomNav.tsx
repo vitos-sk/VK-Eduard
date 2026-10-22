@@ -38,8 +38,8 @@ interface BottomNavProps {
 /**
  * Нижний таб-бар (TabBar): высота 52 px, фон `nav` (хаки, темнее бумаги), без линий.
  * Пять пунктов: Головна · Об'єкти · [+] · Години · Звіти.
- * Активный — зелёная иконка и подпись 600 на светлой «таблетке» `ticket` 56×28 под иконкой.
- * Кнопка [+] на 10 px выше иконок и чуть выступает над баром — это задумано.
+ * Неактивные — `ink`. Активный — зелёные иконка и подпись 600 и зелёная смужка 3 px под ними, без блока и фона.
+ * Кнопка [+] чуть выступает над баром вверх — это задумано.
  * Последний flex-элемент `PhoneFrame` — всегда у его низа.
  *
  * `z-60` — выше подложки нижних листов (z-50): по макету таб-бар
@@ -55,14 +55,14 @@ export function BottomNav({ onFabClick, fabExpanded }: BottomNavProps) {
   return (
     <nav
       aria-label={t.common.appName}
-      className="perf-t relative z-60 shrink-0 bg-ticket pb-[env(safe-area-inset-bottom)]"
+      className="relative z-60 shrink-0 bg-nav pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="grid min-h-[52px] grid-cols-5 items-start px-1 pt-1.5">
+      <div className="grid min-h-[52px] grid-cols-5 items-start px-1 py-1">
         {leftItems.map((item) => (
           <NavTab key={item.href} item={item} pathname={pathname} />
         ))}
 
-        <div className="-mt-2.5 flex justify-center">
+        <div className="-mt-2 flex justify-center">
           <FabButton onClick={onFabClick} expanded={fabExpanded} />
         </div>
 
@@ -84,25 +84,14 @@ function NavTab({ item, pathname }: { item: NavItem; pathname: string }) {
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        // зона нажатия ≥44 px: ссылка на всю ширину ячейки и 44+ по высоте
-        "relative flex min-h-11 flex-col items-center gap-1 text-[11px] leading-[13px] outline-none",
+        // Блок 44 px высотой — зона нажатия; у активной вкладки зелёная смужка 3 px под иконкой и подписью.
+        "mx-auto flex h-11 w-full max-w-[68px] flex-col items-center justify-center gap-0.5 border-b-[3px] border-transparent text-[11px] leading-[13px] outline-none transition-colors duration-150",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        isActive ? "font-semibold text-primary" : "font-medium text-ink-2",
+        isActive ? "border-primary font-semibold text-primary" : "font-medium text-ink",
       )}
     >
-      <Icon
-        className={cn("size-[22px] transition-transform duration-150", isActive && "scale-105")}
-        strokeWidth={isActive ? 2.3 : 1.8}
-        aria-hidden
-      />
+      <Icon className="size-[22px]" strokeWidth={1.9} aria-hidden />
       <span>{item.label}</span>
-      {/* Аккуратная круглая точка-индикатор под выбранным пунктом */}
-      {isActive && (
-        <span
-          aria-hidden
-          className="absolute -bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary"
-        />
-      )}
     </Link>
   );
 }

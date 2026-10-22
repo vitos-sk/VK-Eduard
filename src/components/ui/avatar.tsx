@@ -10,11 +10,13 @@ interface AvatarProps {
   icon?: ReactNode
   /** Подписанная ссылка на фото; не загрузилось (нет сети) — показываем инициалы или иконку. */
   src?: string | null
+  /** Фото грузится, только когда аватар подошёл к экрану: в закрытых списках выбора ничего не скачивается. */
+  lazy?: boolean
   className?: string
 }
 
 /** Аватар-квадрат: фото сотрудника, инициалы или иконка на корешке. Размер задаётся классом (`size-8`). */
-function Avatar({ initials, icon, src, className }: AvatarProps) {
+function Avatar({ initials, icon, src, lazy, className }: AvatarProps) {
   return (
     <span
       aria-hidden
@@ -26,7 +28,12 @@ function Avatar({ initials, icon, src, className }: AvatarProps) {
       )}
     >
       {src ? (
-        <SafeImg src={src} className="absolute inset-0 size-full object-cover" fallback={icon ?? initials} />
+        <SafeImg
+          src={src}
+          className="absolute inset-0 size-full object-cover"
+          fallback={icon ?? initials}
+          {...(lazy ? { loading: "lazy", decoding: "async" } : {})}
+        />
       ) : (
         (icon ?? initials)
       )}

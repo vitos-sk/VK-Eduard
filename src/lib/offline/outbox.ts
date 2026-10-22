@@ -3,7 +3,7 @@ import type { ManualEntryInput } from "@/modules/entries/actions";
 import { findOverlappingEntry } from "@/modules/entries/queries";
 
 import { idbAll, idbDelete, idbPut } from "./idb";
-import { classifyInsertError, OUTBOX_CHANGED_EVENT } from "./outbox-rules";
+import { classifyInsertError, OUTBOX_CHANGED_EVENT, shouldCreateReport } from "./outbox-rules";
 
 export { OUTBOX_CHANGED_EVENT };
 
@@ -126,7 +126,23 @@ async function doFlush(userId: string): Promise<{ sent: number; rejected: number
       source: "manual",
     });
 
-    const outcome = classifyInsertError(error, typeof navigator === "undefined" ? true : navigator.onLine);
+    const online = typeof navigator === "undefined" ? true : navigator.onLine;
+    let outcome = classifyInsertError(error, online);
+
+    // Время с описанием — это и звіт (без фото). Пока он не ушёл, запись из очереди не убираем: при повторе
+    // время вернётся как «уже есть» (тот же client_id), а звіт досоздастся.
+    if (outcome === "sent" && shouldCreateReport(input)) {
+      const { error: reportError } = await supabase.from("site_reports").insert({
+        client_id: input.reportClientId,
+        company_id: entry.companyId,
+        author_id: entry.userId,
+        site_id: input.siteId,
+        work_date: input.workDate,
+        description: input.description,
+      });
+
+      outcome = classifyInsertError(reportError, online);
+    }
 
     if (outcome === "sent") {
       await idbDelete("outbox", entry.id);

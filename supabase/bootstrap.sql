@@ -31,27 +31,4 @@ begin
   insert into profiles (id, company_id, full_name, role)
   values (v_boss, v_company, v_boss_name, 'boss')
   on conflict (id) do update set company_id = excluded.company_id, role = 'boss';
-
-  -- Стандартные категории работ (те же, что в миграции 0015; названия по-украински служат ключом перевода).
-  insert into work_categories (company_id, label, sort_order, is_other)
-  select v_company, c.label, c.ord, c.is_other
-  from (values
-    ('Плоскі дахи', 0, false),
-    ('Скатні дахи', 1, false),
-    ('EPDM', 2, false),
-    ('Resitrix', 3, false),
-    ('Рубероїд', 4, false),
-    ('Дахівка / черепиця', 5, false),
-    ('Фасадні роботи', 6, false),
-    ('Жерстяні роботи', 7, false),
-    ('Водостоки', 8, false),
-    ('Демонтаж', 9, false),
-    ('Ремонт даху', 10, false),
-    ('Склад', 11, false),
-    ('Додаткові роботи', 12, false),
-    ('Інше', 13, true)
-  ) as c(label, ord, is_other)
-  where not exists (
-    select 1 from work_categories w where w.company_id = v_company and w.label = c.label
-  );
 end $$;

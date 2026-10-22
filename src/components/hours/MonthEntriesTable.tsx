@@ -68,7 +68,8 @@ export function MonthEntriesTable({
 
   return (
     <Ticket asChild variant="flat"><section className={className}>
-      <div className="flex items-baseline justify-between gap-3">
+      {/* Итог не помещается рядом с названием (английское «Total: 302:10 h · 35 shifts») — уходит строкой ниже. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <h2 className="text-[15px] font-semibold whitespace-nowrap">{title ?? t.hours.monthTableTitle}</h2>
         {entries.length > 0 && (
           <p className="tabular shrink-0 text-[12px] text-ink-2 lg:text-[13px]">

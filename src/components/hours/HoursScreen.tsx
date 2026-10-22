@@ -29,6 +29,8 @@ import { getTravelEntriesInRange, type TravelEntryWithNames } from "@/modules/tr
 import { getAllSites, type Site } from "@/modules/sites/queries";
 import { getCompanyWorkers, type Worker } from "@/modules/team/queries";
 import { initialsOf } from "@/components/shared/Thumb";
+import { useAvatarUrls } from "@/components/shared/useAvatarUrls";
+import { useSitePhotoUrls } from "@/components/shared/useSitePhotoUrls";
 import type { Profile } from "@/modules/auth/profile";
 import { getCompanyEntriesInRange } from "@/modules/entries/queries";
 import { buildPeriodSummary, type DaySlot } from "@/modules/entries/period";
@@ -85,6 +87,8 @@ export function HoursScreen({
   const [siteFilter, setSiteFilter] = useState(ALL_FILTER);
   const [workers, setWorkers] = useState<readonly Worker[]>([]);
   const [sites, setSites] = useState<readonly Site[]>([]);
+  const workerAvatars = useAvatarUrls(workers);
+  const sitePhotos = useSitePhotoUrls(sites);
   const isTeamView = isBoss;
 
   useEffect(() => {
@@ -342,11 +346,13 @@ export function HoursScreen({
             workers={workers.map((w) => ({
               id: w.id,
               name: w.full_name,
+              photoUrl: workerAvatars[w.id],
               ...(workerStats.byKey.get(w.id) ?? EMPTY_FILTER_STAT),
             }))}
             sites={sites.map((site) => ({
               id: site.id,
               name: site.name,
+              photoUrl: sitePhotos[site.id],
               ...(siteStats.byKey.get(site.id) ?? EMPTY_FILTER_STAT),
             }))}
             workersTotal={workerStats.total}

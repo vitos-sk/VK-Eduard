@@ -15,6 +15,8 @@ export { ALL_FILTER };
 export interface FilterOption extends Partial<FilterStat> {
   id: string;
   name: string;
+  /** Ссылка на фото: аватар сотрудника или обложка объекта. */
+  photoUrl?: string | null;
 }
 
 interface HoursFiltersProps {
@@ -59,7 +61,12 @@ export function HoursFilters({
   const isActive = workerId !== ALL_FILTER || siteId !== ALL_FILTER;
   const describe = useDescribe();
   const toOptions = (list: readonly FilterOption[]) =>
-    list.map((option) => ({ id: option.id, name: option.name, description: describe(option) }));
+    list.map((option) => ({
+      id: option.id,
+      name: option.name,
+      description: describe(option),
+      photoUrl: option.photoUrl,
+    }));
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
