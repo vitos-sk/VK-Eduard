@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/modules/auth/redirect";
+import { isServiceError } from "@/modules/auth/service-error";
 import { getProfile } from "@/modules/auth/session";
 
 export type SignInState = { error: string | null };
@@ -33,7 +34,8 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: t.auth.failed };
+    // Отказ самого сервиса (лимит тарифа, сбой, нет связи) — не «неверный пароль»: иначе все решат, что забыли пароль.
+    return { error: isServiceError(error) ? t.auth.unavailable : t.auth.failed };
   }
 
   redirect(safeNextPath(String(formData.get("next") ?? ""), "/"));
@@ -138,7 +140,7 @@ export async function requestPasswordReset(
 
     // Нет связи с Supabase и т.п. Остальные отказы (например, нет такого пользователя)
     // не показываем — иначе форма выдаёт, какие адреса зарегистрированы.
-    if (error.status === undefined || error.status >= 500) {
+    if (isServiceError(error)) {
       return { status: "error", error: t.auth.forgotFailed };
     }
   }

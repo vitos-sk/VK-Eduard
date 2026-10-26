@@ -59,6 +59,7 @@ export const en: Dict = {
     submitting: "Signing in…",
     signOut: "Sign out",
     failed: "Wrong email or password",
+    unavailable: "The service is temporarily unavailable — your password is not the problem. Please try again later.",
     noProfile: "Your account is not linked to a company. Please contact your boss.",
     networkError: "Can't reach the server. Please try again.",
     forgotLink: "Forgot your password?",

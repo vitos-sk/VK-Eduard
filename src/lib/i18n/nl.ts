@@ -59,6 +59,7 @@ export const nl: Dict = {
     submitting: "Bezig met inloggen…",
     signOut: "Uitloggen",
     failed: "Onjuist e-mailadres of wachtwoord",
+    unavailable: "De dienst is tijdelijk niet beschikbaar — je wachtwoord is niet het probleem. Probeer het later opnieuw.",
     noProfile: "Je account is niet aan een bedrijf gekoppeld. Neem contact op met je baas.",
     networkError: "Geen verbinding met de server. Probeer het opnieuw.",
     forgotLink: "Wachtwoord vergeten?",
